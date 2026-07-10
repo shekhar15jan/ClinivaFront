@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "id": "u1",
+    "email": "admin@clinivahms.com",
+    "roles": ["ADMIN"],
+    "firstName": "Admin",
+    "lastName": "User",
+    "tenantId": "t1"
+  },
+  "doctor": {
+    "id": "u2",
+    "email": "doctor@clinivahms.com",
+    "roles": ["DOCTOR"],
+    "firstName": "Anita",
+    "lastName": "Desai",
+    "tenantId": "t1"
+  }
+}

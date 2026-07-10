@@ -1,0 +1,185 @@
+@if (!isLoading && patient) {
+  <div class="space-y-6 relative">
+    <!-- Header: Back button & Title -->
+    <div class="flex items-center gap-4">
+      <button
+        routerLink="/patients"
+        class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+      >
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <h2 class="text-2xl font-bold text-on-surface">Patient Profile</h2>
+    </div>
+    <!-- Profile Overview Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-6 sm:p-8 flex flex-col md:flex-row gap-6 md:items-center justify-between">
+        <div class="flex items-center gap-6">
+          <div
+            class="w-24 h-24 rounded-full bg-medical-blue/10 flex items-center justify-center text-medical-blue font-bold text-3xl shrink-0"
+          >
+            {{ getInitials(patient.fullName) }}
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-on-surface flex items-center gap-3">
+              {{ patient.fullName }}
+              <span
+                class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-status-green/10 text-status-green"
+                >Active</span
+              >
+            </h3>
+            <p class="text-sm text-outline mt-1">UHID: {{ patient.patientId }}</p>
+            <div class="mt-4 flex flex-wrap gap-4 text-sm text-on-surface">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-outline text-[18px]">call</span>
+                {{ patient.phone }}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-outline text-[18px]">person</span>
+                {{ patient.age }} Yrs, {{ patient.gender }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 md:gap-8">
+          <div>
+            <p class="text-xs text-outline font-medium uppercase tracking-wider">Blood Group</p>
+            <p class="mt-1 font-semibold text-on-surface text-lg">
+              {{ patient.bloodGroup || 'N/A' }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-outline font-medium uppercase tracking-wider">Allergies</p>
+            <p
+              class="mt-1 font-semibold"
+              [ngClass]="{
+                'text-status-red': patient.medicalHistory,
+                'text-on-surface': !patient.medicalHistory,
+              }"
+            >
+              {{ patient.medicalHistory || 'None' }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div class="border-t border-gray-100 bg-surface-container-low px-6">
+        <nav class="flex space-x-8" aria-label="Tabs">
+          <a
+            href="javascript:void(0)"
+            class="border-medical-blue text-medical-blue whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+          >
+            Overview
+          </a>
+          <a
+            href="javascript:void(0)"
+            class="border-transparent text-outline hover:text-on-surface hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+          >
+            Medical History
+          </a>
+          <a
+            href="javascript:void(0)"
+            class="border-transparent text-outline hover:text-on-surface hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+          >
+            Appointments
+          </a>
+          <a
+            href="javascript:void(0)"
+            class="border-transparent text-outline hover:text-on-surface hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+          >
+            Billing
+          </a>
+        </nav>
+      </div>
+    </div>
+    <!-- Tab Content (Overview) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Column: Timeline -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h4 class="text-lg font-semibold text-on-surface mb-6">Recent Visits</h4>
+          <div class="relative border-l border-outline-variant ml-3 space-y-8">
+            <!-- Timeline Item 1 -->
+            <div class="relative pl-6">
+              <span
+                class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-medical-blue ring-4 ring-white"
+              ></span>
+              <div class="flex justify-between items-start mb-1">
+                <div>
+                  <h5 class="text-sm font-semibold text-on-surface">General Consultation</h5>
+                  <p class="text-xs text-outline">Dr. Smith - General Physician</p>
+                </div>
+                <span class="text-xs text-outline">Today, 10:00 AM</span>
+              </div>
+              <p class="text-sm text-on-surface mt-2">
+                Patient reported mild fever and sore throat. Diagnosed with viral pharyngitis.
+                Prescribed paracetamol and throat lozenges.
+              </p>
+            </div>
+            <!-- Timeline Item 2 -->
+            <div class="relative pl-6">
+              <span
+                class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-surface-container-highest ring-4 ring-white"
+              ></span>
+              <div class="flex justify-between items-start mb-1">
+                <div>
+                  <h5 class="text-sm font-semibold text-on-surface">Routine Checkup</h5>
+                  <p class="text-xs text-outline">Dr. Smith - General Physician</p>
+                </div>
+                <span class="text-xs text-outline">Oct 12, 2023</span>
+              </div>
+              <p class="text-sm text-on-surface mt-2">
+                Annual health checkup completed. Vitals normal. Advised lifestyle modifications.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Right Column: Active Info -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h4 class="text-lg font-semibold text-on-surface mb-4">Active Prescriptions</h4>
+          <ul class="space-y-4">
+            <li class="flex items-start gap-3">
+              <div class="p-2 bg-medical-blue/10 text-medical-blue rounded-md">
+                <span class="material-symbols-outlined text-[20px]">medication</span>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-on-surface">Paracetamol 500mg</p>
+                <p class="text-xs text-outline">1-0-1 (After meals) - 3 days</p>
+              </div>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="p-2 bg-medical-blue/10 text-medical-blue rounded-md">
+                <span class="material-symbols-outlined text-[20px]">medication</span>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-on-surface">Strepsils Lozenges</p>
+                <p class="text-xs text-outline">SOS - 5 days</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (isLoading) {
+  <div class="flex justify-center items-center py-12">
+    <svg class="animate-spin h-8 w-8 text-medical-blue" fill="none" viewBox="0 0 24 24">
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
+  </div>
+}

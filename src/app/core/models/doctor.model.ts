@@ -1,0 +1,35 @@
+export interface Doctor {
+  id: string;
+  fullName: string;
+  specialization: string;
+  qualification: string;
+  licenseNumber?: string;
+  experienceYears?: number;
+  consultationFeeInPaisa: number;
+  phone?: string;
+  email?: string;
+  profilePhotoUrl?: string;
+  isActive: boolean;
+}
+
+export interface DoctorWithSlots extends Doctor {
+  availableSlots: string[];
+}
+
+export interface DoctorAvailability {
+  id: string;
+  doctorId: string;
+  dayOfWeek: 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+  startTime: string;
+  endTime: string;
+  isActive: boolean;
+}
+
+export interface UpdateAvailabilityRequest {
+  slots: {
+    dayOfWeek: string;
+    startTime: string;
+    endTime: string;
+    isActive: boolean;
+  }[];
+}

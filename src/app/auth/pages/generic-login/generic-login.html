@@ -1,0 +1,69 @@
+<div class="space-y-6">
+  @if (errorMessage) {
+    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-md">
+      <p class="text-sm text-red-700">{{ errorMessage }}</p>
+    </div>
+  }
+
+  <!-- Hospital Selection -->
+  @if (showSelection) {
+    <div class="space-y-4">
+      <p class="text-sm text-outline">Select your hospital:</p>
+      @for (r of resolutions; track r) {
+        <button
+          (click)="selectTenant(r)"
+          class="w-full text-left p-4 border border-outline-variant rounded-lg hover:border-medical-blue hover:bg-medical-blue/5 transition-all"
+        >
+          <p class="font-medium text-on-surface">{{ r.tenant.name }}</p>
+          <p class="text-sm text-outline">{{ r.tenant.tenantId }}</p>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Email Input -->
+  @if (!showSelection) {
+    <form #emailForm="ngForm" (ngSubmit)="resolveTenant()" class="space-y-6">
+      <div class="relative">
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          #emailCtrl="ngModel"
+          required
+          email
+          class="peer w-full border border-outline-variant rounded-lg px-4 py-4 pt-6 text-on-surface focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue transition-all placeholder-transparent bg-transparent"
+          placeholder="name@clinic.com"
+        />
+        <label
+          for="email"
+          class="absolute left-4 top-1 text-xs text-outline transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-medical-blue bg-white px-1"
+        >
+          Email Address
+        </label>
+      </div>
+      <button
+        type="submit"
+        [disabled]="emailForm.invalid || isLoading"
+        class="w-full bg-medical-blue hover:bg-medical-blue-dark text-white font-medium py-3.5 px-4 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        @if (isLoading) {
+          <span class="material-symbols-outlined animate-spin">progress_activity</span>
+        }
+        <span>{{ isLoading ? 'Finding your clinic...' : 'Continue' }}</span>
+        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform"
+          >arrow_forward</span
+        >
+      </button>
+      <div class="text-center">
+        <button
+          type="button"
+          (click)="goToHospitalCode()"
+          class="text-sm text-medical-blue hover:text-medical-blue-dark font-medium"
+        >
+          Enter Hospital Code instead
+        </button>
+      </div>
+    </form>
+  }
+</div>

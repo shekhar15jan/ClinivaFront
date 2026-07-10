@@ -1,0 +1,361 @@
+<div class="max-w-4xl mx-auto space-y-6 relative">
+  <div class="flex items-center gap-4">
+    <button
+      routerLink="/appointments"
+      class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+    >
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <h2 class="text-2xl font-bold text-gray-900">Book Appointment</h2>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div
+      class="absolute inset-0 bg-white/70 z-10 flex justify-center items-center mt-12 rounded-xl h-64"
+    >
+      <svg class="animate-spin h-8 w-8 text-medical-blue" fill="none" viewBox="0 0 24 24">
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    </div>
+  }
+
+  <!-- Wizard Steps -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="flex border-b border-gray-100">
+      <div
+        class="flex-1 py-4 px-6 border-b-2"
+        [ngClass]="{
+          'border-medical-blue text-medical-blue bg-blue-50/50': step === 1,
+          'border-transparent text-gray-400': step !== 1,
+        }"
+      >
+        <p class="text-xs font-medium uppercase tracking-wider mb-1">Step 1</p>
+        <p class="text-sm font-semibold">Doctor & Time</p>
+      </div>
+      <div
+        class="flex-1 py-4 px-6 border-b-2"
+        [ngClass]="{
+          'border-medical-blue text-medical-blue bg-blue-50/50': step === 2,
+          'border-transparent text-gray-400': step !== 2,
+        }"
+      >
+        <p class="text-xs font-medium uppercase tracking-wider mb-1">Step 2</p>
+        <p class="text-sm font-semibold">Patient Details</p>
+      </div>
+      <div
+        class="flex-1 py-4 px-6 border-b-2"
+        [ngClass]="{
+          'border-medical-blue text-medical-blue bg-blue-50/50': step === 3,
+          'border-transparent text-gray-400': step !== 3,
+        }"
+      >
+        <p class="text-xs font-medium uppercase tracking-wider mb-1">Step 3</p>
+        <p class="text-sm font-semibold">Confirm</p>
+      </div>
+    </div>
+
+    <div class="p-8 space-y-8 min-h-[400px]">
+      <!-- STEP 1: Doctor & Time -->
+      @if (step === 1) {
+        <div [formGroup]="bookingForm">
+          <!-- Date Selection -->
+          <div class="mb-8">
+            <p class="block text-sm font-medium text-gray-700 mb-3">Select Date</p>
+            <div class="flex gap-4 overflow-x-auto pb-2" role="radiogroup" aria-label="Select Date">
+              @for (d of dates; track d) {
+                <div
+                  role="radio"
+                  [attr.aria-checked]="selectedDate === d.fullDate"
+                  tabindex="0"
+                  (click)="selectDate(d.fullDate)"
+                  (keydown.enter)="selectDate(d.fullDate)"
+                  (keydown.space)="selectDate(d.fullDate); $event.preventDefault()"
+                  [ngClass]="{
+                    'border-2 border-medical-blue bg-blue-50/30': selectedDate === d.fullDate,
+                    'border border-gray-200 hover:border-medical-blue/50':
+                      selectedDate !== d.fullDate,
+                  }"
+                  class="shrink-0 w-20 rounded-lg p-3 text-center cursor-pointer transition-colors"
+                >
+                  <p
+                    class="text-xs font-medium uppercase"
+                    [ngClass]="{
+                      'text-medical-blue': selectedDate === d.fullDate,
+                      'text-gray-500': selectedDate !== d.fullDate,
+                    }"
+                  >
+                    {{ d.label }}
+                  </p>
+                  <p class="text-xl font-bold text-gray-900 my-1">{{ d.day }}</p>
+                  <p class="text-xs text-gray-500">{{ d.dayName }}</p>
+                </div>
+              }
+            </div>
+          </div>
+          <!-- Doctor Selection -->
+          <div class="mb-8">
+            <p class="block text-sm font-medium text-gray-700 mb-3">Select Doctor</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="radiogroup" aria-label="Select Doctor">
+              @for (doctor of doctors; track doctor) {
+                <div
+                  role="radio"
+                  [attr.aria-checked]="bookingForm.get('doctorId')?.value === doctor.id"
+                  tabindex="0"
+                  (click)="selectDoctor(doctor.id)"
+                  (keydown.enter)="selectDoctor(doctor.id)"
+                  (keydown.space)="selectDoctor(doctor.id); $event.preventDefault()"
+                  [ngClass]="{
+                    'border-2 border-medical-blue bg-blue-50/30':
+                      bookingForm.get('doctorId')?.value === doctor.id,
+                    'border border-gray-200 hover:border-medical-blue/50':
+                      bookingForm.get('doctorId')?.value !== doctor.id,
+                  }"
+                  class="rounded-lg p-4 cursor-pointer transition-colors"
+                >
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold"
+                    >
+                      {{ getInitials(doctor.fullName) }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900">{{ doctor.fullName }}</p>
+                      <p class="text-xs text-gray-500">{{ doctor.specialization }}</p>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (doctors.length === 0) {
+                <div class="col-span-full text-center text-gray-500 py-4 text-sm">
+                  No doctors found.
+                </div>
+              }
+            </div>
+          </div>
+          <!-- Time Slot Selection -->
+          @if (bookingForm.get('doctorId')?.value) {
+            <div>
+              <p class="block text-sm font-medium text-gray-700 mb-3"
+                >Available Time Slots</p
+              >
+              <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3" role="radiogroup" aria-label="Available Time Slots">
+                @for (slot of selectedDoctorSlots; track slot) {
+                  <div
+                    role="radio"
+                    [attr.aria-checked]="bookingForm.get('appointmentTime')?.value === slot"
+                    tabindex="0"
+                    (click)="selectTime(slot)"
+                    (keydown.enter)="selectTime(slot)"
+                    (keydown.space)="selectTime(slot); $event.preventDefault()"
+                    [ngClass]="{
+                      'border-2 border-medical-blue bg-medical-blue text-white shadow-sm':
+                        bookingForm.get('appointmentTime')?.value === slot,
+                      'border border-gray-200 text-gray-700 hover:border-medical-blue hover:text-medical-blue':
+                        bookingForm.get('appointmentTime')?.value !== slot,
+                    }"
+                    class="rounded-md py-2 text-center text-sm font-medium cursor-pointer transition-colors"
+                  >
+                    {{ slot }}
+                  </div>
+                }
+                @if (selectedDoctorSlots.length === 0) {
+                  <div class="col-span-full text-center text-gray-500 py-4 text-sm">
+                    No slots available for this doctor on the selected date.
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- STEP 2: Patient Details -->
+      @if (step === 2) {
+        <div [formGroup]="patientForm" class="max-w-2xl mx-auto">
+          <div class="flex gap-4 mb-6">
+            <label class="flex items-center gap-2">
+              <input
+                type="radio"
+                formControlName="patientMode"
+                value="existing"
+                class="text-medical-blue focus:ring-medical-blue"
+              />
+              <span class="text-sm font-medium text-gray-700">Existing Patient</span>
+            </label>
+            <label class="flex items-center gap-2">
+              <input
+                type="radio"
+                formControlName="patientMode"
+                value="new"
+                class="text-medical-blue focus:ring-medical-blue"
+              />
+              <span class="text-sm font-medium text-gray-700">New Patient</span>
+            </label>
+          </div>
+          @if (patientForm.get('patientMode')?.value === 'existing') {
+            <div>
+              <label for="patientId" class="block text-sm font-medium text-gray-700 mb-2">Select Patient</label>
+              <select
+                id="patientId"
+                formControlName="patientId"
+                class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm bg-white"
+              >
+                <option value="">-- Select Patient --</option>
+                @for (p of patients; track p) {
+                  <option [value]="p.id">{{ p.fullName }} ({{ p.phone }})</option>
+                }
+              </select>
+            </div>
+          }
+          @if (patientForm.get('patientMode')?.value === 'new') {
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+              <label for="newPatientName" class="block text-sm font-medium text-gray-700">Full Name</label>
+              <input
+                id="newPatientName"
+                type="text"
+                formControlName="fullName"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm"
+              />
+            </div>
+            <div>
+              <label for="newPatientPhone" class="block text-sm font-medium text-gray-700">Phone</label>
+              <input
+                id="newPatientPhone"
+                type="text"
+                formControlName="phone"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm"
+              />
+            </div>
+            <div>
+              <label for="newPatientGender" class="block text-sm font-medium text-gray-700">Gender</label>
+              <select
+                id="newPatientGender"
+                formControlName="gender"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm bg-white"
+                >
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- STEP 3: Confirm -->
+      @if (step === 3) {
+        <div class="max-w-lg mx-auto text-center space-y-6">
+          <div
+            class="w-16 h-16 bg-medical-blue/10 text-medical-blue rounded-full flex items-center justify-center mx-auto"
+          >
+            <span class="material-symbols-outlined text-[32px]">event</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900">Confirm Appointment</h3>
+          <div class="bg-gray-50 p-6 rounded-lg text-left space-y-4">
+            <div>
+              <p class="text-xs text-gray-500 uppercase font-medium">Date & Time</p>
+              <p class="font-medium text-gray-900">
+                {{ bookingForm.get('appointmentDate')?.value }} at
+                {{ bookingForm.get('appointmentTime')?.value }}
+              </p>
+            </div>
+            <div class="border-t border-gray-200 pt-4">
+              <p class="text-xs text-gray-500 uppercase font-medium">Doctor</p>
+              <p class="font-medium text-gray-900">ID: {{ bookingForm.get('doctorId')?.value }}</p>
+            </div>
+            <div class="border-t border-gray-200 pt-4">
+              <p class="text-xs text-gray-500 uppercase font-medium">Patient</p>
+              <p class="font-medium text-gray-900">
+                {{
+                  patientForm.get('patientMode')?.value === 'existing'
+                    ? 'Existing Patient ID: ' + patientForm.get('patientId')?.value
+                    : 'New Patient: ' + patientForm.get('fullName')?.value
+                }}
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="bg-gray-50 p-6 border-t border-gray-100 flex justify-between gap-4">
+      @if (step > 1) {
+        <button
+          (click)="prevStep()"
+          class="px-6 py-2.5 border border-gray-300 bg-white text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
+        >
+          Back
+        </button>
+      }
+      @if (step === 1) {
+        <div class="hidden sm:block"></div>
+      }
+
+      <div class="flex gap-4">
+        <button
+          routerLink="/appointments"
+          class="px-6 py-2.5 border border-transparent bg-transparent text-gray-600 text-sm font-medium rounded-md hover:text-gray-900 hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+
+        @if (step < 3) {
+          <button
+            (click)="nextStep()"
+            [disabled]="step === 1 && bookingForm.invalid"
+            class="px-6 py-2.5 bg-medical-blue hover:bg-medical-blue-dark text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50"
+          >
+            Next Step
+          </button>
+        }
+
+        @if (step === 3) {
+          <button
+            (click)="confirmBooking()"
+            [disabled]="isSubmitting"
+            class="px-6 py-2.5 bg-medical-blue hover:bg-medical-blue-dark text-white text-sm font-medium rounded-md shadow-sm transition-colors disabled:opacity-50 flex items-center"
+          >
+            @if (isSubmitting) {
+              <svg
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            }
+            Confirm Booking
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

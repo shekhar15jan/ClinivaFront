@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for ACTIVE 1`] = `"ACTIVE"`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for ACTIVE 2`] = `
+{
+  "bg-amber-100 text-amber-800": false,
+  "bg-blue-100 text-blue-800": false,
+  "bg-gray-100 text-gray-800": false,
+  "bg-green-100 text-green-800": true,
+  "bg-red-100 text-red-800": false,
+}
+`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for CANCELLED 1`] = `"CANCELLED"`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for CANCELLED 2`] = `
+{
+  "bg-amber-100 text-amber-800": false,
+  "bg-blue-100 text-blue-800": false,
+  "bg-gray-100 text-gray-800": false,
+  "bg-green-100 text-green-800": false,
+  "bg-red-100 text-red-800": true,
+}
+`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for IN_PROGRESS 1`] = `"IN PROGRESS"`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for IN_PROGRESS 2`] = `
+{
+  "bg-amber-100 text-amber-800": true,
+  "bg-blue-100 text-blue-800": false,
+  "bg-gray-100 text-gray-800": false,
+  "bg-green-100 text-green-800": false,
+  "bg-red-100 text-red-800": false,
+}
+`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for PENDING with custom label 1`] = `"Awaiting"`;
+
+exports[`StatusBadgeComponent (snapshot) > should match snapshot for PENDING with custom label 2`] = `
+{
+  "bg-amber-100 text-amber-800": true,
+  "bg-blue-100 text-blue-800": false,
+  "bg-gray-100 text-gray-800": false,
+  "bg-green-100 text-green-800": false,
+  "bg-red-100 text-red-800": false,
+}
+`;

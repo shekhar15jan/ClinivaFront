@@ -1,0 +1,22 @@
+<div class="flex h-screen bg-bg-light overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar class="w-64 flex-shrink-0 border-r border-outline-variant bg-surface hidden md:flex md:flex-col"></app-sidebar>
+  
+  <!-- Main Content Wrapper -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Header -->
+    <app-header class="h-16 flex-shrink-0 border-b border-outline-variant bg-surface"></app-header>
+    
+    <!-- Main Content -->
+    <main class="flex-1 overflow-auto p-6">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-sm text-outline mb-6">
+        <span class="hover:text-medical-blue cursor-pointer transition-colors">Dashboard</span>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-on-surface font-semibold">Overview</span>
+      </nav>
+      
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

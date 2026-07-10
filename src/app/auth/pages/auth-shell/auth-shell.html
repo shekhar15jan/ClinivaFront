@@ -1,0 +1,57 @@
+<div class="min-h-screen flex">
+  <!-- Left Side: Illustration -->
+  <div class="hidden lg:flex lg:w-3/5 bg-medical-blue items-center justify-center p-12 relative overflow-hidden">
+    <div class="absolute inset-0 bg-medical-blue/30 backdrop-blur-[2px]"></div>
+    <div class="z-10 text-white max-w-xl">
+      <h1 class="text-5xl font-bold mb-4 leading-tight">Advanced Healthcare Management.</h1>
+      <p class="text-lg text-white/90 leading-relaxed">
+        Precision technology for modern clinical environments. Cliniva HMS provides a unified ecosystem for patient care, diagnostics, and administration.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right Side: Login Panel -->
+  <div class="w-full lg:w-2/5 flex flex-col bg-surface-container-lowest">
+    <div class="flex-grow flex items-center justify-center p-8 sm:p-12">
+      <div class="w-full max-w-md">
+        <!-- Brand Logo -->
+        <div class="mb-8 flex items-center gap-3">
+          <div class="w-10 h-10 bg-medical-blue rounded-lg flex items-center justify-center">
+            <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1">medical_services</span>
+          </div>
+          <span class="text-xl font-bold text-medical-blue">Cliniva HMS</span>
+        </div>
+
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold text-on-surface mb-1">Welcome Back</h2>
+          <p class="text-sm text-outline">Sign in to access your clinic management dashboard.</p>
+        </div>
+
+        <!-- Router outlet for login steps -->
+        <router-outlet></router-outlet>
+
+        <!-- Secure Portal Divider -->
+        <div class="flex items-center gap-3 my-6">
+          <div class="h-px flex-1 bg-outline-variant"></div>
+          <span class="text-xs font-medium text-outline uppercase tracking-wider">Secure Portal</span>
+          <div class="h-px flex-1 bg-outline-variant"></div>
+        </div>
+
+        <div class="text-center">
+          <p class="text-sm text-outline">
+            Having trouble? <a href="#" class="text-medical-blue font-semibold hover:underline">Contact Administrator</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 text-center border-t border-outline-variant">
+      <p class="text-xs text-outline mb-2">Powered by CodeAtCloud</p>
+      <div class="flex justify-center gap-6">
+        <a href="#" class="text-xs text-outline hover:text-medical-blue transition-colors">Help Center</a>
+        <a href="#" class="text-xs text-outline hover:text-medical-blue transition-colors">Support</a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,399 @@
+﻿<div class="min-h-screen bg-bg-light">
+  <div class="max-w-3xl mx-auto py-8 px-4">
+    <!-- Progress Bar -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold text-on-surface">Configure Your Clinic</h1>
+        <span class="text-sm text-outline">Step {{ currentStep }} of {{ totalSteps }}</span>
+      </div>
+      <div class="flex gap-2">
+        @for (i of [].constructor(totalSteps); track i; let idx = $index) {
+          <div
+            class="flex-1 h-2 rounded-full transition-colors"
+            [class.bg-medical-blue]="idx < currentStep"
+            [class.bg-outline-variant]="idx >= currentStep"
+          ></div>
+        }
+      </div>
+      <p class="text-sm text-outline mt-2">{{ stepTitle }}</p>
+    </div>
+
+    <!-- Step 1: Clinic Configuration -->
+    @if (currentStep === 1) {
+      <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
+        <h2 class="text-lg font-semibold text-on-surface mb-6">Clinic Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2">
+            <label for="clinicName" class="block text-sm font-medium text-on-surface mb-1">Clinic Name</label>
+            <input
+              id="clinicName"
+              type="text"
+              [(ngModel)]="clinicConfig.clinicName"
+              class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label for="address" class="block text-sm font-medium text-on-surface mb-1">Address</label>
+            <textarea
+              id="address"
+              [(ngModel)]="clinicConfig.address"
+              rows="2"
+              class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            ></textarea>
+          </div>
+          <div>
+            <label for="clinicPhone" class="block text-sm font-medium text-on-surface mb-1">Phone</label>
+            <input
+              id="clinicPhone"
+              type="text"
+              [(ngModel)]="clinicConfig.phone"
+              class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div>
+            <label for="clinicEmail" class="block text-sm font-medium text-on-surface mb-1">Email</label>
+            <input
+              id="clinicEmail"
+              type="email"
+              [(ngModel)]="clinicConfig.email"
+              class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div>
+            <label for="patientIdPrefix" class="block text-sm font-medium text-on-surface mb-1">Patient ID Prefix</label>
+            <input
+              id="patientIdPrefix"
+              type="text"
+              [(ngModel)]="clinicConfig.patientIdPrefix"
+              class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div>
+            <label for="clinicTimezone" class="block text-sm font-medium text-on-surface mb-1">Timezone</label>
+            <select
+              id="clinicTimezone"
+              [(ngModel)]="clinicConfig.timezone"
+              class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            >
+              <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+              <option value="Asia/Dubai">Asia/Dubai</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label for="facilityInput" class="block text-sm font-medium text-on-surface mb-1"
+              >Facilities / Services</label
+            >
+            <div class="flex gap-2 mb-2">
+              <input
+                id="facilityInput"
+                type="text"
+                [(ngModel)]="facilityInput"
+                (keyup.enter)="addFacility()"
+                placeholder="e.g. Pharmacy, Lab, X-Ray"
+                class="flex-1 border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              />
+              <button
+                type="button"
+                (click)="addFacility()"
+                class="px-4 py-2.5 bg-medical-blue text-white rounded-lg hover:bg-medical-blue-dark"
+              >
+                Add
+              </button>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              @for (f of clinicConfig.facilities; track f; let i = $index) {
+                <span
+                  class="inline-flex items-center gap-1 px-3 py-1 bg-medical-blue/10 text-medical-blue rounded-full text-sm"
+                >
+                  {{ f }}
+                  <button
+                    type="button"
+                    (click)="removeFacility(i)"
+                    class="text-medical-blue hover:text-status-red"
+                  >
+                    &times;
+                  </button>
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Departments -->
+    @if (currentStep === 2) {
+      <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
+        <h2 class="text-lg font-semibold text-on-surface mb-2">Departments</h2>
+        <p class="text-sm text-outline mb-6">Add departments for your clinic (optional).</p>
+        @for (dept of departments; track dept; let i = $index) {
+          <div class="flex gap-3 mb-3 items-start">
+            <div class="flex-1">
+              <input
+                type="text"
+                [(ngModel)]="dept.name"
+                placeholder="Department name"
+                class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              />
+            </div>
+            <div class="flex-1">
+              <input
+                type="text"
+                [(ngModel)]="dept.description"
+                placeholder="Description (optional)"
+                class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="removeDepartment(i)"
+              class="p-2.5 text-status-red hover:bg-red-50 rounded-lg"
+            >
+              &times;
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          (click)="addDepartment()"
+          class="flex items-center gap-2 text-medical-blue font-medium text-sm hover:text-medical-blue-dark"
+        >
+          <span class="material-symbols-outlined text-[18px]">add</span> Add Department
+        </button>
+      </div>
+    }
+
+    <!-- Step 3: Doctors -->
+    @if (currentStep === 3) {
+      <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-lg font-semibold text-on-surface">Doctors</h2>
+          <span class="text-xs text-outline">Max: {{ getMaxDoctors() }} doctors (plan limit)</span>
+        </div>
+        <p class="text-sm text-outline mb-6">Add your clinic doctors.</p>
+        @for (doc of doctors; track doc; let i = $index) {
+          <div class="p-4 border border-outline-variant rounded-lg mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="md:col-span-2">
+                <input
+                  type="text"
+                  [(ngModel)]="doc.fullName"
+                  placeholder="Full Name"
+                  class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  [(ngModel)]="doc.specialization"
+                  placeholder="Specialization"
+                  class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  [(ngModel)]="doc.qualification"
+                  placeholder="Qualification"
+                  class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <input
+                  type="email"
+                  [(ngModel)]="doc.email"
+                  placeholder="Email"
+                  class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  [(ngModel)]="doc.phone"
+                  placeholder="Phone"
+                  class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+              <label for="consultationFee_{{$index}}" class="block text-xs text-outline mb-1">Consultation Fee (Rs.)</label>
+              <input
+                id="consultationFee_{{$index}}"
+                type="number"
+                [(ngModel)]="doc.consultationFeeInPaisa"
+                  placeholder="Fee in paisa"
+                  class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              (click)="removeDoctor(i)"
+              class="mt-3 text-sm text-status-red hover:text-status-red/80"
+            >
+              Remove
+            </button>
+          </div>
+        }
+        @if (doctors.length < getMaxDoctors()) {
+          <button
+            type="button"
+            (click)="addDoctor()"
+            class="flex items-center gap-2 text-medical-blue font-medium text-sm hover:text-medical-blue-dark"
+          >
+            <span class="material-symbols-outlined text-[18px]">add</span> Add Doctor
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Step 4: Staff -->
+    @if (currentStep === 4) {
+      <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
+        <h2 class="text-lg font-semibold text-on-surface mb-2">Staff</h2>
+        <p class="text-sm text-outline mb-6">Add receptionists and nurses (optional).</p>
+        @for (s of staff; track s; let i = $index) {
+          <div class="flex gap-3 mb-3 items-start">
+            <div class="flex-1">
+              <input
+                type="text"
+                [(ngModel)]="s.fullName"
+                placeholder="Full Name"
+                class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              />
+            </div>
+            <div class="flex-1">
+              <input
+                type="email"
+                [(ngModel)]="s.email"
+                placeholder="Email"
+                class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              />
+            </div>
+            <div class="w-40">
+              <select
+                [(ngModel)]="s.role"
+                class="w-full border border-outline-variant rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              >
+                <option value="RECEPTIONIST">Receptionist</option>
+                <option value="NURSE">Nurse</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              (click)="removeStaff(i)"
+              class="p-2.5 text-status-red hover:bg-red-50 rounded-lg"
+            >
+              &times;
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          (click)="addStaff()"
+          class="flex items-center gap-2 text-medical-blue font-medium text-sm hover:text-medical-blue-dark"
+        >
+          <span class="material-symbols-outlined text-[18px]">add</span> Add Staff
+        </button>
+      </div>
+    }
+
+    <!-- Step 5: Review & Complete -->
+    @if (currentStep === 5) {
+      <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
+        <h2 class="text-lg font-semibold text-on-surface mb-2">Review & Complete</h2>
+        <p class="text-sm text-outline mb-6">Review your configuration before launching.</p>
+        <div class="space-y-4">
+          <div class="p-4 bg-bg-light rounded-lg">
+            <h3 class="font-medium text-on-surface mb-2">Clinic Details</h3>
+            <p class="text-sm text-outline">
+              {{ clinicConfig.clinicName }} - {{ clinicConfig.address }}
+            </p>
+            <p class="text-sm text-outline">
+              Facilities: {{ clinicConfig.facilities.join(', ') || 'None' }}
+            </p>
+          </div>
+          <div class="p-4 bg-bg-light rounded-lg">
+            <h3 class="font-medium text-on-surface mb-2">Departments ({{ departments.length }})</h3>
+            <p class="text-sm text-outline">
+              {{ departments.map((d) => d.name).join(', ') || 'None' }}
+            </p>
+          </div>
+          <div class="p-4 bg-bg-light rounded-lg">
+            <h3 class="font-medium text-on-surface mb-2">Doctors ({{ doctors.length }})</h3>
+            <p class="text-sm text-outline">
+              {{ doctors.map((d) => d.fullName).join(', ') || 'None' }}
+            </p>
+          </div>
+          <div class="p-4 bg-bg-light rounded-lg">
+            <h3 class="font-medium text-on-surface mb-2">Staff ({{ staff.length }})</h3>
+            <p class="text-sm text-outline">
+              {{ staff.map((s) => s.fullName + ' (' + s.role + ')').join(', ') || 'None' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Navigation Buttons -->
+    <div class="flex items-center justify-between mt-8">
+      @if (currentStep > 1) {
+        <button
+          type="button"
+          (click)="prevStep()"
+          class="flex items-center gap-2 px-6 py-2.5 text-outline hover:text-on-surface transition-colors"
+        >
+          <span class="material-symbols-outlined text-[18px]">arrow_back</span> Back
+        </button>
+      }
+      @if (currentStep === 1) {
+        <div class="ml-auto"></div>
+      }
+
+      <div class="flex gap-3">
+        @if (currentStep === 2 || currentStep === 4) {
+          <button
+            type="button"
+            (click)="skipStep()"
+            class="px-6 py-2.5 text-sm text-outline hover:text-on-surface transition-colors"
+          >
+            Skip
+          </button>
+        }
+
+        @if (currentStep < totalSteps) {
+          <button
+            type="button"
+            (click)="nextStep()"
+            [disabled]="isLoading"
+            class="flex items-center gap-2 px-6 py-2.5 bg-medical-blue text-white rounded-lg hover:bg-medical-blue-dark transition-colors disabled:opacity-50"
+          >
+            @if (isLoading) {
+              <span class="material-symbols-outlined animate-spin text-[18px]"
+                >progress_activity</span
+              >
+            }
+            <span>{{ isLoading ? 'Saving...' : 'Continue' }}</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        }
+
+        @if (currentStep === totalSteps) {
+          <button
+            type="button"
+            (click)="completeOnboarding()"
+            [disabled]="isLoading"
+            class="flex items-center gap-2 px-6 py-2.5 bg-status-green text-white rounded-lg hover:bg-status-green/90 transition-colors disabled:opacity-50"
+          >
+            @if (isLoading) {
+              <span class="material-symbols-outlined animate-spin text-[18px]"
+                >progress_activity</span
+              >
+            }
+            <span>{{ isLoading ? 'Setting up...' : 'Launch Dashboard' }}</span>
+            <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

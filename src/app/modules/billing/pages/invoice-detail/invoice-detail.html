@@ -1,0 +1,153 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex items-center gap-4">
+      <button
+        class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
+      >
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div>
+        <h2 class="text-2xl font-bold text-on-surface">Invoice #{{ invoiceNumber }}</h2>
+        <p class="text-sm text-outline">Generated on {{ date | date: 'mediumDate' }}</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 w-full sm:w-auto">
+      <button
+        (click)="printInvoice()"
+        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant bg-white text-on-surface-variant text-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors"
+      >
+        <span class="material-symbols-outlined text-[20px]">print</span>
+        Print
+      </button>
+      @if (status === 'Pending') {
+        <button
+          (click)="collectPayment()"
+          class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-status-green hover:bg-status-green/90 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
+        >
+          <span class="material-symbols-outlined text-[20px]">payments</span>
+          Collect Payment
+        </button>
+      }
+      @if (status === 'Paid') {
+        <button
+          disabled
+          class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-surface-container-high text-outline text-sm font-medium rounded-lg cursor-not-allowed"
+        >
+          <span class="material-symbols-outlined text-[20px]">check_circle</span>
+          Paid
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <!-- Invoice Header -->
+    <div class="p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-8">
+      <div>
+        <div
+          class="w-12 h-12 rounded-lg bg-medical-blue flex items-center justify-center text-white font-bold text-2xl mb-4"
+        >
+          <span class="material-symbols-outlined text-[28px]">medical_services</span>
+        </div>
+        <h3 class="text-lg font-bold text-on-surface">Cliniva HMS - City Clinic</h3>
+        <p class="text-sm text-outline mt-1">
+          123 Health Avenue, Medical District<br />New York, NY 10001<br />Phone: +1 234 567 890
+        </p>
+      </div>
+
+      <div class="text-left md:text-right">
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">Billed To</p>
+        <h3 class="text-lg font-bold text-on-surface">{{ patient.name }}</h3>
+        <p class="text-sm text-outline mt-1">
+          UHID: {{ patient.uhid }}<br />Phone: {{ patient.phone }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div class="p-8">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead>
+          <tr>
+            <th
+              scope="col"
+              class="pb-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
+            >
+              Description
+            </th>
+            <th
+              scope="col"
+              class="pb-3 text-right text-xs font-medium text-outline uppercase tracking-wider"
+            >
+              Qty
+            </th>
+            <th
+              scope="col"
+              class="pb-3 text-right text-xs font-medium text-outline uppercase tracking-wider"
+            >
+              Rate (₹)
+            </th>
+            <th
+              scope="col"
+              class="pb-3 text-right text-xs font-medium text-outline uppercase tracking-wider"
+            >
+              Amount (₹)
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (item of lineItems; track item) {
+            <tr>
+              <td class="py-4 text-sm font-medium text-on-surface">{{ item.description }}</td>
+              <td class="py-4 text-sm text-outline text-right">{{ item.quantity }}</td>
+              <td class="py-4 text-sm text-outline text-right">
+                {{ item.rate | number: '1.2-2' }}
+              </td>
+              <td class="py-4 text-sm text-on-surface font-medium text-right">
+                {{ item.quantity * item.rate | number: '1.2-2' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals -->
+    <div
+      class="bg-surface-container-low p-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-end gap-6"
+    >
+      <div>
+        <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">
+          Payment Status
+        </p>
+        <span
+          class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full"
+          [ngClass]="{
+            'bg-status-orange/10 text-status-orange': status === 'Pending',
+            'bg-status-green/10 text-status-green': status === 'Paid',
+          }"
+        >
+          {{ status }}
+        </span>
+      </div>
+
+      <div class="w-full md:w-64 space-y-3">
+        <div class="flex justify-between text-sm text-outline">
+          <span>Subtotal</span>
+          <span>₹{{ subtotal | number: '1.2-2' }}</span>
+        </div>
+        <div class="flex justify-between text-sm text-outline">
+          <span>Tax ({{ taxRate * 100 }}%)</span>
+          <span>₹{{ tax | number: '1.2-2' }}</span>
+        </div>
+        <div
+          class="flex justify-between text-lg font-bold text-on-surface border-t border-gray-200 pt-3"
+        >
+          <span>Total</span>
+          <span>₹{{ total | number: '1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

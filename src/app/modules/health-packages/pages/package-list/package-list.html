@@ -1,0 +1,50 @@
+@if (isLoading) {
+  <div class="p-6 text-center text-sm text-[#64748B]">Loading health packages...</div>
+} @else if (error) {
+  <div class="p-6 text-center">
+    <p class="text-sm text-red-500 mb-2">{{ error }}</p>
+    <button (click)="loadPackages()" class="text-sm text-[#0052CC] hover:underline">Retry</button>
+  </div>
+} @else if (packages.length === 0) {
+  <app-empty-state icon="🏥" title="No Health Packages" description="No health packages configured yet."></app-empty-state>
+} @else {
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-[#1E293B]">Health Packages</h1>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-[#F8FAFC] text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Name</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actual Price</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Offer Price</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Status</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (pkg of packages; track pkg.id) {
+            <tr class="border-t border-gray-100 hover:bg-[#F8FAFC]">
+              <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ pkg.packageName }}</td>
+              <td class="px-4 py-3 text-sm text-[#64748B]">{{ getPrice(pkg.actualPriceInPaisa) }}</td>
+              <td class="px-4 py-3 text-sm font-medium text-[#059669]">{{ getPrice(pkg.offerPriceInPaisa) }}</td>
+              <td class="px-4 py-3">
+                <app-status-badge [status]="pkg.isActive ? 'ACTIVE' : 'INACTIVE'"></app-status-badge>
+              </td>
+              <td class="px-4 py-3">
+                <button
+                  (click)="toggleActive(pkg)"
+                  [class]="pkg.isActive ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'"
+                  class="text-sm font-medium"
+                >
+                  {{ pkg.isActive ? 'Deactivate' : 'Activate' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

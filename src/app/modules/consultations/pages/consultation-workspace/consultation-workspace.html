@@ -1,0 +1,190 @@
+<div class="h-[calc(100vh-8rem)] flex flex-col sm:flex-row gap-6" [formGroup]="consultationForm">
+  <!-- Left Side: Clinical Notes -->
+  <div
+    class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden"
+    formGroupName="notes"
+  >
+    <div
+      class="p-4 border-b border-gray-100 flex items-center justify-between bg-surface-container-low"
+    >
+      <h3 class="text-lg font-semibold text-on-surface">Clinical Notes</h3>
+      <button class="text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+        Use Template
+      </button>
+    </div>
+
+    <div class="flex-1 p-6 overflow-y-auto space-y-6">
+      <div>
+        <label for="chiefComplaint" class="block text-sm font-medium text-on-surface mb-2">Chief Complaint (CC)</label>
+        <textarea
+          id="chiefComplaint"
+          formControlName="chiefComplaint"
+          rows="2"
+          class="w-full border border-outline-variant rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
+          placeholder="e.g. Fever for 3 days..."
+        ></textarea>
+      </div>
+
+      <div formGroupName="vitals">
+        <p class="block text-sm font-medium text-on-surface mb-2">Vitals</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <span class="text-xs text-outline">BP (mmHg)</span>
+            <input
+              formControlName="bp"
+              type="text"
+              placeholder="120/80"
+              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div>
+            <span class="text-xs text-outline">Temp (°F)</span>
+            <input
+              formControlName="temp"
+              type="text"
+              placeholder="98.6"
+              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div>
+            <span class="text-xs text-outline">Pulse (bpm)</span>
+            <input
+              formControlName="pulse"
+              type="text"
+              placeholder="72"
+              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+          <div>
+            <span class="text-xs text-outline">Weight (kg)</span>
+            <input
+              formControlName="weight"
+              type="text"
+              placeholder="70"
+              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label for="diagnosis" class="block text-sm font-medium text-on-surface mb-2">Diagnosis</label>
+        <input
+          id="diagnosis"
+          formControlName="diagnosis"
+          type="text"
+          class="w-full border border-outline-variant rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
+          placeholder="Search ICD-10 or type..."
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: E-Prescription -->
+  <div
+    class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden"
+  >
+    <div
+      class="p-4 border-b border-gray-100 flex items-center justify-between bg-surface-container-low"
+    >
+      <h3 class="text-lg font-semibold text-on-surface">E-Prescription</h3>
+      <button
+        (click)="addMedicine()"
+        type="button"
+        class="flex items-center gap-2 text-sm text-medical-blue hover:text-medical-blue-dark font-medium"
+      >
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        Add Medicine
+      </button>
+    </div>
+
+    <div class="flex-1 p-6 overflow-y-auto" formArrayName="medicines">
+      <div class="space-y-4">
+        <!-- Medicine Card -->
+        @for (med of medicines.controls; track med; let i = $index) {
+          <div
+            [formGroupName]="i"
+            class="border border-outline-variant rounded-lg p-4 bg-surface-container-low/50"
+          >
+            <div class="flex justify-between items-start mb-3">
+              <div class="flex-1 mr-4 space-y-2">
+                <input
+                  formControlName="name"
+                  type="text"
+                  placeholder="Medicine Name (e.g. Paracetamol 500mg)"
+                  class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 font-semibold text-on-surface focus:outline-none transition-colors"
+                />
+                <input
+                  formControlName="instructions"
+                  type="text"
+                  placeholder="Instructions (e.g. Take after food)"
+                  class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 text-xs text-outline focus:outline-none transition-colors"
+                />
+              </div>
+              <button
+                (click)="removeMedicine(i)"
+                type="button"
+                class="text-outline hover:text-status-red transition-colors mt-1"
+              >
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label for="frequency_{{$index}}" class="block text-xs text-outline mb-1">Frequency</label>
+                <select
+                  id="frequency_{{$index}}"
+                  formControlName="frequency"
+                  class="w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white"
+                >
+                  <option value="1-0-1">1-0-1</option>
+                  <option value="1-1-1">1-1-1</option>
+                  <option value="0-0-1">0-0-1</option>
+                  <option value="SOS">SOS</option>
+                </select>
+              </div>
+              <div>
+                <label for="duration_{{$index}}" class="block text-xs text-outline mb-1">Duration</label>
+                <div class="flex items-center gap-2">
+                  <input
+                    formControlName="duration"
+                    type="number"
+                    min="1"
+                    class="w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20"
+                  />
+                  <span class="text-xs text-on-surface-variant">Days</span>
+                </div>
+              </div>
+              <div>
+                <label for="total_{{$index}}" class="block text-xs text-outline mb-1">Total</label>
+                <input
+                  id="total_{{$index}}"
+                  type="text"
+                  [value]="calculateTotal(med.get('frequency')?.value, med.get('duration')?.value)"
+                  readonly
+                  class="w-full border border-transparent bg-surface-container-high rounded-lg p-2 text-sm text-on-surface-variant focus:outline-none cursor-not-allowed"
+                />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="p-4 border-t border-gray-100 bg-surface-container-low flex justify-end gap-4">
+      <button
+        type="button"
+        class="px-4 py-2 border border-outline-variant bg-white text-on-surface-variant text-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors"
+      >
+        Save Draft
+      </button>
+      <button
+        (click)="finishAndPrint()"
+        type="button"
+        class="px-4 py-2 bg-status-green hover:bg-status-green/90 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
+      >
+        Finish & Print
+      </button>
+    </div>
+  </div>
+</div>

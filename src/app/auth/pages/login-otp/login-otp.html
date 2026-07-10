@@ -1,0 +1,59 @@
+<div class="space-y-6 text-center">
+  <p class="text-sm text-outline text-left mb-6">
+    We've sent a 6-digit code to <strong class="text-on-surface">{{ email }}</strong
+    >.
+  </p>
+
+  @if (errorMessage) {
+    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-md text-left mb-4">
+      <p class="text-sm text-red-700">{{ errorMessage }}</p>
+    </div>
+  }
+
+  <form #otpForm="ngForm" (ngSubmit)="verifyOtp()" class="space-y-6">
+    <div class="flex justify-between gap-2">
+      @for (d of digits; track d; let i = $index) {
+        <input
+          #otpInput
+          type="text"
+          maxlength="1"
+          [(ngModel)]="digits[i]"
+          name="digit{{ i }}"
+          (input)="onDigitInput(i, $event)"
+          (keydown)="onKeyDown(i, $event)"
+          class="otp-digit w-12 h-14 text-center text-xl font-semibold border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue transition-all"
+        />
+      }
+    </div>
+
+    <div class="flex items-center justify-between mt-4">
+      <button
+        type="button"
+        (click)="goBack()"
+        class="flex items-center gap-1 text-sm text-outline hover:text-medical-blue transition-colors"
+      >
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Back
+      </button>
+      <button
+        type="button"
+        (click)="resendOtp()"
+        class="text-sm text-medical-blue hover:text-medical-blue-dark font-medium"
+      >
+        Resend OTP
+      </button>
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="otpCode.length !== 6 || isLoading"
+      class="w-full bg-status-green hover:bg-status-green/90 text-white font-medium py-3.5 px-4 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      @if (isLoading) {
+        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+      }
+      <span class="material-symbols-outlined">verified</span>
+      <span>{{ isLoading ? 'Verifying...' : 'Verify & Login' }}</span>
+    </button>
+  </form>
+</div>

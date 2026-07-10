@@ -1,0 +1,57 @@
+@if (isLoading) {
+  <div class="p-6 text-center text-sm text-[#64748B]">Loading reviews...</div>
+} @else if (error) {
+  <div class="p-6 text-center">
+    <p class="text-sm text-red-500 mb-2">{{ error }}</p>
+    <button (click)="loadReviews()" class="text-sm text-[#0052CC] hover:underline">Retry</button>
+  </div>
+} @else if (reviews.length === 0) {
+  <app-empty-state icon="⭐" title="No Pending Reviews" description="All reviews have been processed."></app-empty-state>
+} @else {
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-[#1E293B]">Pending Reviews</h1>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-[#F8FAFC] text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Patient</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Rating</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Review</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Date</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of reviews; track r.id) {
+            <tr class="border-t border-gray-100 hover:bg-[#F8FAFC]">
+              <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ r.patientName }}</td>
+              <td class="px-4 py-3">
+                <span class="text-sm font-medium text-amber-500">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5 - r.rating) }}</span>
+              </td>
+              <td class="px-4 py-3 text-sm text-[#64748B] max-w-xs truncate">{{ r.reviewText || '-' }}</td>
+              <td class="px-4 py-3 text-sm text-[#64748B]">{{ r.createdAt | date:'mediumDate' }}</td>
+              <td class="px-4 py-3">
+                <div class="flex gap-2">
+                  <button
+                    (click)="approve(r)"
+                    class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    (click)="reject(r)"
+                    class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

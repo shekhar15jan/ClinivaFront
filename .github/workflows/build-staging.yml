@@ -1,0 +1,111 @@
+name: Build & Deploy Frontend (Staging)
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ClinivaFront/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ClinivaFront
+
+      - name: Lint
+        run: npx ng lint
+        working-directory: ClinivaFront
+
+      - name: Run unit tests
+        run: npx ng test --no-watch --browsers=chromium --coverage
+        working-directory: ClinivaFront
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ClinivaFront/coverage/
+
+      - name: npm audit
+        run: npm audit --audit-level=high
+        working-directory: ClinivaFront
+
+      - name: Build Angular app
+        if: github.event_name == 'push'
+        run: npm run build -- --configuration=staging
+        working-directory: ClinivaFront
+
+      - name: Inject API URL
+        if: github.event_name == 'push'
+        run: |
+          echo "Using API URL: ${{ vars.API_URL }}"
+          sed -i "s|__API_URL__|${{ vars.API_URL }}|g" ClinivaFront/dist/cliniva-front/browser/*.js
+          grep -l "/api" ClinivaFront/dist/cliniva-front/browser/*.js || echo "  (no __API_URL__ in built files)"
+
+      - name: Connect to Tailscale
+        if: github.event_name == 'push'
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
+
+      - name: Run E2E tests against staging
+        if: github.event_name == 'push'
+        env:
+          CYPRESS_BASE_URL: https://code-at-cloud.tailef5a29.ts.net/cliniva
+        run: npm run e2e
+        working-directory: ClinivaFront
+
+      - name: Upload E2E report
+        if: always() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-report
+          path: ClinivaFront/cypress/report/
+
+      - name: Upload visual diff artifacts
+        if: failure() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: ClinivaFront/cypress/screenshots/
+
+      - name: Copy files to k3s host via SCP
+        if: github.event_name == 'push'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.K3S_HOST }}
+          username: ${{ secrets.K3S_SSH_USER }}
+          key: ${{ secrets.K3S_SSH_KEY }}
+          source: "ClinivaFront/dist/cliniva-front/browser/*"
+          target: "/var/www/cliniva/"
+          strip_components: 3
+
+      - name: Reload nginx on remote host
+        if: github.event_name == 'push'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.K3S_HOST }}
+          username: ${{ secrets.K3S_SSH_USER }}
+          key: ${{ secrets.K3S_SSH_KEY }}
+          script: |
+            sudo nginx -t && sudo systemctl reload nginx
+            echo "Nginx reloaded with new Cliniva frontend"
