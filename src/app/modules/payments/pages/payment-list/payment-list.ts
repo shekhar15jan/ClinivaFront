@@ -1,14 +1,16 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { PaymentService } from '../../../core/services/payment.service';
-import { PaymentResponse } from '../../../core/models/payment.model';
-import { SharedModule } from '../../../shared/shared-module';
+import { PaymentService } from '../../../../core/services/payment.service';
+import { PaymentResponse } from '../../../../core/models/payment.model';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-payment-list',
   templateUrl: './payment-list.html',
   styleUrl: './payment-list.scss',
   standalone: true,
-  imports: [SharedModule],
+  imports: [StatusBadgeComponent, EmptyStateComponent, DatePipe],
 })
 export class PaymentList implements OnInit {
   private paymentService = inject(PaymentService);

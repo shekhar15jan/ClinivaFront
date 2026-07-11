@@ -9,8 +9,8 @@ switch (mode) {
     execSync('npx vitest run --reporter=verbose', { stdio: 'inherit' });
     break;
   case 'e2e':
-    console.log('Running E2E tests (Cypress)...');
-    execSync('npx cypress run', { stdio: 'inherit' });
+    console.log('Running E2E tests (Playwright)...');
+    execSync('npx playwright test', { stdio: 'inherit' });
     break;
   case 'watch':
     console.log('Running unit tests in watch mode...');

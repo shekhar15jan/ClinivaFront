@@ -42,6 +42,7 @@ import { FormsModule } from '@angular/forms';
           </select>
         </div>
 
+        <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="bg-[#F8FAFC] text-left">
@@ -109,6 +110,55 @@ import { FormsModule } from '@angular/forms';
             }
           </tbody>
         </table>
+        </div>
+
+        <div class="md:hidden divide-y divide-outline-variant">
+          @if (isLoading) {
+            <div class="px-4 py-8 text-center text-body-sm text-on-surface-variant">Loading doctors...</div>
+          }
+          @for (doc of doctors; track doc) {
+            <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary font-semibold text-sm shrink-0"
+                >
+                  {{ doc.fullName.charAt(0) }}
+                </div>
+                <div class="min-w-0">
+                  <span class="text-title-md font-semibold text-on-surface block truncate">{{ doc.fullName }}</span>
+                  <span class="text-body-sm text-on-surface-variant block truncate">{{ doc.email }}</span>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2 text-body-sm text-on-surface-variant">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-base">stethoscope</span>
+                  {{ doc.specialization }}
+                </span>
+                <span class="text-on-surface-variant">|</span>
+                <span>{{ doc.qualification }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-title-md font-semibold text-on-surface">₹{{ doc.consultationFeeInPaisa / 100 }}</span>
+                <span
+                  [class]="
+                    doc.isActive ? 'bg-status-green-light text-status-green' : 'bg-status-red-light text-status-red'
+                  "
+                  class="px-2.5 py-1 rounded-full text-label-sm font-medium"
+                >
+                  {{ doc.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2 pt-1">
+                <button
+                  [routerLink]="[doc.id]"
+                  class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-white bg-primary rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-sm">visibility</span> View
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     </div>
   `,

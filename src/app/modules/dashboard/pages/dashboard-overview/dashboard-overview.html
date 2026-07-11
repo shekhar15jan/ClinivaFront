@@ -1,246 +1,254 @@
-<div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+<div class="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
 
   <!-- Main Content Area -->
-  <div class="xl:col-span-3 space-y-6">
+  <div class="xl:col-span-3 space-y-4 sm:space-y-6">
+
+    <!-- Mobile: Greeting -->
+    <div class="md:hidden">
+      <p class="text-sm text-outline">Good Morning</p>
+      <h1 class="text-headline-md text-on-surface">Dr. Smith</h1>
+      <p class="text-body-sm text-outline mt-1">You have <span class="font-medium text-primary">12 appointments</span> today</p>
+    </div>
 
     <!-- Top Stat Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-medical-blue transition-colors duration-300">
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant hover:border-primary transition-colors duration-300">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-xs font-medium text-outline uppercase tracking-wider">Today's Appointments</p>
-            <p class="text-3xl font-bold text-on-surface mt-2">42</p>
+            <p class="text-label-sm text-outline uppercase tracking-wider">Today's Appts</p>
+            <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2">42</p>
           </div>
-          <div class="p-2 bg-medical-blue/10 rounded-lg">
-            <span class="material-symbols-outlined text-medical-blue">event_note</span>
+          <div class="p-2 bg-primary/10 rounded-lg">
+            <span class="material-symbols-outlined text-primary">event_note</span>
           </div>
         </div>
         <div class="mt-2 flex items-center gap-2">
-          <span class="text-xs font-medium text-status-green bg-status-green/10 px-2 py-0.5 rounded-full">+5%</span>
-          <span class="text-xs text-outline">vs yesterday</span>
+          <span class="text-label-sm font-medium text-status-green bg-status-green-light px-2 py-0.5 rounded-full">+5%</span>
+          <span class="text-label-sm text-outline hidden sm:inline">vs yesterday</span>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-medical-blue transition-colors duration-300">
+      <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant hover:border-primary transition-colors duration-300">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-xs font-medium text-outline uppercase tracking-wider">Total Patients</p>
-            <p class="text-3xl font-bold text-on-surface mt-2">1,284</p>
+            <p class="text-label-sm text-outline uppercase tracking-wider">Total Patients</p>
+            <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2">1,284</p>
           </div>
           <div class="p-2 bg-surface-container-high rounded-lg">
             <span class="material-symbols-outlined text-on-surface-variant">groups</span>
           </div>
         </div>
         <div class="mt-2 flex items-center gap-2">
-          <span class="text-xs font-medium text-status-green bg-status-green/10 px-2 py-0.5 rounded-full">+12 new</span>
-          <span class="text-xs text-outline">this week</span>
+          <span class="text-label-sm font-medium text-status-green bg-status-green-light px-2 py-0.5 rounded-full">+12 new</span>
+          <span class="text-label-sm text-outline hidden sm:inline">this week</span>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-medical-blue transition-colors duration-300">
+      <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant hover:border-primary transition-colors duration-300">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-xs font-medium text-outline uppercase tracking-wider">Pending Bills (INR)</p>
-            <p class="text-3xl font-bold text-on-surface mt-2">₹45k</p>
+            <p class="text-label-sm text-outline uppercase tracking-wider">Pending Bills</p>
+            <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2">&euro;45k</p>
           </div>
-          <div class="p-2 bg-status-red/10 rounded-lg">
-            <span class="material-symbols-outlined text-status-red">receipt_long</span>
+          <div class="p-2 bg-error/10 rounded-lg">
+            <span class="material-symbols-outlined text-error">receipt_long</span>
           </div>
         </div>
         <div class="mt-2 flex items-center gap-2">
-          <span class="text-xs font-medium text-status-red bg-status-red/10 px-2 py-0.5 rounded-full">-2%</span>
-          <span class="text-xs text-outline">vs last week</span>
+          <span class="text-label-sm font-medium text-error bg-status-red-light px-2 py-0.5 rounded-full">-2%</span>
+          <span class="text-label-sm text-outline hidden sm:inline">vs last week</span>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100 hover:border-medical-blue transition-colors duration-300 border-l-4 border-l-medical-blue">
+      <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant hover:border-primary transition-colors duration-300 border-l-4 border-l-primary">
         <div class="flex justify-between items-start">
           <div>
-            <p class="text-xs font-medium text-outline uppercase tracking-wider">Doctors Available</p>
-            <p class="text-3xl font-bold text-on-surface mt-2">4</p>
+            <p class="text-label-sm text-outline uppercase tracking-wider">Doctors Available</p>
+            <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2">4</p>
           </div>
           <div class="p-2 bg-status-green/10 rounded-lg">
             <span class="material-symbols-outlined text-status-green">medical_information</span>
           </div>
         </div>
         <div class="mt-2 flex items-center gap-2">
-          <span class="flex items-center gap-1 text-xs font-medium text-status-green">
+          <span class="flex items-center gap-1 text-label-sm font-medium text-status-green">
             <span class="w-1.5 h-1.5 bg-status-green rounded-full animate-pulse"></span>
             Active
           </span>
-          <span class="text-xs text-outline">Out of 5</span>
+          <span class="text-label-sm text-outline hidden sm:inline">Out of 5</span>
         </div>
       </div>
+    </div>
+
+    <!-- Mobile: Quick Actions -->
+    <div class="md:hidden grid grid-cols-2 gap-3">
+      <button routerLink="/patients" class="flex items-center gap-3 px-4 py-3.5 bg-primary text-white rounded-xl shadow-sm active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-[22px]">person_add</span>
+        <span class="text-sm font-medium">Register Patient</span>
+      </button>
+      <button routerLink="/appointments/book" class="flex items-center gap-3 px-4 py-3.5 bg-surface-container border-2 border-primary/20 text-primary rounded-xl active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-[22px]">add_task</span>
+        <span class="text-sm font-medium">Book</span>
+      </button>
     </div>
 
     <!-- Patient Activity Chart -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+    <div class="bg-white rounded-xl shadow-card border border-outline-variant overflow-hidden">
+      <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-outline-variant flex justify-between items-center">
         <div>
-          <h3 class="text-lg font-semibold text-on-surface">Patient Activity</h3>
-          <p class="text-sm text-outline">Weekly patient visit trends</p>
+          <h3 class="text-title-md text-on-surface">Patient Activity</h3>
+          <p class="text-body-sm text-outline hidden sm:block">Weekly patient visit trends</p>
         </div>
         <div class="flex gap-2">
-          <button class="px-3 py-1.5 text-xs font-medium rounded-full bg-medical-blue text-white">Daily</button>
-          <button class="px-3 py-1.5 text-xs font-medium rounded-full text-outline hover:bg-surface-container-high transition-colors">Weekly</button>
+          <button class="px-3 py-1.5 text-label-sm rounded-full bg-primary text-white">Daily</button>
+          <button class="px-3 py-1.5 text-label-sm rounded-full text-outline hover:bg-surface-container-high transition-colors">Weekly</button>
         </div>
       </div>
-      <div class="p-6">
-        <!-- Simple bar chart representation -->
-        <div class="flex items-end justify-between gap-3 h-40">
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue/20 rounded-t-md" style="height: 60%"></div>
-            <span class="text-xs text-outline">Mon</span>
-          </div>
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue/30 rounded-t-md" style="height: 75%"></div>
-            <span class="text-xs text-outline">Tue</span>
-          </div>
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue/40 rounded-t-md" style="height: 45%"></div>
-            <span class="text-xs text-outline">Wed</span>
-          </div>
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue rounded-t-md" style="height: 90%"></div>
-            <span class="text-xs text-outline">Thu</span>
-          </div>
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue/50 rounded-t-md" style="height: 55%"></div>
-            <span class="text-xs text-outline">Fri</span>
-          </div>
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue/25 rounded-t-md" style="height: 35%"></div>
-            <span class="text-xs text-outline">Sat</span>
-          </div>
-          <div class="flex-1 flex flex-col items-center gap-2">
-            <div class="w-full bg-medical-blue/15 rounded-t-md" style="height: 20%"></div>
-            <span class="text-xs text-outline">Sun</span>
-          </div>
+      <div class="p-4 sm:p-6">
+        <div class="flex items-end justify-between gap-2 sm:gap-3 h-32 sm:h-40">
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary/20 rounded-t-md" style="height: 60%"></div><span class="text-label-sm text-outline">Mon</span></div>
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary/30 rounded-t-md" style="height: 75%"></div><span class="text-label-sm text-outline">Tue</span></div>
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary/40 rounded-t-md" style="height: 45%"></div><span class="text-label-sm text-outline">Wed</span></div>
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary rounded-t-md" style="height: 90%"></div><span class="text-label-sm text-outline">Thu</span></div>
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary/50 rounded-t-md" style="height: 55%"></div><span class="text-label-sm text-outline">Fri</span></div>
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary/25 rounded-t-md" style="height: 35%"></div><span class="text-label-sm text-outline">Sat</span></div>
+          <div class="flex-1 flex flex-col items-center gap-2"><div class="w-full bg-primary/15 rounded-t-md" style="height: 20%"></div><span class="text-label-sm text-outline">Sun</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Today's Queue -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <!-- Today's Queue - Desktop Table / Mobile Cards -->
+    <div class="bg-white rounded-xl shadow-card border border-outline-variant overflow-hidden">
+      <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
         <div>
-          <h3 class="text-lg font-semibold text-on-surface">Today's Patient Queue</h3>
-          <p class="text-sm text-outline">Real-time clinic queue status</p>
+          <h3 class="text-title-md text-on-surface">Today's Patient Queue</h3>
+          <p class="text-body-sm text-outline hidden sm:block">Real-time clinic queue status</p>
         </div>
-        <div class="flex gap-3">
-          <span class="text-xs font-medium bg-surface-container-high px-2 py-1 rounded-lg text-on-surface-variant">Total: 42</span>
-          <span class="text-xs font-medium bg-medical-blue/10 text-medical-blue px-2 py-1 rounded-lg">In Progress: 4</span>
+        <div class="flex gap-2 sm:gap-3">
+          <span class="text-label-sm font-medium bg-surface-container-high px-2 py-1 rounded-lg text-on-surface-variant">Total: 42</span>
+          <span class="text-label-sm font-medium bg-primary/10 text-primary px-2 py-1 rounded-lg">In Progress: 4</span>
         </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+
+      <!-- Desktop Table -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-outline-variant">
           <thead class="bg-surface-container-low">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider">Token No</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider">Time</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider">Patient Name</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider">Doctor</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider">Status</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-outline uppercase tracking-wider">Action</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Token</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Time</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Patient</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Doctor</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-right text-label-sm text-outline uppercase tracking-wider">Action</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-white divide-y divide-outline-variant">
             <tr class="hover:bg-surface-container-lowest transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-on-surface">#001</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-outline">10:00 AM</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <p class="text-sm font-medium text-on-surface">Rahul Sharma</p>
-                <p class="text-xs text-outline">M, 45y</p>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-on-surface">Dr. Smith</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-status-red">Pending</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="text-medical-blue hover:bg-medical-blue/5 px-3 py-1.5 rounded-lg transition-all font-medium">Mark Arrived</button>
-              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm font-medium text-on-surface">#001</td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">10:00 AM</td>
+              <td class="px-6 py-4 whitespace-nowrap"><p class="text-body-sm font-medium text-on-surface">Rahul Sharma</p><p class="text-label-sm text-outline">M, 45y</p></td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">Dr. Smith</td>
+              <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-amber-light text-status-amber">Pending</span></td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium"><button class="text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all font-medium">Mark Arrived</button></td>
             </tr>
             <tr class="hover:bg-surface-container-lowest transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-on-surface">#002</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-outline">10:15 AM</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <p class="text-sm font-medium text-on-surface">Priya Patel</p>
-                <p class="text-xs text-outline">F, 28y</p>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-on-surface">Dr. Smith</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-medical-blue">In Consult</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="text-gray-400 cursor-not-allowed px-3 py-1.5" disabled>Start Consult</button>
-              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm font-medium text-on-surface">#002</td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">10:15 AM</td>
+              <td class="px-6 py-4 whitespace-nowrap"><p class="text-body-sm font-medium text-on-surface">Priya Patel</p><p class="text-label-sm text-outline">F, 28y</p></td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">Dr. Smith</td>
+              <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-blue-light text-status-blue">In Consult</span></td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium"><button class="text-outline cursor-not-allowed px-3 py-1.5" disabled>Start Consult</button></td>
             </tr>
             <tr class="hover:bg-surface-container-lowest transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-on-surface">#003</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-outline">10:30 AM</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <p class="text-sm font-medium text-on-surface">Amit Kumar</p>
-                <p class="text-xs text-outline">M, 52y</p>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-on-surface">Dr. Jones</td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-status-green">Completed</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="text-medical-blue hover:bg-medical-blue/5 px-3 py-1.5 rounded-lg transition-all font-medium">View Bill</button>
-              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm font-medium text-on-surface">#003</td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">10:30 AM</td>
+              <td class="px-6 py-4 whitespace-nowrap"><p class="text-body-sm font-medium text-on-surface">Amit Kumar</p><p class="text-label-sm text-outline">M, 52y</p></td>
+              <td class="px-6 py-4 whitespace-nowrap text-body-sm text-on-surface">Dr. Jones</td>
+              <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-green-light text-status-green">Completed</span></td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium"><button class="text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all font-medium">View Bill</button></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="px-6 py-3 bg-surface-container-lowest text-center border-t border-gray-200">
-        <button class="text-medical-blue text-sm font-medium hover:underline">View Full Daily Queue</button>
+
+      <!-- Mobile Cards -->
+      <div class="md:hidden divide-y divide-outline-variant">
+        <div class="px-4 py-3.5 flex items-center gap-4 active:bg-surface-container-low transition-colors">
+          <div class="flex-shrink-0 text-center w-12">
+            <p class="text-title-md text-primary font-bold">#001</p>
+            <p class="text-label-sm text-outline">10:00</p>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-body-sm font-medium text-on-surface">Rahul Sharma</p>
+            <p class="text-label-sm text-outline">M, 45y &bull; Dr. Smith</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-amber-light text-status-amber">Pending</span>
+            <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+          </div>
+        </div>
+        <div class="px-4 py-3.5 flex items-center gap-4 active:bg-surface-container-low transition-colors">
+          <div class="flex-shrink-0 text-center w-12">
+            <p class="text-title-md text-primary font-bold">#002</p>
+            <p class="text-label-sm text-outline">10:15</p>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-body-sm font-medium text-on-surface">Priya Patel</p>
+            <p class="text-label-sm text-outline">F, 28y &bull; Dr. Smith</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-blue-light text-status-blue">In Consult</span>
+            <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+          </div>
+        </div>
+        <div class="px-4 py-3.5 flex items-center gap-4 active:bg-surface-container-low transition-colors">
+          <div class="flex-shrink-0 text-center w-12">
+            <p class="text-title-md text-primary font-bold">#003</p>
+            <p class="text-label-sm text-outline">10:30</p>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-body-sm font-medium text-on-surface">Amit Kumar</p>
+            <p class="text-label-sm text-outline">M, 52y &bull; Dr. Jones</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-green-light text-status-green">Completed</span>
+            <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-surface-container-lowest text-center border-t border-outline-variant">
+        <button class="text-primary text-body-sm font-medium hover:underline">View Full Daily Queue</button>
       </div>
     </div>
   </div>
 
-  <!-- Right Sidebar -->
-  <div class="xl:col-span-1 space-y-6">
+  <!-- Right Sidebar - Desktop Only -->
+  <div class="hidden xl:block xl:col-span-1 space-y-6">
 
     <!-- Quick Actions -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h3 class="text-xs font-medium text-outline uppercase tracking-widest mb-4">Quick Actions</h3>
+    <div class="bg-white rounded-xl shadow-card border border-outline-variant p-6">
+      <h3 class="text-label-md text-outline uppercase tracking-widest mb-4">Quick Actions</h3>
       <div class="space-y-3">
-        <button class="w-full flex items-center justify-between px-4 py-3 bg-medical-blue text-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
+        <button class="w-full flex items-center justify-between px-4 py-3 bg-primary text-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
           <div class="flex items-center gap-3">
-            <div class="bg-white/20 p-2 rounded-lg">
-              <span class="material-symbols-outlined text-[20px]">person_add</span>
-            </div>
-            <div class="text-left">
-              <span class="text-sm font-medium">Register Patient</span>
-              <p class="text-xs opacity-80">New record creation</p>
-            </div>
+            <div class="bg-white/20 p-2 rounded-lg"><span class="material-symbols-outlined text-[20px]">person_add</span></div>
+            <div class="text-left"><span class="text-body-sm font-medium">Register Patient</span><p class="text-label-sm opacity-80">New record creation</p></div>
           </div>
           <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
         </button>
-
-        <button class="w-full flex items-center justify-between px-4 py-3 bg-white border-2 border-medical-blue/20 text-medical-blue rounded-xl hover:bg-medical-blue/5 transition-all group">
+        <button class="w-full flex items-center justify-between px-4 py-3 bg-white border-2 border-primary/20 text-primary rounded-xl hover:bg-primary/5 transition-all group">
           <div class="flex items-center gap-3">
-            <div class="bg-medical-blue/10 p-2 rounded-lg">
-              <span class="material-symbols-outlined text-[20px]">add_task</span>
-            </div>
-            <div class="text-left">
-              <span class="text-sm font-medium">Book Appointment</span>
-              <p class="text-xs text-on-surface-variant">Slot management</p>
-            </div>
+            <div class="bg-primary/10 p-2 rounded-lg"><span class="material-symbols-outlined text-[20px]">add_task</span></div>
+            <div class="text-left"><span class="text-body-sm font-medium">Book Appointment</span><p class="text-label-sm text-on-surface-variant">Slot management</p></div>
           </div>
           <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
         </button>
-
         <button class="w-full flex items-center justify-between px-4 py-3 bg-white border-2 border-status-green/20 text-status-green rounded-xl hover:bg-status-green/5 transition-all group">
           <div class="flex items-center gap-3">
-            <div class="bg-status-green/10 p-2 rounded-lg">
-              <span class="material-symbols-outlined text-[20px]">payments</span>
-            </div>
-            <div class="text-left">
-              <span class="text-sm font-medium">Collect Payment</span>
-              <p class="text-xs text-on-surface-variant">Invoice & billing</p>
-            </div>
+            <div class="bg-status-green/10 p-2 rounded-lg"><span class="material-symbols-outlined text-[20px]">payments</span></div>
+            <div class="text-left"><span class="text-body-sm font-medium">Collect Payment</span><p class="text-label-sm text-on-surface-variant">Invoice & billing</p></div>
           </div>
           <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
         </button>
@@ -248,61 +256,52 @@
     </div>
 
     <!-- Priority Alert -->
-    <div class="bg-medical-blue/5 rounded-xl border border-medical-blue/20 p-5">
+    <div class="bg-primary/5 rounded-xl border border-primary/20 p-5">
       <div class="flex items-center gap-2 mb-3">
-        <span class="material-symbols-outlined text-medical-blue">emergency</span>
-        <h4 class="text-sm font-semibold text-medical-blue">Priority Alert</h4>
+        <span class="material-symbols-outlined text-primary">emergency</span>
+        <h4 class="text-body-sm font-semibold text-primary">Priority Alert</h4>
       </div>
-      <p class="text-sm text-on-surface mb-4">Dr. Sarah Jenkins requested a follow-up for Patient ID #84920 (Critical Labs).</p>
-      <button class="w-full text-sm font-medium text-white bg-medical-blue px-4 py-2 rounded-lg hover:bg-medical-blue-dark transition-colors">Review Now</button>
+      <p class="text-body-sm text-on-surface mb-4">Dr. Sarah Jenkins requested a follow-up for Patient ID #84920 (Critical Labs).</p>
+      <button class="w-full text-body-sm font-medium text-white bg-primary px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">Review Now</button>
     </div>
 
     <!-- Upcoming Appointments -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-      <h4 class="text-sm font-semibold text-on-surface mb-4">Upcoming Appointments</h4>
+    <div class="bg-white rounded-xl shadow-card border border-outline-variant p-5">
+      <h4 class="text-body-sm font-semibold text-on-surface mb-4">Upcoming Appointments</h4>
       <div class="space-y-4">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-medical-blue font-bold text-sm">JD</div>
+          <div class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-primary font-bold text-label-md">JD</div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-on-surface truncate">James Dean</p>
-            <p class="text-xs text-outline">10:30 AM - Consultation</p>
+            <p class="text-body-sm font-medium text-on-surface truncate">James Dean</p>
+            <p class="text-label-sm text-outline">10:30 AM - Consultation</p>
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-medical-blue font-bold text-sm">AL</div>
+          <div class="w-9 h-9 rounded-full bg-surface-container-low flex items-center justify-center text-primary font-bold text-label-md">AL</div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-on-surface truncate">Anna Lee</p>
-            <p class="text-xs text-outline">11:15 AM - Routine Checkup</p>
+            <p class="text-body-sm font-medium text-on-surface truncate">Anna Lee</p>
+            <p class="text-label-sm text-outline">11:15 AM - Routine Checkup</p>
           </div>
         </div>
       </div>
-      <button class="mt-4 text-sm font-medium text-medical-blue hover:underline">View Schedule</button>
+      <button class="mt-4 text-body-sm font-medium text-primary hover:underline">View Schedule</button>
     </div>
 
     <!-- Department Status -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-      <h4 class="text-xs font-medium text-outline uppercase tracking-wider mb-4">Department Status</h4>
+    <div class="bg-white rounded-xl shadow-card border border-outline-variant p-5">
+      <h4 class="text-label-md text-outline uppercase tracking-wider mb-4">Department Status</h4>
       <div class="space-y-3">
         <div class="flex items-center justify-between py-2 px-3 hover:bg-surface-container rounded-lg transition-colors">
-          <div class="flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full bg-medical-blue"></span>
-            <span class="text-sm text-on-surface">Radiology</span>
-          </div>
-          <span class="text-xs text-outline">Busy</span>
+          <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-primary"></span><span class="text-body-sm text-on-surface">Radiology</span></div>
+          <span class="text-label-sm text-outline">Busy</span>
         </div>
         <div class="flex items-center justify-between py-2 px-3 hover:bg-surface-container rounded-lg transition-colors">
-          <div class="flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full bg-status-green"></span>
-            <span class="text-sm text-on-surface">Pathology Lab</span>
-          </div>
-          <span class="text-xs text-outline">Normal</span>
+          <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-status-green"></span><span class="text-body-sm text-on-surface">Pathology Lab</span></div>
+          <span class="text-label-sm text-outline">Normal</span>
         </div>
         <div class="flex items-center justify-between py-2 px-3 hover:bg-surface-container rounded-lg transition-colors">
-          <div class="flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full bg-status-red"></span>
-            <span class="text-sm text-on-surface">Emergency Ward</span>
-          </div>
-          <span class="text-xs font-medium text-status-red">Critical</span>
+          <div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full bg-error"></span><span class="text-body-sm text-on-surface">Emergency Ward</span></div>
+          <span class="text-label-sm font-medium text-error">Critical</span>
         </div>
       </div>
     </div>

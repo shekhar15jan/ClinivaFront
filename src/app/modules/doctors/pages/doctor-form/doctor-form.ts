@@ -23,7 +23,7 @@ import { DoctorService } from '../../../../core/services/doctor.service';
         <h2 class="text-lg font-bold text-[#1E293B] mb-6">Doctor Registration</h2>
 
         <form [formGroup]="doctorForm" (ngSubmit)="onSubmit()" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="fullName" class="block text-sm font-medium text-[#475569] mb-1">Full Name</label>
               <input
@@ -50,7 +50,7 @@ import { DoctorService } from '../../../../core/services/doctor.service';
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="qualification" class="block text-sm font-medium text-[#475569] mb-1">Qualification</label>
               <input
@@ -75,7 +75,7 @@ import { DoctorService } from '../../../../core/services/doctor.service';
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="phone" class="block text-sm font-medium text-[#475569] mb-1">Phone</label>
               <input

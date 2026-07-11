@@ -1,308 +1,190 @@
-<div class="space-y-6 relative">
+<div class="space-y-4 sm:space-y-6 relative">
   <!-- Header & Actions -->
-  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <h2 class="text-2xl font-bold text-gray-900">Patients</h2>
-    <div class="flex items-center gap-3 w-full sm:w-auto">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+    <h2 class="text-headline-md text-on-surface">Patients</h2>
+    <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
       <div class="relative flex-1 sm:w-64">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <span class="material-symbols-outlined text-outline text-[20px]">search</span>
         </div>
-        <input
-          type="text"
-          class="block w-full pl-10 pr-3 py-2 border border-outline-variant rounded-lg leading-5 bg-white placeholder-outline text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue transition-all"
-          placeholder="Search patients..."
-        />
+        <input type="text" class="block w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-lg leading-5 bg-white placeholder-outline text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Search patients...">
       </div>
-      <button
-        class="flex items-center gap-2 px-3 py-2 border border-outline-variant bg-white text-on-surface-variant text-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors"
-      >
+      <button class="flex items-center gap-2 px-3 py-2 border border-outline-variant bg-white text-on-surface-variant text-body-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors">
         <span class="material-symbols-outlined text-[20px]">filter_list</span>
-        Filter
+        <span class="hidden sm:inline">Filter</span>
       </button>
-      <button
-        (click)="toggleAddModal()"
-        class="flex items-center gap-2 px-4 py-2 bg-medical-blue hover:bg-medical-blue-dark text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
-      >
+      <button (click)="toggleCsvUpload()" class="flex items-center gap-2 px-3 py-2 border border-outline-variant bg-white text-on-surface-variant text-body-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors">
+        <span class="material-symbols-outlined text-[20px]">upload_file</span>
+        <span class="hidden sm:inline">Import CSV</span>
+      </button>
+      <button (click)="toggleAddModal()" class="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-body-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95">
         <span class="material-symbols-outlined text-[20px]">add</span>
-        Add Patient
+        <span class="hidden sm:inline">Add Patient</span>
       </button>
     </div>
   </div>
 
+  @if (showCsvUpload) {
+    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
+      <p class="text-sm font-medium text-gray-700 mb-3">Upload Patients CSV</p>
+      <input #csvInput type="file" accept=".csv" (change)="onCsvFileSelected($event)" class="hidden" />
+      <div class="flex justify-center gap-3 mb-3">
+        <button (click)="csvInput.click()" class="px-4 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50">Select File</button>
+      </div>
+      @if (csvFile) {
+        <p class="mt-2 text-sm text-gray-600">{{ csvFile.name }} ({{ (csvFile.size / 1024).toFixed(1) }} KB)</p>
+        <button (click)="uploadCsv()" [disabled]="isUploading" class="mt-3 px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">{{ isUploading ? 'Uploading...' : 'Upload' }}</button>
+      }
+      @if (uploadResult) {
+        <p class="mt-3 text-sm" [class.text-green-600]="!uploadResult.includes('fail')" [class.text-red-600]="uploadResult.includes('fail')">{{ uploadResult }}</p>
+      }
+      <button (click)="toggleCsvUpload()" class="mt-3 block w-full text-sm text-gray-500 hover:text-gray-700">Cancel</button>
+    </div>
+  }
+
   <!-- Loading State -->
   @if (isLoading) {
     <div class="flex justify-center items-center py-12">
-      <svg class="animate-spin h-8 w-8 text-medical-blue" fill="none" viewBox="0 0 24 24">
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        ></circle>
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
+      <svg class="animate-spin h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
     </div>
   }
 
-  <!-- Patients Table -->
+  <!-- Patients: Desktop Table + Mobile Cards -->
   @if (!isLoading) {
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
+    <div class="bg-white rounded-xl shadow-card border border-outline-variant overflow-hidden">
+      <!-- Desktop Table -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-outline-variant">
           <thead class="bg-surface-container-low">
             <tr>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                ID
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                Name
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                Phone
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                Age/Gender
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                Last Visit
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium text-outline uppercase tracking-wider"
-              >
-                Actions
-              </th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">ID</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Phone</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Age/Gender</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Last Visit</th>
+              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-6 py-3 text-right text-label-sm text-outline uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-white divide-y divide-outline-variant">
             @for (patient of patients; track patient) {
               <tr class="hover:bg-surface-container-lowest transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-on-surface">
-                  {{ patient.patientId }}
-                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-body-sm font-medium text-on-surface">{{ patient.patientId }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div
-                      class="flex-shrink-0 h-8 w-8 rounded-full bg-medical-blue/10 flex items-center justify-center text-medical-blue font-bold text-xs"
-                    >
-                      {{ getInitials(patient.fullName) }}
-                    </div>
+                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-label-md">{{ getInitials(patient.fullName) }}</div>
                     <div class="ml-3">
-                      <a
-                        [routerLink]="['/patients', patient.id]"
-                        class="text-sm font-medium text-medical-blue hover:underline"
-                        >{{ patient.fullName }}</a
-                      >
+                      <a [routerLink]="['/patients', patient.id]" class="text-body-sm font-medium text-primary hover:underline">{{ patient.fullName }}</a>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-outline">
-                  {{ patient.phone }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-outline">
-                  {{ patient.age }} / {{ patient.gender.substring(0, 1) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-outline">
-                  {{ patient.lastVisitDate || 'N/A' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-status-green/10 text-status-green"
-                    >Active</span
-                  >
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button class="text-outline hover:text-on-surface transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">more_vert</span>
-                  </button>
+                <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">{{ patient.phone }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">{{ patient.age }} / {{ patient.gender.substring(0, 1) }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">{{ patient.lastVisitDate || 'N/A' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-green-light text-status-green">Active</span></td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
+                  <button class="text-outline hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
                 </td>
               </tr>
             }
             @if (patients.length === 0) {
-              <tr>
-                <td colspan="7" class="px-6 py-12 text-center text-outline text-sm">
-                  No patients found. Add a patient to get started.
-                </td>
-              </tr>
+              <tr><td colspan="7" class="px-6 py-12 text-center text-outline text-body-sm">No patients found. Add a patient to get started.</td></tr>
             }
           </tbody>
         </table>
       </div>
-      <!-- Pagination (Static for now) -->
-      <div
-        class="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6"
-      >
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p class="text-sm text-on-surface">
-              Showing <span class="font-medium">1</span> to
-              <span class="font-medium">{{ patients.length }}</span> of
-              <span class="font-medium">{{ patients.length }}</span> results
-            </p>
-          </div>
-          <div>
-            <nav
-              class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px"
-              aria-label="Pagination"
-            >
-              <button
-                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-white text-sm font-medium text-outline cursor-not-allowed"
-              >
-                <span class="sr-only">Previous</span>
-                <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-outline-variant bg-medical-blue text-sm font-medium text-white"
-              >
-                1
-              </button>
-              <button
-                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-white text-sm font-medium text-outline cursor-not-allowed"
-              >
-                <span class="sr-only">Next</span>
-                <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-              </button>
-            </nav>
-          </div>
+
+      <!-- Mobile Card List -->
+      <div class="md:hidden divide-y divide-outline-variant">
+        @for (patient of patients; track patient) {
+          <a [routerLink]="['/patients', patient.id]" class="flex items-center gap-3 px-4 py-3.5 active:bg-surface-container-low transition-colors">
+            <div class="flex-shrink-0 h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-label-md">
+              {{ getInitials(patient.fullName) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-body-sm font-medium text-on-surface">{{ patient.fullName }}</p>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-label-sm text-on-surface-variant font-mono">{{ patient.patientId }}</span>
+                <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+                <span class="text-label-sm text-outline">{{ patient.age }}y, {{ patient.gender.substring(0, 1) }}</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-outline text-[20px]">chevron_right</span>
+          </a>
+        }
+        @if (patients.length === 0) {
+          <div class="px-4 py-12 text-center text-outline text-body-sm">No patients found.</div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      <div class="bg-white px-4 py-3 border-t border-outline-variant flex items-center justify-between">
+        <div class="flex-1 flex items-center justify-between">
+          <p class="text-body-sm text-on-surface">
+            Showing <span class="font-medium">1</span> to <span class="font-medium">{{ patients.length }}</span> of <span class="font-medium">{{ patients.length }}</span>
+          </p>
+          <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+            <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-white text-body-sm font-medium text-outline cursor-not-allowed min-w-touch min-h-touch justify-center">
+              <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+            </button>
+            <button class="relative inline-flex items-center px-4 py-2 border border-outline-variant bg-primary text-body-sm font-medium text-white">1</button>
+            <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-white text-body-sm font-medium text-outline cursor-not-allowed min-w-touch min-h-touch justify-center">
+              <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+            </button>
+          </nav>
         </div>
       </div>
     </div>
   }
 
-  <!-- Add Patient Modal Overlay -->
+  <!-- Add Patient Modal -->
   @if (showAddModal) {
     <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
-      <div
-        class="fixed inset-0 bg-on-surface/50 transition-opacity"
-        role="presentation"
-        (click)="toggleAddModal()"
-        (keydown.enter)="toggleAddModal()"
-        (keydown.space)="toggleAddModal(); $event.preventDefault()"
-        tabindex="0"
-      ></div>
-      <div
-        class="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 z-10 transform transition-all"
-      >
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 class="text-lg font-medium text-on-surface">Add New Patient</h3>
-          <button
-            (click)="toggleAddModal()"
-            class="text-outline hover:text-on-surface focus:outline-none"
-          >
+      <div class="fixed inset-0 bg-on-surface/50 transition-opacity" role="presentation" (click)="toggleAddModal()" (keydown.enter)="toggleAddModal()" (keydown.space)="toggleAddModal(); $event.preventDefault()" tabindex="0"></div>
+      <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 z-10 transform transition-all">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+          <h3 class="text-title-md text-on-surface">Add New Patient</h3>
+          <button (click)="toggleAddModal()" class="text-outline hover:text-on-surface focus:outline-none min-w-touch min-h-touch flex items-center justify-center">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
         <form [formGroup]="addForm" (ngSubmit)="onSubmitAdd()" class="p-6">
           <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
-              <label for="patientFullName" class="block text-sm font-medium text-on-surface">Full Name</label>
-              <input
-                id="patientFullName"
-                type="text"
-                formControlName="fullName"
-                class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
-              />
+              <label for="patientFullName" class="block text-body-sm font-medium text-on-surface">Full Name</label>
+              <input id="patientFullName" type="text" formControlName="fullName" class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-body-sm">
             </div>
             <div>
-              <label for="patientDob" class="block text-sm font-medium text-on-surface">Date of Birth</label>
-              <input
-                id="patientDob"
-                type="date"
-                formControlName="dateOfBirth"
-                class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
-              />
+              <label for="patientDob" class="block text-body-sm font-medium text-on-surface">Date of Birth</label>
+              <input id="patientDob" type="date" formControlName="dateOfBirth" class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-body-sm">
             </div>
             <div>
-              <label for="patientGender" class="block text-sm font-medium text-on-surface">Gender</label>
-              <select
-                id="patientGender"
-                formControlName="gender"
-                class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm bg-white"
-              >
+              <label for="patientGender" class="block text-body-sm font-medium text-on-surface">Gender</label>
+              <select id="patientGender" formControlName="gender" class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-body-sm bg-white">
                 <option value="MALE">Male</option>
                 <option value="FEMALE">Female</option>
                 <option value="OTHER">Other</option>
               </select>
             </div>
             <div>
-              <label for="patientPhone" class="block text-sm font-medium text-on-surface">Phone</label>
-              <input
-                id="patientPhone"
-                type="tel"
-                formControlName="phone"
-                class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
-                placeholder="10 digits"
-              />
+              <label for="patientPhone" class="block text-body-sm font-medium text-on-surface">Phone</label>
+              <input id="patientPhone" type="tel" formControlName="phone" class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-body-sm" placeholder="10 digits">
             </div>
             <div>
-              <label for="patientEmail" class="block text-sm font-medium text-on-surface">Email (Optional)</label>
-              <input
-                id="patientEmail"
-                type="email"
-                formControlName="email"
-                class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
-              />
+              <label for="patientEmail" class="block text-body-sm font-medium text-on-surface">Email (Optional)</label>
+              <input id="patientEmail" type="email" formControlName="email" class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-body-sm">
             </div>
           </div>
           <div class="mt-8 flex justify-end gap-3">
-            <button
-              type="button"
-              (click)="toggleAddModal()"
-              class="px-4 py-2.5 border border-outline-variant bg-white text-sm font-medium text-on-surface-variant rounded-lg hover:bg-surface-container-high focus:outline-none transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              [disabled]="addForm.invalid || isSubmitting"
-              class="px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-medical-blue hover:bg-medical-blue-dark focus:outline-none disabled:opacity-50 flex items-center transition-all hover:shadow-md"
-            >
+            <button type="button" (click)="toggleAddModal()" class="px-4 py-2.5 border border-outline-variant bg-white text-body-sm font-medium text-on-surface-variant rounded-lg hover:bg-surface-container-high focus:outline-none transition-colors">Cancel</button>
+            <button type="submit" [disabled]="addForm.invalid || isSubmitting" class="px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-body-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none disabled:opacity-50 flex items-center transition-all hover:shadow-md">
               @if (isSubmitting) {
-                <svg
-                  class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               }
               Save Patient

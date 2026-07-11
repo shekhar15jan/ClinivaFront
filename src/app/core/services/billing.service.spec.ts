@@ -115,6 +115,22 @@ describe('BillingService', () => {
     });
   });
 
+  describe('getPatientBills', () => {
+    it('should GET patient bills with patientId param', () => {
+      const mockResponse: ApiResponse<Bill[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
+
+      service.getPatientBills('p1').subscribe((res) => {
+        expect(res.data).toEqual([]);
+      });
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${baseUrl}/patient/logged-in` && r.params.get('patientId') === 'p1',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
   describe('updateBillStatus', () => {
     it('should PUT status', () => {
       service.updateBillStatus('b1', 'PAID', 50000).subscribe();

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { PrescriptionService } from './prescription.service';
-import { Prescription, CreatePrescriptionRequest } from '../models/prescription.model';
+import { Prescription, CreatePrescriptionRequest, UpdatePrescriptionRequest } from '../models/prescription.model';
 import { ApiResponse, PagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -92,6 +92,73 @@ describe('PrescriptionService', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(request);
       req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('getDoctorPrescriptions', () => {
+    it('should GET doctor prescriptions with doctorId param', () => {
+      const mockResponse: ApiResponse<Prescription[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
+
+      service.getDoctorPrescriptions('d1').subscribe((res) => {
+        expect(res.data).toEqual([]);
+      });
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${baseUrl}/doctor/logged-in` && r.params.get('doctorId') === 'd1',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('getPatientPrescriptions', () => {
+    it('should GET patient prescriptions with patientId param', () => {
+      const mockResponse: ApiResponse<Prescription[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
+
+      service.getPatientPrescriptions('p1').subscribe((res) => {
+        expect(res.data).toEqual([]);
+      });
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${baseUrl}/patient/logged-in` && r.params.get('patientId') === 'p1',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('getByAppointment', () => {
+    it('should GET prescription by appointment id', () => {
+      service.getByAppointment('a1').subscribe();
+
+      const req = httpMock.expectOne(`${baseUrl}/appointment/a1`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('updatePrescription', () => {
+    it('should PUT to update prescription', () => {
+      const request: UpdatePrescriptionRequest = {
+        medicines: [{ medicineName: 'Aspirin', dosage: '100mg', frequency: 'OD', duration: '3 days' }],
+      };
+
+      service.updatePrescription('rx1', request).subscribe();
+
+      const req = httpMock.expectOne(`${baseUrl}/rx1`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual(request);
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('deletePrescription', () => {
+    it('should DELETE prescription by id', () => {
+      service.deletePrescription('rx1').subscribe();
+
+      const req = httpMock.expectOne(`${baseUrl}/rx1`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush({ success: true, data: undefined } as unknown as ApiResponse<unknown>);
     });
   });
 

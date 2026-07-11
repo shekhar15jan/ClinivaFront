@@ -10,6 +10,8 @@ import { ResourceUsageBarComponent } from './components/resource-usage-bar/resou
 import { ModuleUpgradePromptComponent } from './components/module-upgrade-prompt/module-upgrade-prompt.component';
 import { CsvUploadComponent } from './components/csv-upload/csv-upload.component';
 import { TrialBannerComponent } from './components/trial-banner/trial-banner.component';
+import { FabComponent } from './components/fab/fab.component';
+import { BottomSheetComponent } from './components/bottom-sheet/bottom-sheet.component';
 
 const COMPONENTS = [
   ToastComponent,
@@ -22,6 +24,8 @@ const COMPONENTS = [
   ModuleUpgradePromptComponent,
   CsvUploadComponent,
   TrialBannerComponent,
+  FabComponent,
+  BottomSheetComponent,
 ];
 
 @NgModule({

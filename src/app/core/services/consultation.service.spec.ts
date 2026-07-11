@@ -76,6 +76,30 @@ describe('ConsultationService', () => {
     });
   });
 
+  describe('getById', () => {
+    it('should GET consultation by id', () => {
+      service.getById('c1').subscribe();
+
+      const req = httpMock.expectOne(`${baseUrl}/c1`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('getPatientHistory', () => {
+    it('should GET patient history by patientId', () => {
+      const mockResponse: ApiResponse<Consultation[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
+
+      service.getPatientHistory('p1').subscribe((res) => {
+        expect(res.data).toEqual([]);
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/patient/p1`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
   describe('recordVitals', () => {
     it('should PUT vitals for appointment', () => {
       const vitals: Vitals = { bloodPressureSystolic: 120, bloodPressureDiastolic: 80, temperature: 98.6 };

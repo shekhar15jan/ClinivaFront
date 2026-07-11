@@ -135,4 +135,17 @@ describe('MedicineService', () => {
       req.flush({ success: false }, { status: 404, statusText: 'Not Found' });
     });
   });
+
+  describe('uploadMedicines', () => {
+    it('should POST FormData to upload', () => {
+      const file = new File(['csv content'], 'medicines.csv', { type: 'text/csv' });
+
+      service.uploadMedicines(file).subscribe();
+
+      const req = httpMock.expectOne(`${baseUrl}/upload`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toBeInstanceOf(FormData);
+      req.flush({ success: true, data: { imported: 10, errors: [] } } as unknown as ApiResponse<unknown>);
+    });
+  });
 });

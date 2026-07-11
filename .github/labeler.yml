@@ -1,0 +1,67 @@
+core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/core/**/*
+
+auth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/auth/**/*
+
+layout:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/layout/**/*
+
+shared:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/shared/**/*
+
+modules:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/modules/**/*
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.spec.ts"
+          - "**/*.cy.ts"
+          - cypress/**/*
+          - vitest.config.ts
+          - cypress.config.ts
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**/*
+          - Dockerfile
+          - nginx.conf
+          - docker-compose*.yml
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - package.json
+          - package-lock.json
+
+styles:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.scss"
+          - "**/*.css"
+          - tailwind.config.js
+          - postcss.config.js
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - docs/**/*
+
+assets:
+  - changed-files:
+      - any-glob-to-any-file:
+          - public/**/*
+          - src/assets/**/*

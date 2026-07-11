@@ -13,6 +13,7 @@
       <h1 class="text-2xl font-bold text-[#1E293B]">Contact Messages</h1>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead>
           <tr class="bg-[#F8FAFC] text-left">
@@ -21,6 +22,7 @@
             <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Subject</th>
             <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Status</th>
             <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Date</th>
+            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -33,10 +35,68 @@
                 <app-status-badge [status]="msg.status"></app-status-badge>
               </td>
               <td class="px-4 py-3 text-sm text-[#64748B]">{{ msg.createdAt | date:'mediumDate' }}</td>
+              <td class="px-4 py-3">
+                <button (click)="selectMessage(msg)" class="text-sm text-[#0052CC] hover:underline">Reply</button>
+              </td>
             </tr>
           }
         </tbody>
       </table>
+      </div>
+
+      <div class="md:hidden divide-y divide-outline-variant">
+        @for (msg of messages; track msg.id) {
+          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface">
+            <div class="flex items-center justify-between">
+              <span class="text-title-md font-semibold text-on-surface">{{ msg.name }}</span>
+              <app-status-badge [status]="msg.status"></app-status-badge>
+            </div>
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base">mail</span>
+                <span>{{ msg.email }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base">subject</span>
+                <span>{{ msg.subject || '-' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                <span class="material-symbols-outlined text-base">calendar_today</span>
+                <span>{{ msg.createdAt | date:'mediumDate' }}</span>
+              </div>
+            </div>
+            <button (click)="selectMessage(msg)" class="text-sm text-[#0052CC] hover:underline">Reply</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (selectedMessage) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="closeDetail()" (keydown.escape)="closeDetail()" tabindex="0" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900">Reply to {{ selectedMessage.name }}</h3>
+        <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+        <p class="text-xs text-gray-500">{{ selectedMessage.email }}</p>
+        <p class="text-sm font-medium mt-1">{{ selectedMessage.subject || 'No Subject' }}</p>
+        <p class="text-sm text-gray-700 mt-2">{{ selectedMessage.message }}</p>
+      </div>
+      <div class="mb-4">
+        <label for="replyText" class="block text-sm font-medium text-gray-700 mb-1">Your Reply</label>
+        <textarea id="replyText" [(ngModel)]="replyText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Type your reply..."></textarea>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button (click)="closeDetail()" class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50">Cancel</button>
+        <button (click)="sendReply()" [disabled]="isReplying || !replyText.trim()" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+          {{ isReplying ? 'Sending...' : 'Send Reply' }}
+        </button>
+      </div>
     </div>
   </div>
 }

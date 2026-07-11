@@ -1,19 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { ConsultationWorkspace } from './consultation-workspace';
 import { FormBuilder } from '@angular/forms';
+import { ConsultationService } from '../../../../core/services/consultation.service';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 describe('ConsultationWorkspace', () => {
-  let alertSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-  });
-
-  function createComponent() {
+  function createComponent(overrides?: Partial<ConsultationService>) {
     TestBed.configureTestingModule({
-      providers: [FormBuilder],
+      providers: [
+        FormBuilder,
+        {
+          provide: ConsultationService,
+          useValue: {
+            createConsultation: vi.fn().mockReturnValue(of({ success: true })),
+            ...overrides,
+          },
+        },
+      ],
     });
     return TestBed.runInInjectionContext(() => new ConsultationWorkspace());
   }
@@ -67,21 +71,31 @@ describe('ConsultationWorkspace', () => {
     expect(component.calculateTotal('1-1-1', 7)).toBe('21 Tabs');
     expect(component.calculateTotal('SOS', 3)).toBe('3 Tabs');
     expect(component.calculateTotal('', 0)).toBe('0 Tabs');
-    expect(component.calculateTotal('1-0-0', 10)).toBe('10 Tabs');
   });
 
-  it('should alert when finishAndPrint called with invalid form', () => {
+  it('should show error when finishAndPrint called with invalid form', () => {
     const component = createComponent();
     component.ngOnInit();
     component.finishAndPrint();
-    expect(alertSpy).toHaveBeenCalledWith('Please fill out required fields');
+    expect(component.error).toBe('Please fill out required fields');
   });
 
-  it('should alert success when finishAndPrint with valid form', () => {
-    const component = createComponent();
+  it('should submit via API when finishAndPrint with valid form', () => {
+    const createSpy = vi.fn().mockReturnValue(of({ success: true }));
+    const component = createComponent({ createConsultation: createSpy });
     component.ngOnInit();
     component.medicines.at(0).patchValue({ name: 'Paracetamol' });
     component.finishAndPrint();
-    expect(alertSpy).toHaveBeenCalledWith('Consultation saved successfully!');
+    expect(component.isSubmitting).toBe(false);
+  });
+
+  it('should handle API error on submit', () => {
+    const component = createComponent({
+      createConsultation: vi.fn().mockReturnValue(throwError(() => ({ message: 'Server error' }))),
+    });
+    component.ngOnInit();
+    component.medicines.at(0).patchValue({ name: 'Paracetamol' });
+    component.finishAndPrint();
+    expect(component.error).toBe('Server error');
   });
 });

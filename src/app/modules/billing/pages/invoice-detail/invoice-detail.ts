@@ -1,12 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { BillingService } from '../../../../core/services/billing.service';
+import { Bill } from '../../../../core/models/billing.model';
 import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
-
-interface LineItem {
-  id: string;
-  description: string;
-  quantity: number;
-  rate: number;
-}
 
 @Component({
   selector: 'app-invoice-detail',
@@ -14,47 +10,85 @@ interface LineItem {
   styleUrl: './invoice-detail.scss',
   imports: [NgClass, DecimalPipe, DatePipe],
 })
-export class InvoiceDetail {
-  invoiceNumber = 'INV-2023-001';
-  date = new Date().toISOString();
+export class InvoiceDetail implements OnInit {
+  private route = inject(ActivatedRoute);
+  private billingService = inject(BillingService);
 
-  patient = {
-    name: 'Rahul Sharma',
-    uhid: '#P-00123',
-    phone: '+91 9876543210',
-  };
+  bill: Bill | null = null;
+  isLoading = false;
+  isDownloading = false;
+  isCollecting = false;
 
-  status: 'Pending' | 'Paid' = 'Pending';
-  taxRate = 0.05;
-
-  lineItems: LineItem[] = [
-    { id: '1', description: 'General Consultation - Dr. Smith', quantity: 1, rate: 500 },
-    { id: '2', description: 'Complete Blood Count (CBC)', quantity: 1, rate: 350 },
-  ];
-
-  get subtotal(): number {
-    return this.lineItems.reduce((sum, item) => sum + item.quantity * item.rate, 0);
+  get id(): string | null {
+    return this.route.snapshot.paramMap.get('id');
   }
 
-  get tax(): number {
-    return this.subtotal * this.taxRate;
+  get status(): string {
+    return this.bill?.status || 'UNPAID';
   }
 
   get total(): number {
-    return this.subtotal + this.tax;
+    return (this.bill?.totalInPaisa || 0) / 100;
   }
 
-  collectPayment(): void {
-    if (this.status === 'Paid') return;
-
-    // In real app, this opens a modal or redirects to gateway
-    if (confirm(`Confirm collection of ₹${this.total.toFixed(2)}?`)) {
-      this.status = 'Paid';
-      alert('Payment collected successfully!');
+  ngOnInit() {
+    if (this.id) {
+      this.loadBill(this.id);
     }
   }
 
-  printInvoice(): void {
+  loadBill(id: string) {
+    this.isLoading = true;
+    this.billingService.getBillById(id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.bill = res.data;
+        }
+        this.isLoading = false;
+      },
+      error: () => {
+        this.isLoading = false;
+      },
+    });
+  }
+
+  collectPayment() {
+    if (this.status === 'PAID' || !this.id) return;
+    this.isCollecting = true;
+    this.billingService.updateBillStatus(this.id, 'PAID').subscribe({
+      next: () => {
+        if (this.bill) {
+          this.bill = { ...this.bill, status: 'PAID' };
+        }
+        this.isCollecting = false;
+      },
+      error: () => {
+        this.isCollecting = false;
+      },
+    });
+  }
+
+  printInvoice() {
     window.print();
+  }
+
+  downloadPdf() {
+    if (!this.id || this.isDownloading) return;
+    this.isDownloading = true;
+    this.billingService.downloadPdf(this.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `invoice-${this.id}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.isDownloading = false;
+      },
+      error: (err) => {
+        console.error('Invoice PDF download failed:', err);
+        this.isDownloading = false;
+      },
+    });
   }
 }

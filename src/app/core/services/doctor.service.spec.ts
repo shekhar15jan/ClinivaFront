@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { DoctorService } from './doctor.service';
-import { Doctor, DoctorWithSlots } from '../models/doctor.model';
+import { Doctor, DoctorWithSlots, DoctorAvailability, UpdateAvailabilityRequest } from '../models/doctor.model';
 import { ApiResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -115,6 +115,41 @@ describe('DoctorService', () => {
 
       const req = httpMock.expectOne(`${apiUrl}/d1`);
       req.flush({ success: false, message: 'Cannot delete' }, { status: 409, statusText: 'Conflict' });
+    });
+  });
+
+  describe('getAvailability', () => {
+    it('should GET availability for doctor', () => {
+      const mockResponse: ApiResponse<DoctorAvailability[]> = {
+        success: true,
+        data: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00', isAvailable: true }],
+        message: '',
+        timestamp: '',
+        requestId: '',
+      };
+
+      service.getAvailability('d1').subscribe((res) => {
+        expect(res.data[0].dayOfWeek).toBe('MONDAY');
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/d1/availability`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('setAvailability', () => {
+    it('should PUT availability for doctor', () => {
+      const availability: UpdateAvailabilityRequest = {
+        availabilities: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00', isAvailable: true }],
+      };
+
+      service.setAvailability('d1', availability).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/d1/availability`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual(availability);
+      req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);
     });
   });
 });

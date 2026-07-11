@@ -12,7 +12,7 @@ import { SharedModule } from '../../../../shared/shared-module';
         <h1 class="text-2xl font-semibold text-gray-900">Audit Logs</h1>
       </div>
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div class="flex gap-4 mb-4">
+        <div class="flex flex-wrap gap-4 mb-4">
           <input
             type="date"
             class="px-3 py-2 text-sm border border-gray-300 rounded-lg"

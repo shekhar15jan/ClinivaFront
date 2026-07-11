@@ -1,27 +1,40 @@
-<div class="h-full px-6 flex items-center justify-between bg-surface border-b border-outline-variant">
-  <!-- Search -->
-  <div class="flex-1 max-w-lg">
-    <div class="relative group">
+<div class="h-full px-4 sm:px-6 flex items-center justify-between bg-surface/80 backdrop-blur-md border-b border-outline-variant">
+  <!-- Left: Hamburger + Search -->
+  <div class="flex items-center gap-3 flex-1">
+    <button
+      (click)="menuClick.emit()"
+      class="md:hidden p-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors min-h-touch min-w-touch flex items-center justify-center"
+      aria-label="Open menu"
+    >
+      <span class="material-symbols-outlined text-[24px]">menu</span>
+    </button>
+
+    <div class="relative flex-1 max-w-lg hidden sm:block">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <span class="material-symbols-outlined text-outline group-focus-within:text-medical-blue transition-colors">search</span>
+        <span class="material-symbols-outlined text-outline group-focus-within:text-primary transition-colors">search</span>
       </div>
-      <input type="text" class="block w-full pl-10 pr-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue transition-all" placeholder="Search patients, phone numbers...">
+      <input type="text" class="block w-full pl-10 pr-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg text-sm text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Search patients, phone numbers...">
     </div>
   </div>
 
   <!-- Right Actions -->
-  <div class="flex items-center gap-4 ml-4">
-    <button class="hidden sm:flex items-center gap-2 px-4 py-2 bg-medical-blue hover:bg-medical-blue-dark text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95">
+  <div class="flex items-center gap-2 sm:gap-4 ml-2 sm:ml-4">
+    <!-- Mobile search icon -->
+    <button class="sm:hidden p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+      <span class="material-symbols-outlined text-[24px]">search</span>
+    </button>
+
+    <button class="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95">
       <span class="material-symbols-outlined text-[20px]">add</span>
       + New Appointment
     </button>
 
     <button class="relative p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
-      <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-status-red ring-2 ring-surface"></span>
+      <span class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-error ring-2 ring-surface"></span>
       <span class="material-symbols-outlined text-[24px]">notifications</span>
     </button>
 
-    <button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
+    <button class="hidden sm:block p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
       <span class="material-symbols-outlined text-[24px]">help</span>
     </button>
   </div>

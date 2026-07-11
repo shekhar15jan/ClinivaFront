@@ -16,7 +16,7 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       exclude: [
         'src/**/*.spec.ts',
-        'src/**/*.cy.ts',
+        'e2e/**',
         'src/environments/**',
         'src/main.ts',
         'src/main.server.ts',

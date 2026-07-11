@@ -141,4 +141,43 @@ describe('PatientService', () => {
       req.flush(mockResponse);
     });
   });
+
+  describe('searchPatients', () => {
+    it('should GET search with q param', () => {
+      const mockResponse: ApiResponse<Patient[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
+
+      service.searchPatients('john').subscribe((res) => {
+        expect(res.data).toEqual([]);
+      });
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${apiUrl}/search` && r.params.get('q') === 'john',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('uploadPatients', () => {
+    it('should POST FormData to upload', () => {
+      const file = new File(['csv content'], 'patients.csv', { type: 'text/csv' });
+
+      service.uploadPatients(file).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/upload`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toBeInstanceOf(FormData);
+      req.flush({ success: true, data: { imported: 5, errors: [] } } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('deletePatient', () => {
+    it('should DELETE patient by id', () => {
+      service.deletePatient('p1').subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/p1`);
+      expect(req.request.method).toBe('DELETE');
+      req.flush({ success: true, data: undefined } as unknown as ApiResponse<unknown>);
+    });
+  });
 });

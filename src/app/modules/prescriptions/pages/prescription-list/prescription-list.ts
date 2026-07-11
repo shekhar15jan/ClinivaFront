@@ -26,6 +26,7 @@ import { DatePipe } from '@angular/common';
           </div>
         </div>
 
+        <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="bg-[#F8FAFC] text-left">
@@ -70,6 +71,45 @@ import { DatePipe } from '@angular/common';
             }
           </tbody>
         </table>
+        </div>
+
+        <div class="md:hidden divide-y divide-outline-variant">
+          @for (rx of prescriptions; track rx) {
+            <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface">
+              <div class="flex items-center justify-between">
+                <span class="text-title-md font-semibold text-on-surface">{{ rx.patientName }}</span>
+                <span class="text-label-sm font-mono text-on-surface-variant">#{{ rx.id.substring(0, 8) }}</span>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                  <span class="material-symbols-outlined text-base">stethoscope</span>
+                  <span>{{ rx.doctorName }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                  <span class="material-symbols-outlined text-base">medication</span>
+                  <span>{{ rx.medicines.length }} medicine(s)</span>
+                </div>
+                <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+                  <span class="material-symbols-outlined text-base">calendar_today</span>
+                  <span>{{ rx.createdAt | date: 'mediumDate' }}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 pt-1">
+                <button
+                  [routerLink]="['/prescriptions', rx.id]"
+                  class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-white bg-primary rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-sm">visibility</span> View
+                </button>
+                <button
+                  class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-sm">download</span> PDF
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     </div>
   `,

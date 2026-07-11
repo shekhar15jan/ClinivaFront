@@ -23,6 +23,10 @@ export class PatientList implements OnInit {
   patients: Patient[] = [];
   isLoading = false;
   showAddModal = false;
+  showCsvUpload = false;
+  csvFile: File | null = null;
+  isUploading = false;
+  uploadResult: string | null = null;
   addForm: FormGroup;
   isSubmitting = false;
 
@@ -56,12 +60,7 @@ export class PatientList implements OnInit {
   }
 
   getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    return name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
   toggleAddModal() {
@@ -71,21 +70,47 @@ export class PatientList implements OnInit {
     }
   }
 
+  toggleCsvUpload() {
+    this.showCsvUpload = !this.showCsvUpload;
+    this.csvFile = null;
+    this.uploadResult = null;
+  }
+
+  onCsvFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.csvFile = input.files[0];
+      this.uploadResult = null;
+    }
+  }
+
+  uploadCsv() {
+    if (!this.csvFile) return;
+    this.isUploading = true;
+    this.uploadResult = null;
+    this.patientService.uploadPatients(this.csvFile).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.uploadResult = `Imported ${res.data?.imported || 0} patients`;
+          this.showCsvUpload = false;
+          this.loadPatients();
+        }
+        this.isUploading = false;
+      },
+      error: (err) => {
+        this.uploadResult = err?.message || 'Upload failed';
+        this.isUploading = false;
+      },
+    });
+  }
+
   onSubmitAdd() {
     if (this.addForm.invalid) return;
-
     this.isSubmitting = true;
     const formVal = this.addForm.value;
-
-    // calculate age mock
     const birthYear = new Date(formVal.dateOfBirth).getFullYear();
     const age = new Date().getFullYear() - birthYear;
-
-    const newPatient: Partial<Patient> = {
-      ...formVal,
-      age,
-    };
-
+    const newPatient: Partial<Patient> = { ...formVal, age };
     this.patientService.createPatient(newPatient).subscribe({
       next: () => {
         this.isSubmitting = false;

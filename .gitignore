@@ -45,3 +45,7 @@ scripts/deploy-config.ps1
 # System files
 .DS_Store
 Thumbs.db
+
+# Playwright
+/playwright-report/
+/test-results/

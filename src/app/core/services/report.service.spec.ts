@@ -117,4 +117,44 @@ describe('ReportService', () => {
       req.flush({ success: false }, { status: 500, statusText: 'Server Error' });
     });
   });
+
+  describe('getAppointmentsPerMonth', () => {
+    it('should GET appointments per month', () => {
+      const mockResponse: ApiResponse<AppointmentTrend[]> = {
+        success: true,
+        data: [{ month: '2024-06', count: 120 }],
+        message: '',
+        timestamp: '',
+        requestId: '',
+      };
+
+      service.getAppointmentsPerMonth().subscribe((res) => {
+        expect(res.data[0].count).toBe(120);
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/appointments-per-month`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('getBillsStatus', () => {
+    it('should GET bills status', () => {
+      const mockResponse: ApiResponse<DashboardStats> = {
+        success: true,
+        data: { totalPatients: 0, todayAppointments: 0, pendingBills: 3, totalRevenueInPaisa: 0, activeDoctors: 0 },
+        message: '',
+        timestamp: '',
+        requestId: '',
+      };
+
+      service.getBillsStatus().subscribe((res) => {
+        expect(res.data.pendingBills).toBe(3);
+      });
+
+      const req = httpMock.expectOne(`${baseUrl}/bills-status`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
 });

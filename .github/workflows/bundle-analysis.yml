@@ -1,0 +1,91 @@
+name: Bundle Size Analysis
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  bundle-size:
+    name: Analyze Bundle Size
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for analysis
+        run: npm run build -- --configuration production --stats-json
+
+      - name: Analyze bundle
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          BROWSER_DIR="dist/ClinivaFront/browser"
+
+          INITIAL_FILES=$(find $BROWSER_DIR -name "*.js" | grep -v "chunk-" | sort)
+          LAZY_FILES=$(find $BROWSER_DIR -name "chunk-*.js" | sort)
+
+          echo "### Initial Chunks" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          for f in $INITIAL_FILES; do
+            NAME=$(basename "$f")
+            SIZE=$(stat --format=%s "$f" 2>/dev/null || echo 0)
+            SIZE_KB=$(echo "scale=1; $SIZE / 1024" | bc)
+            echo "| $NAME | ${SIZE_KB} KB |" >> $GITHUB_STEP_SUMMARY
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### All Lazy Chunks" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          for f in $LAZY_FILES; do
+            NAME=$(basename "$f")
+            SIZE=$(stat --format=%s "$f" 2>/dev/null || echo 0)
+            SIZE_KB=$(echo "scale=1; $SIZE / 1024" | bc)
+            echo "| $NAME | ${SIZE_KB} KB |" >> $GITHUB_STEP_SUMMARY
+          done
+
+          TOTAL=$(du -sk $BROWSER_DIR | cut -f1)
+          TOTAL_KB=$(echo "scale=1; $TOTAL" | bc)
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Totals" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Total size (disk) | ${TOTAL_KB} KB |" >> $GITHUB_STEP_SUMMARY
+
+          CSS_SIZE=$(du -sk $BROWSER_DIR/*.css 2>/dev/null | awk '{s+=$1} END {print s}')
+          echo "| CSS | ${CSS_SIZE:-0} KB |" >> $GITHUB_STEP_SUMMARY
+
+          JS_COUNT=$(find $BROWSER_DIR -name "*.js" | wc -l)
+          echo "| JS chunk count | $JS_COUNT |" >> $GITHUB_STEP_SUMMARY
+
+  budget-check:
+    name: Budget Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build with budget check
+        run: npm run build -- --configuration production

@@ -19,7 +19,7 @@ import { Doctor } from '../../../../core/models/doctor.model';
 
       @if (!isLoading && doctor) {
         <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <div class="flex items-start gap-5">
+          <div class="flex flex-col sm:flex-row items-start gap-4">
             <div
               class="w-16 h-16 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#0052CC] text-2xl font-bold"
             >

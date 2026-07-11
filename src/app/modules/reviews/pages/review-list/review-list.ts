@@ -1,14 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ReviewService } from '../../../core/services/review.service';
-import { ReviewResponse } from '../../../core/models/review.model';
-import { SharedModule } from '../../../shared/shared-module';
+import { ReviewService } from '../../../../core/services/review.service';
+import { ReviewResponse } from '../../../../core/models/review.model';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-review-list',
   templateUrl: './review-list.html',
   styleUrl: './review-list.scss',
   standalone: true,
-  imports: [SharedModule],
+  imports: [EmptyStateComponent, DatePipe],
 })
 export class ReviewList implements OnInit {
   private reviewService = inject(ReviewService);

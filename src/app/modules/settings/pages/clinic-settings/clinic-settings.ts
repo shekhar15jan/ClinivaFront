@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
       <div class="max-w-3xl space-y-6">
         <div class="bg-white rounded-xl border border-gray-200 p-6">
           <h2 class="text-lg font-bold text-[#1E293B] mb-4">General Information</h2>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="col-span-2">
               <label for="settingsClinicName" class="block text-sm font-medium text-[#475569] mb-1">Clinic Name</label>
               <input
@@ -53,7 +53,7 @@ import { FormsModule } from '@angular/forms';
 
         <div class="bg-white rounded-xl border border-gray-200 p-6">
           <h2 class="text-lg font-bold text-[#1E293B] mb-4">Configuration</h2>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="settingsPatientIdPrefix" class="block text-sm font-medium text-[#475569] mb-1">Patient ID Prefix</label>
               <input

@@ -5,6 +5,13 @@ export interface Breadcrumb {
   route?: string;
 }
 
+export interface FabConfig {
+  icon: string;
+  label: string;
+  route?: string;
+  action?: () => void;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -13,12 +20,16 @@ export class LayoutStore {
   private sidebarCollapsedSignal = signal(false);
   private breadcrumbsSignal = signal<Breadcrumb[]>([]);
   private notificationsSignal = signal<{ id: string; message: string; read: boolean; timestamp: string }[]>([]);
+  private mobileDrawerOpenSignal = signal(false);
+  private fabConfigSignal = signal<FabConfig | null>(null);
 
   readonly isLoading = this.loadingSignal.asReadonly();
   readonly isSidebarCollapsed = this.sidebarCollapsedSignal.asReadonly();
   readonly breadcrumbs = this.breadcrumbsSignal.asReadonly();
   readonly notifications = this.notificationsSignal.asReadonly();
   readonly unreadCount = signal(0);
+  readonly mobileDrawerOpen = this.mobileDrawerOpenSignal.asReadonly();
+  readonly fabConfig = this.fabConfigSignal.asReadonly();
 
   setLoading(loading: boolean): void {
     this.loadingSignal.set(loading);
@@ -30,6 +41,18 @@ export class LayoutStore {
 
   setSidebarCollapsed(collapsed: boolean): void {
     this.sidebarCollapsedSignal.set(collapsed);
+  }
+
+  toggleMobileDrawer(): void {
+    this.mobileDrawerOpenSignal.set(!this.mobileDrawerOpenSignal());
+  }
+
+  setMobileDrawerOpen(open: boolean): void {
+    this.mobileDrawerOpenSignal.set(open);
+  }
+
+  setFabConfig(config: FabConfig | null): void {
+    this.fabConfigSignal.set(config);
   }
 
   setBreadcrumbs(breadcrumbs: Breadcrumb[]): void {

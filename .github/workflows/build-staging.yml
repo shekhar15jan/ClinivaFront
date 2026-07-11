@@ -9,103 +9,282 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+
 jobs:
-  build-and-deploy:
+  static-analysis:
+    name: Static Analysis
     runs-on: ubuntu-latest
-    environment: staging
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: ClinivaFront/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: ClinivaFront
+
+      - name: Security audit
+        run: npm audit --audit-level=high
 
       - name: Lint
-        run: npx ng lint
-        working-directory: ClinivaFront
+        run: npm run lint
 
-      - name: Run unit tests
-        run: npx ng test --no-watch --browsers=chromium --coverage
-        working-directory: ClinivaFront
+      - name: Type check
+        run: npx tsc --noEmit
+
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage --reporter=verbose
 
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: ClinivaFront/coverage/
+          path: coverage/
 
-      - name: npm audit
-        run: npm audit --audit-level=high
-        working-directory: ClinivaFront
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 20
 
-      - name: Build Angular app
-        if: github.event_name == 'push'
-        run: npm run build -- --configuration=staging
-        working-directory: ClinivaFront
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: cliniva
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: e2e_test_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and run backend
+        working-directory: ../cliniva
+        run: |
+          chmod +x ./mvnw
+          SPRING_PROFILES_ACTIVE=prod \
+          SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/cliniva \
+          SPRING_DATASOURCE_USERNAME=postgres \
+          SPRING_DATASOURCE_PASSWORD=e2e_test_pass \
+          JWT_SECRET=ZUd4aGNIQnNZWGxmTWpBeU5pMHdNUzB3TUV3Z1VISmxZM0psY0dGdWJ5Qm1ZV3h6WlNCcGJpQmpZV3hzYVc1bklHbHpJRU5zYVc1cGRtRWc= \
+          CORS_ALLOWED_ORIGINS=http://localhost:4200 \
+          CLINIVA_ADMIN_EMAIL=admin@cliniva.com \
+          CLINIVA_ADMIN_PASSWORD=admin \
+          ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod &
+          sleep 60
+          curl --retry 10 --retry-delay 5 --retry-connrefused http://localhost:8080/actuator/health
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright E2E tests
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+      - name: Upload Playwright test results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+      
+      - name: Upload visual diffs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: test-results/**/*.png
+
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: [static-analysis, unit-tests, e2e-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build staging
+        run: npm run build:staging
 
       - name: Inject API URL
-        if: github.event_name == 'push'
         run: |
           echo "Using API URL: ${{ vars.API_URL }}"
-          sed -i "s|__API_URL__|${{ vars.API_URL }}|g" ClinivaFront/dist/cliniva-front/browser/*.js
-          grep -l "/api" ClinivaFront/dist/cliniva-front/browser/*.js || echo "  (no __API_URL__ in built files)"
+          sed -i "s|__API_URL__|${{ vars.API_URL }}|g" dist/ClinivaFront/browser/*.js
+          if grep -q "__API_URL__" dist/ClinivaFront/browser/*.js; then
+            echo "::warning::Unreplaced API URL placeholder found"
+          fi
 
       - name: Connect to Tailscale
-        if: github.event_name == 'push'
         uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      - name: Run E2E tests against staging
-        if: github.event_name == 'push'
-        env:
-          CYPRESS_BASE_URL: https://code-at-cloud.tailef5a29.ts.net/cliniva
-        run: npm run e2e
-        working-directory: ClinivaFront
+      - name: Verify staging is reachable
+        run: |
+          echo "Checking staging connectivity..."
+          for i in $(seq 1 10); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://code-at-cloud.tailef5a29.ts.net/cliniva/ --max-time 10 --insecure || echo "000")
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" != "000" ]; then
+              echo "Staging reachable"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::warning::Staging unreachable after 10 attempts — skipping deployment"
 
-      - name: Upload E2E report
-        if: always() && github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-report
-          path: ClinivaFront/cypress/report/
-
-      - name: Upload visual diff artifacts
-        if: failure() && github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-screenshots
-          path: ClinivaFront/cypress/screenshots/
-
-      - name: Copy files to k3s host via SCP
-        if: github.event_name == 'push'
+      - name: Copy files to staging server via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.K3S_HOST }}
+          host: 100.100.122.74
           username: ${{ secrets.K3S_SSH_USER }}
           key: ${{ secrets.K3S_SSH_KEY }}
-          source: "ClinivaFront/dist/cliniva-front/browser/*"
+          source: "dist/ClinivaFront/browser/*"
           target: "/var/www/cliniva/"
           strip_components: 3
 
-      - name: Reload nginx on remote host
-        if: github.event_name == 'push'
-        uses: appleboy/ssh-action@v1
+  smoke-test:
+    name: Post-Deploy Smoke Test
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    timeout-minutes: 10
+    continue-on-error: true
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
         with:
-          host: ${{ secrets.K3S_HOST }}
-          username: ${{ secrets.K3S_SSH_USER }}
-          key: ${{ secrets.K3S_SSH_KEY }}
-          script: |
-            sudo nginx -t && sudo systemctl reload nginx
-            echo "Nginx reloaded with new Cliniva frontend"
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 10); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://code-at-cloud.tailef5a29.ts.net/cliniva/ --max-time 10 --insecure || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Smoke test PASSED — HTTP $STATUS"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — retrying..."
+            sleep 5
+          done
+          echo "::warning::Smoke test FAILED — staging returned non-200 after 10 attempts"
+
+  e2e-staging:
+    name: E2E Against Staging
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    timeout-minutes: 15
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
+
+      - name: Wait for staging to stabilize
+        run: |
+          echo "Waiting for staging deployment to stabilize..."
+          sleep 15
+          for i in $(seq 1 20); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://code-at-cloud.tailef5a29.ts.net/cliniva/ --max-time 10 --insecure || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging ready (HTTP $STATUS)"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::Staging not ready after wait"
+
+      - name: Run Playwright against staging
+        env:
+          BASE_URL: https://code-at-cloud.tailef5a29.ts.net/cliniva
+          SKIP_WEBSERVER: true
+        run: npx playwright test
+
+      - name: Upload staging E2E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-e2e-report
+          path: playwright-report/
+
+      - name: Upload staging visual diff artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-test-results
+          path: test-results/

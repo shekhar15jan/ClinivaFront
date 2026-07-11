@@ -86,6 +86,10 @@ const routes: Routes = [
           { path: 'health-packages', loadChildren: () => import('./modules/health-packages/health-packages.module').then(m => m.HealthPackagesModule) },
           { path: 'contacts', loadChildren: () => import('./modules/contacts/contacts.module').then(m => m.ContactsModule) },
           { path: 'reviews', loadChildren: () => import('./modules/reviews/reviews.module').then(m => m.ReviewsModule) },
+          {
+            path: 'patient',
+            loadChildren: () => import('./modules/patient-portal/patient-portal.module').then(m => m.PatientPortalModule)
+          },
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
         ]
       }

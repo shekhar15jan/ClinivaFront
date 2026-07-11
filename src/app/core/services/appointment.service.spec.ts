@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AppointmentService } from './appointment.service';
-import { Appointment, CreateAppointmentRequest } from '../models/appointment.model';
+import { Appointment, CreateAppointmentRequest, UpdateAppointmentRequest } from '../models/appointment.model';
 import { ApiResponse, PagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -113,6 +113,68 @@ describe('AppointmentService', () => {
       const req = httpMock.expectOne(`${apiUrl}/a1`);
       expect(req.request.method).toBe('DELETE');
       expect(req.request.body).toBeNull();
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('rejectAppointment', () => {
+    it('should PUT to reject', () => {
+      service.rejectAppointment('a1').subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/a1/reject`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual({});
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('getDoctorAppointments', () => {
+    it('should GET doctor appointments with doctorId param', () => {
+      service.getDoctorAppointments('d1').subscribe();
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${apiUrl}/doctor/logged-in` && r.params.get('doctorId') === 'd1',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('getPatientAppointments', () => {
+    it('should GET patient appointments with patientId param', () => {
+      service.getPatientAppointments('p1').subscribe();
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${apiUrl}/patient/logged-in` && r.params.get('patientId') === 'p1',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('getAvailableSlots', () => {
+    it('should GET available slots with doctorId and date params', () => {
+      service.getAvailableSlots('d1', '2024-06-20').subscribe();
+
+      const req = httpMock.expectOne(
+        (r) => r.url === `${apiUrl}/slots`
+          && r.params.get('doctorId') === 'd1'
+          && r.params.get('date') === '2024-06-20',
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);
+    });
+  });
+
+  describe('updateAppointment', () => {
+    it('should PUT to update appointment', () => {
+      const update: UpdateAppointmentRequest = { status: 'CONFIRMED' };
+
+      service.updateAppointment('a1', update).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/a1`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual(update);
       req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
     });
   });

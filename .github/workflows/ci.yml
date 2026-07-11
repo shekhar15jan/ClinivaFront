@@ -6,8 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  static-analysis:
+    name: Static Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit
+      - name: Security audit
         run: npm audit --audit-level=high
 
       - name: Lint
@@ -30,11 +35,182 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Unit tests
-        run: npx vitest run --coverage
+  unit-tests:
+    name: Unit, Integration, A11y & Snapshot Tests
+    runs-on: ubuntu-latest
 
-      - name: Build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npx vitest run --coverage --reporter=verbose
+
+      - name: Check coverage threshold
+        run: |
+          STATEMENTS=$(jq '.total.statements.pct' coverage/coverage-summary.json)
+          BRANCHES=$(jq '.total.branches.pct' coverage/coverage-summary.json)
+          FUNCTIONS=$(jq '.total.functions.pct' coverage/coverage-summary.json)
+          LINES=$(jq '.total.lines.pct' coverage/coverage-summary.json)
+          echo "Coverage: statements=${STATEMENTS}% branches=${BRANCHES}% functions=${FUNCTIONS}% lines=${LINES}%"
+          if (( $(echo "$STATEMENTS < 70" | bc -l) )); then
+            echo "::error::Statement coverage ${STATEMENTS}% is below 70% threshold"
+            exit 1
+          fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: OWASP Dependency Check
+        run: |
+          npx @cyclonedx/cyclonedx-npm --output-file bom.json --output-format JSON
+          echo "SBOM generated: bom.json"
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: bom.json
+
+      - name: Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: security
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: cliniva
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: e2e_test_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build and run backend
+        working-directory: ../cliniva
+        run: |
+          chmod +x ./mvnw
+          SPRING_PROFILES_ACTIVE=prod \
+          SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/cliniva \
+          SPRING_DATASOURCE_USERNAME=postgres \
+          SPRING_DATASOURCE_PASSWORD=e2e_test_pass \
+          JWT_SECRET=ZUd4aGNIQnNZWGxmTWpBeU5pMHdNUzB3TUV3Z1VISmxZM0psY0dGdWJ5Qm1ZV3h6WlNCcGJpQmpZV3hzYVc1bklHbHpJRU5zYVc1cGRtRWc= \
+          CORS_ALLOWED_ORIGINS=http://localhost:4200 \
+          CLINIVA_ADMIN_EMAIL=admin@cliniva.com \
+          CLINIVA_ADMIN_PASSWORD=admin \
+          ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod &
+          sleep 60
+          curl --retry 10 --retry-delay 5 --retry-connrefused http://localhost:8080/actuator/health
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright E2E tests
+        run: npx playwright test
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+      - name: Upload Playwright test results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+
+      - name: Upload visual diffs (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: test-results/**/*.png
+
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [static-analysis, unit-tests, security-scan, e2e-tests]
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production build
         run: npm run build -- --configuration production
+
+      - name: Analyze bundle size
+        run: |
+          echo "### Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          ls -lhR dist/ClinivaFront/browser/*.js 2>/dev/null | awk '{print $5, $NF}' | sort -rh >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          TOTAL=$(du -sh dist/ClinivaFront/browser/ | cut -f1)
+          echo "**Total bundle size:** $TOTAL" >> $GITHUB_STEP_SUMMARY
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -50,3 +226,8 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/cliniva-frontend:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/cliniva-frontend:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/cliniva-frontend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/cliniva-frontend:buildcache,mode=max
