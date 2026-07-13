@@ -10,7 +10,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DoctorService } from '../../../../core/services/doctor.service';
 import { PatientService } from '../../../../core/services/patient.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
-import { DoctorWithSlots } from '../../../../core/models/doctor.model';
+import { DoctorWithSlotsResponse } from '../../../../core/models/doctor.model';
 import { Patient } from '../../../../core/models/patient.model';
 import { NgClass } from '@angular/common';
 
@@ -31,7 +31,7 @@ export class BookingFlow implements OnInit {
   isLoading = false;
   isSubmitting = false;
 
-  doctors: DoctorWithSlots[] = [];
+  doctors: DoctorWithSlotsResponse[] = [];
   patients: Patient[] = [];
   selectedDate: string;
 
@@ -90,8 +90,8 @@ export class BookingFlow implements OnInit {
 
   get selectedDoctorSlots(): string[] {
     const docId = this.bookingForm.get('doctorId')?.value;
-    const doc = this.doctors.find((d) => d.id === docId);
-    return doc ? doc.availableSlots : [];
+    const doc = this.doctors.find((d) => d.doctor.id === docId);
+    return doc ? doc.availability.map((a) => a.startTime) : [];
   }
 
   getInitials(name: string): string {

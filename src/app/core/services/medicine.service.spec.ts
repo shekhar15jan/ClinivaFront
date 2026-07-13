@@ -58,14 +58,14 @@ describe('MedicineService', () => {
     it('should GET medicine by id', () => {
       const mockResponse: ApiResponse<Medicine> = {
         success: true,
-        data: { id: 'm1', name: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'ABC', category: 'Analgesic', unit: 'Tablet', priceInPaisa: 500, isActive: true, createdAt: '' },
+        data: { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'ABC', category: 'Analgesic', unit: 'Tablet', priceInPaisa: 500, isDiscontinued: false, createdAt: '' },
         message: '',
         timestamp: '',
         requestId: '',
       };
 
       service.getMedicineById('m1').subscribe((res) => {
-        expect(res.data.name).toBe('Paracetamol');
+        expect(res.data.medicineName).toBe('Paracetamol');
       });
 
       const req = httpMock.expectOne(`${baseUrl}/m1`);
@@ -90,7 +90,7 @@ describe('MedicineService', () => {
 
   describe('createMedicine', () => {
     it('should POST a new medicine', () => {
-      const medicine: Partial<Medicine> = { name: 'Ibuprofen', genericName: 'Ibuprofen', manufacturer: 'XYZ', category: 'Painkiller', unit: 'Tablet', priceInPaisa: 1000, isActive: true };
+      const medicine: Partial<Medicine> = { medicineName: 'Ibuprofen', genericName: 'Ibuprofen', manufacturer: 'XYZ', category: 'Painkiller', unit: 'Tablet', priceInPaisa: 1000, isDiscontinued: false };
 
       service.createMedicine(medicine).subscribe();
 

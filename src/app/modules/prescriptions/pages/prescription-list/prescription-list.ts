@@ -44,8 +44,8 @@ import { DatePipe } from '@angular/common';
                 <td class="px-4 py-3 text-sm font-mono text-[#64748B]">
                   {{ rx.id.substring(0, 8) }}
                 </td>
-                <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ rx.patientName }}</td>
-                <td class="px-4 py-3 text-sm text-[#475569]">{{ rx.doctorName }}</td>
+                <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ rx.patient.fullName }}</td>
+                <td class="px-4 py-3 text-sm text-[#475569]">{{ rx.doctor.fullName }}</td>
                 <td class="px-4 py-3 text-sm text-[#64748B]">{{ rx.medicines.length }} items</td>
                 <td class="px-4 py-3 text-sm text-[#64748B]">
                   {{ rx.createdAt | date: 'mediumDate' }}
@@ -77,13 +77,13 @@ import { DatePipe } from '@angular/common';
           @for (rx of prescriptions; track rx) {
             <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface">
               <div class="flex items-center justify-between">
-                <span class="text-title-md font-semibold text-on-surface">{{ rx.patientName }}</span>
+                <span class="text-title-md font-semibold text-on-surface">{{ rx.patient.fullName }}</span>
                 <span class="text-label-sm font-mono text-on-surface-variant">#{{ rx.id.substring(0, 8) }}</span>
               </div>
               <div class="flex flex-col gap-1">
                 <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
                   <span class="material-symbols-outlined text-base">stethoscope</span>
-                  <span>{{ rx.doctorName }}</span>
+                  <span>{{ rx.doctor.fullName }}</span>
                 </div>
                 <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
                   <span class="material-symbols-outlined text-base">medication</span>
@@ -123,16 +123,15 @@ export class PrescriptionList implements OnInit {
       {
         id: 'rx-001',
         consultationId: 'c1',
-        patientId: '1',
-        patientName: 'Rahul Sharma',
-        doctorId: 'd1',
-        doctorName: 'Dr. Anita Desai',
+        patient: { id: '1', fullName: 'Rahul Sharma' },
+        doctor: { id: 'd1', fullName: 'Dr. Anita Desai' },
         medicines: [
           {
             medicineName: 'Paracetamol 500mg',
             dosage: '1 tablet',
             frequency: '3 times daily',
-            duration: '5 days',
+            duration: 5,
+            durationUnit: 'days',
           },
         ],
         createdAt: '2026-06-25T10:30:00',
@@ -140,22 +139,22 @@ export class PrescriptionList implements OnInit {
       {
         id: 'rx-002',
         consultationId: 'c2',
-        patientId: '2',
-        patientName: 'Priya Patel',
-        doctorId: 'd2',
-        doctorName: 'Dr. Vivek Kumar',
+        patient: { id: '2', fullName: 'Priya Patel' },
+        doctor: { id: 'd2', fullName: 'Dr. Vivek Kumar' },
         medicines: [
           {
             medicineName: 'Amoxicillin 250mg',
             dosage: '1 capsule',
             frequency: '2 times daily',
-            duration: '7 days',
+            duration: 7,
+            durationUnit: 'days',
           },
           {
             medicineName: 'Cetirizine 10mg',
             dosage: '1 tablet',
             frequency: 'Once daily',
-            duration: '5 days',
+            duration: 5,
+            durationUnit: 'days',
           },
         ],
         createdAt: '2026-07-01T14:00:00',

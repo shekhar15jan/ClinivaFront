@@ -1,7 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, map, firstValueFrom, of } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, firstValueFrom, of, combineLatest } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { toObservable } from '@angular/core/rxjs-interop';
 import {
   AuthResponse,
   SendOtpRequest,
@@ -33,6 +34,21 @@ export class AuthService {
   public pendingTenantCode: string | null = null;
   public loginStep = signal<'credentials' | 'otp'>('credentials');
 
+  // Convert tenant signal to observable
+  private tenant$ = toObservable(this.tenantContext.tenant);
+
+  // authState$ combines user auth state for components that need to react to auth changes
+  public authState$ = combineLatest([
+    this.currentUser$,
+    this.tenant$
+  ]).pipe(
+    map(([user, tenant]) => ({
+      isAuthenticated: !!user && !!this.accessToken,
+      user,
+      tenant
+    }))
+  );
+
   public get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
@@ -63,7 +79,7 @@ export class AuthService {
           const rawUser = raw['user'] as Record<string, unknown> | undefined;
           const rawTenant = raw['tenant'] as Record<string, unknown> | undefined;
           const authResponse: AuthResponse = {
-            accessToken: (raw['token'] as string) || '',
+            token: (raw['token'] as string) || '',
             refreshToken: (raw['refreshToken'] as string) || '',
             user: {
               id: (rawUser?.['id'] as string) || '',
@@ -133,7 +149,7 @@ export class AuthService {
     const rawUser = raw['user'] as Record<string, unknown> | undefined;
     const rawTenant = raw['tenant'] as Record<string, unknown> | undefined;
     return {
-      accessToken: (raw['token'] as string) || '',
+      token: (raw['token'] as string) || '',
       refreshToken: (raw['refreshToken'] as string) || '',
       user: {
         id: (rawUser?.['id'] as string) || '',
@@ -195,17 +211,17 @@ export class AuthService {
         map((response) => {
           if (response.success && response.data) {
             const normalized = this.normalizeResponse(response.data);
-            this.accessToken = normalized.accessToken;
+            this.accessToken = normalized.token;
             this.refreshTokenValue = normalized.refreshToken;
             if (normalized.user) {
               this.currentUserSubject.next(normalized.user);
               this.currentUser.set(normalized.user);
             }
             try {
-              localStorage.setItem(this.TOKEN_KEY, normalized.accessToken);
+              localStorage.setItem(this.TOKEN_KEY, normalized.token);
               localStorage.setItem(this.REFRESH_KEY, normalized.refreshToken);
             } catch { /* localStorage unavailable */ }
-            return normalized.accessToken;
+            return normalized.token;
           }
           throw new Error('Refresh failed');
         }),
@@ -224,12 +240,12 @@ export class AuthService {
   }
 
   private setSession(authResponse: AuthResponse): void {
-    this.accessToken = authResponse.accessToken;
+    this.accessToken = authResponse.token;
     this.refreshTokenValue = authResponse.refreshToken;
     this.currentUserSubject.next(authResponse.user);
     this.currentUser.set(authResponse.user);
     try {
-      localStorage.setItem(this.TOKEN_KEY, authResponse.accessToken);
+      localStorage.setItem(this.TOKEN_KEY, authResponse.token);
       localStorage.setItem(this.REFRESH_KEY, authResponse.refreshToken);
     } catch { /* localStorage unavailable */ }
   }

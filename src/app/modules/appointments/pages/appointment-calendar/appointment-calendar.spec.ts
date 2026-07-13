@@ -10,7 +10,7 @@ import { Appointment } from '../../../../core/models/appointment.model';
 
 describe('AppointmentCalendar', () => {
   const mockDoctor: Doctor = { id: 'd1', fullName: 'Dr. A', specialization: 'Cardio', qualification: 'MD', consultationFeeInPaisa: 500, isActive: true };
-  const mockAppt: Appointment = { id: 'a1', patientId: 'p1', patientName: 'Rahul', doctorId: 'd1', doctorName: 'Dr. A', appointmentDate: '2026-07-03', appointmentTime: '09:00 AM', tokenNumber: 1, status: 'APPROVED' };
+  const mockAppt: Appointment = { id: 'a1', patient: { id: 'p1', fullName: 'Rahul' }, doctor: { id: 'd1', fullName: 'Dr. A' }, appointmentDate: '2026-07-03', appointmentTime: '09:00 AM', tokenNumber: 1, status: 'APPROVED' };
 
   const mockDocResponse: ApiResponse<Doctor[]> = { success: true, data: [mockDoctor], message: 'ok', timestamp: '', requestId: 'r1' };
   const mockApptResponse: ApiResponse<PagedResponse<Appointment>> = { success: true, data: { content: [mockAppt], pageNumber: 0, pageSize: 50, totalElements: 1, totalPages: 1, last: true }, message: 'ok', timestamp: '', requestId: 'r1' };
@@ -46,7 +46,7 @@ describe('AppointmentCalendar', () => {
 
   it('should filter appointments for a doctor', () => {
     const component = createComponent();
-    component.appointments = [mockAppt, { ...mockAppt, id: 'a2', doctorId: 'd2' }];
+    component.appointments = [mockAppt, { ...mockAppt, id: 'a2', doctor: { id: 'd2', fullName: 'Dr. B' } }];
     const result = component.getAppointmentsForDoctor('d1');
     expect(result.length).toBe(1);
     expect(result[0].id).toBe('a1');

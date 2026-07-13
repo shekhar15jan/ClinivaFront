@@ -1,6 +1,5 @@
 export interface ClinicSettings {
   clinicName: string;
-  clinicLogo?: string;
   address: string;
   phone: string;
   email: string;

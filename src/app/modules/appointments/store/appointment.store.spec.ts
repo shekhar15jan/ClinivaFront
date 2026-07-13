@@ -12,10 +12,8 @@ describe('AppointmentStore', () => {
 
   const mockAppointment: Appointment = {
     id: 'a1',
-    patientId: 'p1',
-    patientName: 'John Doe',
-    doctorId: 'd1',
-    doctorName: 'Dr. Smith',
+    patient: { id: 'p1', fullName: 'John Doe' },
+    doctor: { id: 'd1', fullName: 'Dr. Smith' },
     appointmentDate: '2026-07-15',
     appointmentTime: '10:00',
     tokenNumber: 1,

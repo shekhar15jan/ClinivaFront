@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -11,7 +11,13 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class Sidebar {
   private effectiveLicense = inject(EffectiveLicenseService);
+  private router = inject(Router);
   protected authService = inject(AuthService);
+
+  onLogout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 
   readonly activeModules = this.effectiveLicense.activeModules;
   readonly userRole = computed(() => this.authService.currentUserValue?.role || '');

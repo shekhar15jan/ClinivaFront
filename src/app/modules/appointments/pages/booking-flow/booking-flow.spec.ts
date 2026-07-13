@@ -8,14 +8,14 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse } from '../../../../core/models/common.model';
-import { DoctorWithSlots } from '../../../../core/models/doctor.model';
+import { DoctorWithSlotsResponse } from '../../../../core/models/doctor.model';
 import { Patient } from '../../../../core/models/patient.model';
 
 describe('BookingFlow', () => {
-  const mockDoc: DoctorWithSlots = { id: 'd1', fullName: 'Dr. A', specialization: 'Cardio', qualification: 'MD', consultationFeeInPaisa: 500, isActive: true, availableSlots: ['09:00', '10:00'] };
+  const mockDoc: DoctorWithSlotsResponse = { doctor: { id: 'd1', fullName: 'Dr. A', specialization: 'Cardio', qualification: 'MD', consultationFeeInPaisa: 500, isActive: true }, availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '09:30' }, { dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '10:30' }] };
   const mockPatient: Patient = { id: 'p1', patientId: 'CLV-001', fullName: 'Rahul', dateOfBirth: '1990-01-01', age: 36, gender: 'MALE', phone: '9876543210' };
 
-  const mockDocResponse: ApiResponse<DoctorWithSlots[]> = { success: true, data: [mockDoc], message: 'ok', timestamp: '', requestId: 'r1' };
+  const mockDocResponse: ApiResponse<DoctorWithSlotsResponse[]> = { success: true, data: [mockDoc], message: 'ok', timestamp: '', requestId: 'r1' };
   const mockPatientPaged = { success: true, data: { content: [mockPatient], pageNumber: 0, pageSize: 100, totalElements: 1, totalPages: 1, last: true } as unknown as Record<string, unknown>, message: 'ok', timestamp: '', requestId: 'r1' };
 
   function createComponent(overrides?: Record<string, unknown>) {

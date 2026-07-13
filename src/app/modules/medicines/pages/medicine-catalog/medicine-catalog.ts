@@ -53,12 +53,12 @@ import { Medicine } from '../../../../core/models/medicine.model';
               @if (!isLoading && medicines.length === 0) { <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-on-surface-variant">No medicines found.</td></tr> }
               @for (med of filteredMedicines; track med) {
                 <tr class="border-t border-outline-variant hover:bg-surface-container">
-                  <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ med.name }}</td>
+                  <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ med.medicineName }}</td>
                   <td class="px-4 py-3 text-sm text-on-surface-variant">{{ med.genericName }}</td>
                   <td class="px-4 py-3"><span class="bg-primary-container text-primary-on-container px-2.5 py-0.5 rounded-full text-xs font-medium">{{ med.category }}</span></td>
                   <td class="px-4 py-3 text-sm text-on-surface-variant">{{ med.manufacturer }}</td>
                   <td class="px-4 py-3 text-sm font-medium text-on-surface">₹{{ (med.priceInPaisa || 0) / 100 }}</td>
-                  <td class="px-4 py-3"><span [class]="med.isActive ? 'bg-status-green-light text-status-green' : 'bg-status-red-light text-status-red'" class="px-2.5 py-1 rounded-full text-xs font-medium">{{ med.isActive ? 'In Stock' : 'Discontinued' }}</span></td>
+                  <td class="px-4 py-3"><span [class]="!med.isDiscontinued ? 'bg-status-green-light text-status-green' : 'bg-status-red-light text-status-red'" class="px-2.5 py-1 rounded-full text-xs font-medium">{{ !med.isDiscontinued ? 'In Stock' : 'Discontinued' }}</span></td>
                 </tr>
               }
             </tbody>
@@ -71,8 +71,8 @@ import { Medicine } from '../../../../core/models/medicine.model';
             <div class="p-4 grid gap-3">
               @for (med of filteredMedicines; track med) {
                 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-2">
-                  <div class="flex items-start justify-between gap-2"><div class="flex-1 min-w-0"><h3 class="text-sm font-semibold text-primary truncate">{{ med.name }}</h3><p class="text-xs text-on-surface-variant mt-0.5">{{ med.genericName }}</p></div><span class="bg-primary-container text-primary-on-container px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0">{{ med.category }}</span></div>
-                  <div class="flex items-center justify-between pt-1"><span class="text-sm font-semibold text-on-surface">₹{{ (med.priceInPaisa || 0) / 100 }}</span><span [class]="med.isActive ? 'bg-status-green-light text-status-green' : 'bg-status-red-light text-status-red'" class="px-2.5 py-1 rounded-full text-xs font-medium">{{ med.isActive ? 'In Stock' : 'Discontinued' }}</span></div>
+                  <div class="flex items-start justify-between gap-2"><div class="flex-1 min-w-0"><h3 class="text-sm font-semibold text-primary truncate">{{ med.medicineName }}</h3><p class="text-xs text-on-surface-variant mt-0.5">{{ med.genericName }}</p></div><span class="bg-primary-container text-primary-on-container px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap shrink-0">{{ med.category }}</span></div>
+                  <div class="flex items-center justify-between pt-1"><span class="text-sm font-semibold text-on-surface">₹{{ (med.priceInPaisa || 0) / 100 }}</span><span [class]="!med.isDiscontinued ? 'bg-status-green-light text-status-green' : 'bg-status-red-light text-status-red'" class="px-2.5 py-1 rounded-full text-xs font-medium">{{ !med.isDiscontinued ? 'In Stock' : 'Discontinued' }}</span></div>
                 </div>
               }
             </div>
@@ -87,7 +87,7 @@ import { Medicine } from '../../../../core/models/medicine.model';
           <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between"><h3 class="text-base font-bold text-on-surface">Add New Medicine</h3><button (click)="toggleAddModal()" class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined">close</span></button></div>
           <form [formGroup]="addForm" (ngSubmit)="onSubmitAdd()" class="p-6 space-y-4">
             <div class="grid grid-cols-2 gap-4">
-              <div><label for="medName" class="block text-sm font-medium text-on-surface-variant mb-1">Medicine Name *</label><input id="medName" type="text" formControlName="name" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-primary-light bg-surface-container-lowest text-on-surface" /></div>
+              <div><label for="medName" class="block text-sm font-medium text-on-surface-variant mb-1">Medicine Name *</label><input id="medName" type="text" formControlName="medicineName" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-primary-light bg-surface-container-lowest text-on-surface" /></div>
               <div><label for="medGenericName" class="block text-sm font-medium text-on-surface-variant mb-1">Generic Name *</label><input id="medGenericName" type="text" formControlName="genericName" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:border-primary-light bg-surface-container-lowest text-on-surface" /></div>
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -128,7 +128,7 @@ export class MedicineCatalog implements OnInit {
 
   constructor() {
     this.addForm = this.fb.group({
-      name: ['', Validators.required], genericName: ['', Validators.required],
+      medicineName: ['', Validators.required], genericName: ['', Validators.required],
       category: ['Analgesic', Validators.required], manufacturer: ['', Validators.required],
       unit: ['tablet', Validators.required], price: ['', [Validators.required, Validators.min(0.01)]],
     });
@@ -186,7 +186,7 @@ export class MedicineCatalog implements OnInit {
     if (this.addForm.invalid) return;
     this.isSubmitting = true;
     const formVal = this.addForm.value;
-    const newMed: Partial<Medicine> = { name: formVal.name, genericName: formVal.genericName, category: formVal.category, manufacturer: formVal.manufacturer, unit: formVal.unit, priceInPaisa: Math.round(formVal.price * 100), isActive: true };
+    const newMed: Partial<Medicine> = { medicineName: formVal.medicineName, genericName: formVal.genericName, category: formVal.category, manufacturer: formVal.manufacturer, unit: formVal.unit, priceInPaisa: Math.round(formVal.price * 100), isDiscontinued: false };
     this.medicineService.createMedicine(newMed).subscribe({
       next: () => { this.isSubmitting = false; this.toggleAddModal(); this.loadMedicines(); },
       error: () => { this.isSubmitting = false; },

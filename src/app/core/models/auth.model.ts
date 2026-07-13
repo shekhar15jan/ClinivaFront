@@ -3,10 +3,13 @@ export interface User {
   email: string;
   role: string;
   profile?: Record<string, string>;
+  tenantId?: string;
+  tenantCode?: string;
 }
 
 export interface TenantInfo {
   id: string;
+  tenantId?: string;
   name: string;
   logoUrl?: string;
   timezone?: string;
@@ -14,7 +17,7 @@ export interface TenantInfo {
 }
 
 export interface AuthResponse {
-  accessToken: string;
+  token: string;
   refreshToken: string;
   user: User;
   tenant: TenantInfo;

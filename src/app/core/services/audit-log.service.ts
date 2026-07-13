@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { AuditLog } from '../models/audit-log.model';
 import { environment } from '../../../environments/environment';
 
@@ -32,7 +32,7 @@ export class AuditLogService {
     if (params.action) queryParams.set('action', params.action);
 
     return this.http
-      .get<ApiResponse<PagedResponse<AuditLog>>>(`${this.apiUrl}?${queryParams.toString()}`)
-      .pipe(map((res) => res.data));
+      .get<ApiResponse<RawPagedResponse<AuditLog>>>(`${this.apiUrl}?${queryParams.toString()}`)
+      .pipe(map((res) => PagedResponse.from(res.data)));
   }
 }

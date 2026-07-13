@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { BillingService } from '../../../../core/services/billing.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { Bill } from '../../../../core/models/billing.model';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-my-bills',
@@ -28,12 +28,12 @@ import { DatePipe, DecimalPipe } from '@angular/common';
               <tbody>
                 @for (bill of bills; track bill.id) {
                   <tr class="border-t border-outline-variant">
-                    <td class="px-4 py-3 text-sm font-mono text-on-surface">INV-{{ bill.id?.substring(0, 6) }}</td>
+                    <td class="px-4 py-3 text-sm font-mono text-on-surface">INV-{{ bill.id.substring(0, 6) }}</td>
                     <td class="px-4 py-3 text-sm text-outline">{{ bill.createdAt | date:'mediumDate' }}</td>
-                    <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm text-outline">₹{{ (bill.paidAmountInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm font-medium text-red-600">₹{{ (bill.dueAmountInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3"><span [class]="statusClass(bill.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.status }}</span></td>
+                    <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</td>
+                    <td class="px-4 py-3 text-sm text-outline">₹{{ (bill.paymentStatus === 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
+                    <td class="px-4 py-3 text-sm font-medium text-red-600">₹{{ (bill.paymentStatus !== 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
+                    <td class="px-4 py-3"><span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span></td>
                   </tr>
                 }
               </tbody>
@@ -43,17 +43,17 @@ import { DatePipe, DecimalPipe } from '@angular/common';
             @for (bill of bills; track bill.id) {
               <div class="px-4 py-3.5 flex flex-col gap-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-sm font-mono font-medium text-on-surface">INV-{{ bill.id?.substring(0, 6) }}</span>
-                  <span [class]="statusClass(bill.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.status }}</span>
+                  <span class="text-sm font-mono font-medium text-on-surface">INV-{{ bill.id.substring(0, 6) }}</span>
+                  <span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-xs text-outline">{{ bill.createdAt | date:'mediumDate' }}</span>
-                  <span class="text-sm font-semibold text-on-surface">₹{{ (bill.totalInPaisa || 0) / 100 }}</span>
+                  <span class="text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</span>
                 </div>
-                @if ((bill.dueAmountInPaisa || 0) > 0) {
+                @if (bill.paymentStatus !== 'PAID') {
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-outline">Due</span>
-                    <span class="text-sm font-medium text-red-600">₹{{ (bill.dueAmountInPaisa || 0) / 100 }}</span>
+                    <span class="text-sm font-medium text-red-600">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</span>
                   </div>
                 }
               </div>
@@ -63,7 +63,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
       }
     </div>
   `,
-  imports: [DatePipe, DecimalPipe],
+  imports: [DatePipe],
 })
 export class MyBills implements OnInit {
   private billingService = inject(BillingService);

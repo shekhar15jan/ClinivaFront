@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse, PagedResponse } from '../models/common.model';
-import { Bill, BillPreview, CreateBillRequest } from '../models/billing.model';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
+import { Bill, CreateBillRequest, UpdateBillRequest } from '../models/billing.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -20,17 +20,18 @@ export class BillingService {
     if (page !== undefined) params = params.set('page', page);
     if (size !== undefined) params = params.set('size', size);
     if (status) params = params.set('status', status);
-    return this.http.get<ApiResponse<PagedResponse<Bill>>>(this.baseUrl, { params });
+    return this.http
+      .get<ApiResponse<RawPagedResponse<Bill>>>(this.baseUrl, { params })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
   getBillById(id: string): Observable<ApiResponse<Bill>> {
     return this.http.get<ApiResponse<Bill>>(`${this.baseUrl}/${id}`);
-  }
-
-  getBillPreview(prescriptionId: string): Observable<ApiResponse<BillPreview>> {
-    return this.http.get<ApiResponse<BillPreview>>(`${this.baseUrl}/preview`, {
-      params: { prescriptionId },
-    });
   }
 
   createBill(prescriptionId: string, request: CreateBillRequest): Observable<ApiResponse<Bill>> {
@@ -41,14 +42,14 @@ export class BillingService {
     return this.http.get(`${this.baseUrl}/${id}/invoice`, { responseType: 'blob' });
   }
 
-  updateBillStatus(id: string, status: string, paidAmount?: number): Observable<ApiResponse<Bill>> {
-    const body: { status: string; paidAmount?: number } = { status };
-    if (paidAmount !== undefined) body.paidAmount = paidAmount;
-    return this.http.put<ApiResponse<Bill>>(`${this.baseUrl}/${id}`, body);
+  updateBill(id: string, request: UpdateBillRequest): Observable<ApiResponse<Bill>> {
+    return this.http.put<ApiResponse<Bill>>(`${this.baseUrl}/${id}`, request);
   }
 
   voidBill(id: string, reason: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/${id}`, { body: { reason } });
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/${id}`, {
+      params: { reason },
+    });
   }
 
   getPatientBills(patientId: string): Observable<ApiResponse<Bill[]>> {

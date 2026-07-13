@@ -46,8 +46,8 @@ export class OnboardingWizard implements OnInit {
     const tenant = this.tenantContext.tenant();
     if (tenant) {
       this.clinicConfig.clinicName = tenant.name;
-      this.clinicConfig.email = tenant.contactEmail;
-      this.clinicConfig.patientIdPrefix = tenant.patientIdPrefix;
+      this.clinicConfig.email = tenant.contactEmail || '';
+      this.clinicConfig.patientIdPrefix = tenant.patientIdPrefix || '';
     }
   }
 

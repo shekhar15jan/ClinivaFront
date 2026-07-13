@@ -8,9 +8,9 @@ import { ApiResponse, PagedResponse } from '../../../../core/models/common.model
 import { Medicine } from '../../../../core/models/medicine.model';
 
 describe('MedicineCatalog', () => {
-  const mockMedicine: Medicine = { id: 'm1', name: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 1000, isActive: true, createdAt: '2026-01-01' };
+  const mockMedicine: Medicine = { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 1000, isDiscontinued: false, createdAt: '2026-01-01' };
 
-  const mockPaged: ApiResponse<PagedResponse<Medicine>> = { success: true, data: { content: [mockMedicine, { ...mockMedicine, id: 'm2', name: 'Amoxicillin', category: 'Antibiotic' }], pageNumber: 0, pageSize: 20, totalElements: 2, totalPages: 1, last: true }, message: 'ok', timestamp: '', requestId: 'r1' };
+  const mockPaged: ApiResponse<PagedResponse<Medicine>> = { success: true, data: { content: [mockMedicine, { ...mockMedicine, id: 'm2', medicineName: 'Amoxicillin', category: 'Antibiotic' }], pageNumber: 0, pageSize: 20, totalElements: 2, totalPages: 1, last: true }, message: 'ok', timestamp: '', requestId: 'r1' };
 
   const mockSearchResponse: ApiResponse<Medicine[]> = { success: true, data: [mockMedicine], message: 'ok', timestamp: '', requestId: 'r1' };
 
@@ -71,7 +71,7 @@ describe('MedicineCatalog', () => {
     component.selectedCategory = 'Antibiotic';
     component.onFilterChange();
     expect(component.filteredMedicines.length).toBe(1);
-    expect(component.filteredMedicines[0].name).toBe('Amoxicillin');
+    expect(component.filteredMedicines[0].medicineName).toBe('Amoxicillin');
   });
 
   it('should toggle add modal and reset form', () => {
@@ -92,7 +92,7 @@ describe('MedicineCatalog', () => {
   it('should submit and create medicine', () => {
     const component = createComponent();
     component.showAddModal = true;
-    component.addForm.patchValue({ name: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
+    component.addForm.patchValue({ medicineName: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
     component.onSubmitAdd();
     expect(component.isSubmitting).toBe(false);
     expect(component.showAddModal).toBe(false);
@@ -100,7 +100,7 @@ describe('MedicineCatalog', () => {
 
   it('should handle create medicine error', () => {
     const component = createComponent({ createMedicine: vi.fn().mockReturnValue(throwError(() => new Error('fail'))) });
-    component.addForm.patchValue({ name: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
+    component.addForm.patchValue({ medicineName: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
     component.onSubmitAdd();
     expect(component.isSubmitting).toBe(false);
   });

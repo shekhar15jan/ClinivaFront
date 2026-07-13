@@ -14,7 +14,7 @@ export interface PlatformUser {
   id: string;
   email: string;
   isActive: boolean;
-  roles: string[];
+  role: string;
   createdAt: string;
 }
 
@@ -62,6 +62,6 @@ export interface SupportTicket {
 export interface PlatformReport {
   totalTenants: number;
   activeTenants: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
+  totalRevenueInPaisa: number;
+  monthlyBreakdown: { month: string; billed: number; collected: number }[];
 }

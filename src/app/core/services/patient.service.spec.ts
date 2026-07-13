@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { PatientService } from './patient.service';
-import { Patient, PatientVisit } from '../models/patient.model';
+import { Patient, PatientVisitResponse } from '../models/patient.model';
 import { ApiResponse, PagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -44,14 +44,6 @@ describe('PatientService', () => {
       const req = httpMock.expectOne(`${apiUrl}?page=0&size=10`);
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
-    });
-
-    it('should include search param when provided', () => {
-      service.getPatients(1, 20, 'john').subscribe();
-
-      const req = httpMock.expectOne(`${apiUrl}?page=1&size=20&search=john`);
-      expect(req.request.method).toBe('GET');
-      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
     });
 
     it('should handle error', () => {
@@ -123,17 +115,17 @@ describe('PatientService', () => {
 
   describe('getPatientVisits', () => {
     it('should GET visits by patient id', () => {
-      const mockResponse: ApiResponse<PatientVisit[]> = {
+      const mockResponse: ApiResponse<PatientVisitResponse> = {
         success: true,
-        data: [{ id: 'v1', date: '2024-01-01', doctorName: 'Dr. A', diagnosis: 'Fever' }],
+        data: { patientId: 'p1', patientName: 'John', visits: [{ appointmentId: 'a1', appointmentDate: '2024-01-01', appointmentTime: '10:00', doctorName: 'Dr. A', status: 'COMPLETED' }] },
         message: '',
         timestamp: '',
         requestId: '',
       };
 
       service.getPatientVisits('p1').subscribe((res) => {
-        expect(res.data.length).toBe(1);
-        expect(res.data[0].doctorName).toBe('Dr. A');
+        expect(res.data.visits.length).toBe(1);
+        expect(res.data.visits[0].doctorName).toBe('Dr. A');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/p1/visits`);

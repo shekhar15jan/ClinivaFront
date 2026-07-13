@@ -112,16 +112,16 @@
               @for (doctor of doctors; track doctor) {
                 <div
                   role="radio"
-                  [attr.aria-checked]="bookingForm.get('doctorId')?.value === doctor.id"
+                  [attr.aria-checked]="bookingForm.get('doctorId')?.value === doctor.doctor.id"
                   tabindex="0"
-                  (click)="selectDoctor(doctor.id)"
-                  (keydown.enter)="selectDoctor(doctor.id)"
-                  (keydown.space)="selectDoctor(doctor.id); $event.preventDefault()"
+                  (click)="selectDoctor(doctor.doctor.id)"
+                  (keydown.enter)="selectDoctor(doctor.doctor.id)"
+                  (keydown.space)="selectDoctor(doctor.doctor.id); $event.preventDefault()"
                   [ngClass]="{
                     'border-2 border-medical-blue bg-blue-50/30':
-                      bookingForm.get('doctorId')?.value === doctor.id,
+                      bookingForm.get('doctorId')?.value === doctor.doctor.id,
                     'border border-gray-200 hover:border-medical-blue/50':
-                      bookingForm.get('doctorId')?.value !== doctor.id,
+                      bookingForm.get('doctorId')?.value !== doctor.doctor.id,
                   }"
                   class="rounded-lg p-4 cursor-pointer transition-colors"
                 >
@@ -129,11 +129,11 @@
                     <div
                       class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold"
                     >
-                      {{ getInitials(doctor.fullName) }}
+                      {{ getInitials(doctor.doctor.fullName) }}
                     </div>
                     <div>
-                      <p class="text-sm font-semibold text-gray-900">{{ doctor.fullName }}</p>
-                      <p class="text-xs text-gray-500">{{ doctor.specialization }}</p>
+                      <p class="text-sm font-semibold text-gray-900">{{ doctor.doctor.fullName }}</p>
+                      <p class="text-xs text-gray-500">{{ doctor.doctor.specialization }}</p>
                     </div>
                   </div>
                 </div>

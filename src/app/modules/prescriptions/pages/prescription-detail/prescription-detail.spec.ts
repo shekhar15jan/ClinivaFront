@@ -7,11 +7,12 @@ import { vi } from 'vitest';
 
 describe('PrescriptionDetail', () => {
   const mockPrescription = {
-    id: 'rx-001', consultationId: 'c1', appointmentId: 'a1', patientId: 'p1',
-    patientName: 'Rahul Sharma', doctorId: 'd1', doctorName: 'Dr. Anita Desai',
+    id: 'rx-001', consultationId: 'c1', appointmentId: 'a1',
+    patient: { id: 'p1', fullName: 'Rahul Sharma' },
+    doctor: { id: 'd1', fullName: 'Dr. Anita Desai' },
     diagnosis: 'Fever', date: '2026-06-25', notes: 'Rest advised',
-    medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: '1-0-1', duration: '5 days', durationUnit: 'DAYS' }],
-    createdAt: '2026-06-25T10:30:00', tenantId: 't1',
+    medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: '1-0-1', duration: 5, durationUnit: 'DAYS' }],
+    createdAt: '2026-06-25T10:30:00',
   };
 
   function createComponent(routeId = 'rx-001', overrides?: Partial<PrescriptionService>) {
@@ -43,7 +44,7 @@ describe('PrescriptionDetail', () => {
     const component = createComponent();
     component.ngOnInit();
     expect(component.prescription).toBeDefined();
-    expect(component.prescription!.patientName).toBe('Rahul Sharma');
+    expect(component.prescription!.patient.fullName).toBe('Rahul Sharma');
   });
 
   it('should handle not found', () => {

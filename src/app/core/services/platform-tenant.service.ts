@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse } from '../models/common.model';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { PlatformTenant, PlatformModule } from '../models/platform.model';
 import { environment } from '../../../environments/environment';
 
@@ -11,8 +11,18 @@ export class PlatformTenantService {
 
   private baseUrl = `${environment.apiUrl}/platform/tenants`;
 
-  list(): Observable<ApiResponse<PlatformTenant[]>> {
-    return this.http.get<ApiResponse<PlatformTenant[]>>(this.baseUrl);
+  list(
+    page = 0,
+    size = 20,
+  ): Observable<ApiResponse<PagedResponse<PlatformTenant>>> {
+    return this.http
+      .get<ApiResponse<RawPagedResponse<PlatformTenant>>>(`${this.baseUrl}?page=${page}&size=${size}`)
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
   getById(id: string): Observable<ApiResponse<PlatformTenant>> {

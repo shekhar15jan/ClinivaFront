@@ -31,14 +31,14 @@ describe('OnboardingService', () => {
     it('should GET onboarding status', () => {
       const mockResponse: ApiResponse<OnboardingStatus> = {
         success: true,
-        data: { isComplete: false, currentStep: 2, totalSteps: 5, steps: [] },
+        data: { step: 'CLINIC', completed: false },
         message: '',
         timestamp: '',
         requestId: '',
       };
 
       service.getStatus().subscribe((res) => {
-        expect(res.data.currentStep).toBe(2);
+        expect(res.data.step).toBe('CLINIC');
       });
 
       const req = httpMock.expectOne(apiUrl);

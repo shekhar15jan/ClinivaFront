@@ -39,7 +39,7 @@ export class AppointmentCalendar implements OnInit {
     // Fetch doctors
     this.doctorService.getDoctors().subscribe((dRes) => {
       if (dRes.success) {
-        this.doctors = dRes.data;
+        this.doctors = dRes.data.content;
       }
 
       // Fetch appointments
@@ -53,7 +53,7 @@ export class AppointmentCalendar implements OnInit {
   }
 
   getAppointmentsForDoctor(doctorId: string): Appointment[] {
-    return this.appointments.filter((a) => a.doctorId === doctorId);
+    return this.appointments.filter((a) => a.doctor?.id === doctorId);
   }
 
   getTopPosition(time: string): number {

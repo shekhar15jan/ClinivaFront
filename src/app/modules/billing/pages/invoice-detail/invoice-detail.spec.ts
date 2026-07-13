@@ -7,13 +7,10 @@ import { vi } from 'vitest';
 
 describe('InvoiceDetail', () => {
   const mockBill = {
-    id: 'b-001', appointmentId: 'a1', patientId: 'p1', patientName: 'Rahul Sharma',
-    consultationFeeInPaisa: 50000, lineItems: [
-      { description: 'General Consultation', quantity: 1, unitPriceInPaisa: 50000, totalInPaisa: 50000 },
-    ],
-    discountInPaisa: 0, taxInPaisa: 2500, totalInPaisa: 52500,
-    paidAmountInPaisa: 0, dueAmountInPaisa: 52500,
-    status: 'UNPAID' as const, createdAt: '2026-07-01',
+    id: 'b-001', appointmentId: 'a1', patient: { id: 'p1', fullName: 'Rahul Sharma' },
+    consultationFeeInPaisa: 50000,
+    discountInPaisa: 0, taxInPaisa: 2500, totalAmountInPaisa: 52500,
+    paymentStatus: 'UNPAID' as const, createdAt: '2026-07-01',
   };
 
   function createComponent(overrides?: Partial<BillingService>) {
@@ -23,7 +20,7 @@ describe('InvoiceDetail', () => {
           provide: BillingService,
           useValue: {
             getBillById: vi.fn().mockReturnValue(of({ success: true, data: mockBill })),
-            updateBillStatus: vi.fn().mockReturnValue(of({ success: true })),
+            updateBill: vi.fn().mockReturnValue(of({ success: true })),
             downloadPdf: vi.fn().mockReturnValue(of(new Blob([]))),
             ...overrides,
           },
@@ -45,7 +42,7 @@ describe('InvoiceDetail', () => {
     const component = createComponent();
     component.ngOnInit();
     expect(component.bill).toBeDefined();
-    expect(component.bill?.status).toBe('UNPAID');
+    expect(component.bill?.paymentStatus).toBe('UNPAID');
   });
 
   it('should compute total from paisa', () => {
@@ -60,15 +57,15 @@ describe('InvoiceDetail', () => {
     expect(component.status).toBe('UNPAID');
   });
 
-  it('should call updateBillStatus on collectPayment', () => {
+  it('should call updateBill on collectPayment', () => {
     const updateSpy = vi.fn().mockReturnValue(of({ success: true }));
-    const component = createComponent({ updateBillStatus: updateSpy });
+    const component = createComponent({ updateBill: updateSpy });
     component.ngOnInit();
     component.collectPayment();
   });
 
   it('should not collect payment if already paid', () => {
-    const paidBill = { ...mockBill, status: 'PAID' as const, paidAmountInPaisa: 52500, dueAmountInPaisa: 0 };
+    const paidBill = { ...mockBill, paymentStatus: 'PAID' as const };
     const component = createComponent({
       getBillById: vi.fn().mockReturnValue(of({ success: true, data: paidBill })),
     });

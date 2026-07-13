@@ -15,7 +15,7 @@ export class OnboardingGuard implements CanActivate {
     return new Promise((resolve) => {
       this.onboardingService.getStatus().subscribe({
         next: (response) => {
-          if (response.success && response.data && !response.data.isComplete) {
+          if (response.success && response.data && !response.data.completed) {
             this.router.navigate([`/${hospitalCode}/onboarding`]);
             resolve(false);
           } else {

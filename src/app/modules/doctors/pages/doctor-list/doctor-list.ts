@@ -175,7 +175,7 @@ export class DoctorList implements OnInit {
     this.doctorService.getDoctors().subscribe({
       next: (res) => {
         if (res.success) {
-          this.doctors = res.data;
+          this.doctors = res.data.content;
         }
         this.isLoading = false;
       },

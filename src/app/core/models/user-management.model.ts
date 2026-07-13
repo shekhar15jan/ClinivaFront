@@ -3,9 +3,8 @@ export interface ManagedUser {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'ADMIN' | 'DOCTOR' | 'RECEPTIONIST' | 'NURSE' | 'PATIENT';
+  roles: string;
   isActive: boolean;
-  lastLoginAt: string | null;
   createdAt: string;
 }
 

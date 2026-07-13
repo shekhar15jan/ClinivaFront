@@ -31,7 +31,7 @@ export const MedicineStore = signalStore(
   withState(initialState),
   withComputed((state) => ({
     hasMedicines: computed(() => state.medicines().length > 0),
-    activeMedicines: computed(() => state.medicines().filter((m) => m.isActive))
+    activeMedicines: computed(() => state.medicines().filter((m) => !m.isDiscontinued))
   })),
   withMethods((store) => {
     const medicineService = inject(MedicineService);

@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { BillingStore } from './billing.store';
 import { BillingService } from '../../../core/services/billing.service';
-import { Bill, BillPreview, CreateBillRequest } from '../../../core/models/billing.model';
+import { Bill, CreateBillRequest } from '../../../core/models/billing.model';
 import { ApiResponse, PagedResponse } from '../../../core/models/common.model';
 
 describe('BillingStore', () => {
@@ -13,26 +13,16 @@ describe('BillingStore', () => {
   const mockBill: Bill = {
     id: 'b1',
     appointmentId: 'a1',
-    patientId: 'p1',
-    patientName: 'John Doe',
+    patient: { id: 'p1', fullName: 'John Doe' },
     consultationFeeInPaisa: 50000,
-    lineItems: [],
     discountInPaisa: 0,
     taxInPaisa: 0,
-    totalInPaisa: 50000,
-    paidAmountInPaisa: 0,
-    dueAmountInPaisa: 50000,
-    status: 'UNPAID',
+    totalAmountInPaisa: 50000,
+    paymentStatus: 'UNPAID',
     createdAt: '2026-07-15T10:00:00Z',
   };
 
-  const mockPaidBill: Bill = { ...mockBill, id: 'b2', status: 'PAID', paidAmountInPaisa: 50000, dueAmountInPaisa: 0 };
-
-  const mockBillPreview: BillPreview = {
-    consultationFeeInPaisa: 50000,
-    medicineCharges: [],
-    totalInPaisa: 50000,
-  };
+  const mockPaidBill: Bill = { ...mockBill, id: 'b2', paymentStatus: 'PAID' };
 
   const mockPagedResponse: ApiResponse<PagedResponse<Bill>> = {
     success: true,
@@ -53,9 +43,8 @@ describe('BillingStore', () => {
     mockBillingService = {
       getBills: vi.fn().mockReturnValue(of(mockPagedResponse)),
       getBillById: vi.fn().mockReturnValue(of({ success: true, data: mockBill, message: 'ok', timestamp: '', requestId: 'r1' })),
-      getBillPreview: vi.fn().mockReturnValue(of({ success: true, data: mockBillPreview, message: 'ok', timestamp: '', requestId: 'r1' })),
       createBill: vi.fn().mockReturnValue(of({ success: true, data: mockBill, message: 'created', timestamp: '', requestId: 'r1' })),
-      updateBillStatus: vi.fn().mockReturnValue(of({ success: true, data: { ...mockBill, status: 'PAID', paidAmountInPaisa: 50000, dueAmountInPaisa: 0 }, message: 'updated', timestamp: '', requestId: 'r1' })),
+      updateBill: vi.fn().mockReturnValue(of({ success: true, data: { ...mockBill, paymentStatus: 'PAID' }, message: 'updated', timestamp: '', requestId: 'r1' })),
     };
 
     TestBed.configureTestingModule({
@@ -71,7 +60,6 @@ describe('BillingStore', () => {
   it('should have initial state', () => {
     expect(store.bills()).toEqual([]);
     expect(store.selectedBill()).toBeNull();
-    expect(store.billPreview()).toBeNull();
     expect(store.loading()).toBe(false);
     expect(store.error()).toBeNull();
     expect(store.totalElements()).toBe(0);
@@ -122,26 +110,11 @@ describe('BillingStore', () => {
     expect(errorStore.error()).toBe('Not found');
   }));
 
-  it('should load bill preview', fakeAsync(() => {
-    store.loadBillPreview('a1');
-    tick();
-    expect(store.billPreview()).toEqual(mockBillPreview);
-    expect(mockBillingService.getBillPreview).toHaveBeenCalledWith('a1');
-  }));
-
-  it('should handle load bill preview error', fakeAsync(() => {
-    mockBillingService.getBillPreview = vi.fn().mockReturnValue(throwError(() => new Error('Preview failed')));
-    const errorStore = TestBed.inject(BillingStore);
-    errorStore.loadBillPreview('a1');
-    tick();
-    expect(errorStore.error()).toBe('Preview failed');
-  }));
-
   it('should create bill', fakeAsync(() => {
     store.loadBills();
     tick();
     const initialCount = store.bills().length;
-    const request: CreateBillRequest = { prescriptionId: 'rx1', appointmentId: 'a1', lineItems: [] };
+    const request: CreateBillRequest = { prescriptionId: 'rx1' };
     store.createBill(request);
     tick();
     expect(mockBillingService.createBill).toHaveBeenCalledWith('rx1', request);
@@ -153,24 +126,24 @@ describe('BillingStore', () => {
   it('should handle create bill error', fakeAsync(() => {
     mockBillingService.createBill = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(BillingStore);
-    errorStore.createBill({ prescriptionId: 'rx1', appointmentId: 'a1', lineItems: [] } as CreateBillRequest);
+    errorStore.createBill({ prescriptionId: 'rx1' } as CreateBillRequest);
     tick();
     expect(errorStore.error()).toBe('Create failed');
   }));
 
-  it('should update bill status', fakeAsync(() => {
+  it('should update bill', fakeAsync(() => {
     store.loadBills();
     tick();
-    store.updateBillStatus({ id: 'b1', status: 'PAID', paidAmount: 50000 });
+    store.updateBill({ id: 'b1', request: {} });
     tick();
-    expect(mockBillingService.updateBillStatus).toHaveBeenCalledWith('b1', 'PAID', 50000);
-    expect(store.bills()[0].status).toBe('PAID');
+    expect(mockBillingService.updateBill).toHaveBeenCalledWith('b1', {});
+    expect(store.bills()[0].paymentStatus).toBe('PAID');
   }));
 
-  it('should handle update bill status error', fakeAsync(() => {
-    mockBillingService.updateBillStatus = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
+  it('should handle update bill error', fakeAsync(() => {
+    mockBillingService.updateBill = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(BillingStore);
-    errorStore.updateBillStatus({ id: 'b1', status: 'PAID' });
+    errorStore.updateBill({ id: 'b1', request: {} });
     tick();
     expect(errorStore.error()).toBe('Update failed');
   }));
@@ -189,15 +162,14 @@ describe('BillingStore', () => {
   it('should update selectedBill after status update', fakeAsync(() => {
     store.loadBill('b1');
     tick();
-    store.updateBillStatus({ id: 'b1', status: 'PAID', paidAmount: 50000 });
+    store.updateBill({ id: 'b1', request: {} });
     tick();
-    expect(store.selectedBill()?.status).toBe('PAID');
+    expect(store.selectedBill()?.paymentStatus).toBe('PAID');
   }));
 
-  it('should clear selected bill and preview', () => {
+  it('should clear selected bill', () => {
     store.clearSelectedBill();
     expect(store.selectedBill()).toBeNull();
-    expect(store.billPreview()).toBeNull();
   });
 
   it('should clear error', () => {

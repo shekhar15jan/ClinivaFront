@@ -97,6 +97,12 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Checkout backend (Cliniva)
+        uses: actions/checkout@v4
+        with:
+          repository: shekhar15jan/Cliniva
+          path: ../cliniva
+
       - name: Install frontend dependencies
         run: npm ci
 

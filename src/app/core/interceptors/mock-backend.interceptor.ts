@@ -8,7 +8,7 @@ import { Doctor } from '../models/doctor.model';
 import { Appointment } from '../models/appointment.model';
 import { Consultation } from '../models/consultation.model';
 import { Prescription } from '../models/prescription.model';
-import { Bill, BillStatus } from '../models/billing.model';
+import { Bill } from '../models/billing.model';
 import { Medicine } from '../models/medicine.model';
 import { DashboardStats } from '../models/report.model';
 import { ClinicSettings } from '../models/setting.model';
@@ -35,56 +35,77 @@ interface TenantResolution {
 export class MockBackendInterceptor implements HttpInterceptor {
 
   private patients: Patient[] = [
-    { id: '1', patientId: 'CLI-001', fullName: 'Rahul Sharma', dateOfBirth: '1985-06-15', age: 39, gender: 'MALE', phone: '9876543210', email: 'rahul@example.com', bloodGroup: 'A+', address: '123 Mumbai St', lastVisitDate: '2026-06-25' },
-    { id: '2', patientId: 'CLI-002', fullName: 'Priya Patel', dateOfBirth: '1992-09-20', age: 33, gender: 'FEMALE', phone: '9876543211', email: 'priya@example.com', bloodGroup: 'B+', address: '456 Delhi Ave', lastVisitDate: '2026-07-01' },
-    { id: '3', patientId: 'CLI-003', fullName: 'Amit Singh', dateOfBirth: '1978-03-10', age: 48, gender: 'MALE', phone: '9876543212', email: 'amit@example.com', bloodGroup: 'O+', lastVisitDate: '2026-06-28' },
+    // Tenant A (Clinica Hospital) - t1
+    { id: '1', patientId: 'CLI-001', fullName: 'Rahul Sharma', dateOfBirth: '1985-06-15', age: 39, gender: 'MALE', phone: '9876543210', email: 'rahul@example.com', bloodGroup: 'A+', address: '123 Mumbai St' },
+    { id: '2', patientId: 'CLI-002', fullName: 'Priya Patel', dateOfBirth: '1992-09-20', age: 33, gender: 'FEMALE', phone: '9876543211', email: 'priya@example.com', bloodGroup: 'B+', address: '456 Delhi Ave' },
+    { id: '3', patientId: 'CLI-003', fullName: 'Amit Singh', dateOfBirth: '1978-03-10', age: 48, gender: 'MALE', phone: '9876543212', email: 'amit@example.com', bloodGroup: 'O+' },
+    // Tenant B (Wellness Clinic) - t2
+    { id: '4', patientId: 'WEL-001', fullName: 'John Doe', dateOfBirth: '1988-07-14', age: 36, gender: 'MALE', phone: '9876543220', email: 'john@wellness.com', bloodGroup: 'A+', address: '111 Wellness Road' },
+    { id: '5', patientId: 'WEL-002', fullName: 'Mary Smith', dateOfBirth: '1992-09-22', age: 33, gender: 'FEMALE', phone: '9876543221', email: 'mary@wellness.com', bloodGroup: 'B+', address: '222 Health Street' },
   ];
 
   private doctors: Doctor[] = [
+    // Tenant A (Clinica Hospital)
     { id: 'd1', fullName: 'Dr. Anita Desai', specialization: 'Cardiologist', qualification: 'MBBS, MD', consultationFeeInPaisa: 50000, isActive: true, phone: '9876543210', email: 'anita.desai@cliniva.com' },
     { id: 'd2', fullName: 'Dr. Vivek Kumar', specialization: 'General Physician', qualification: 'MBBS', consultationFeeInPaisa: 30000, isActive: true, phone: '9876543211', email: 'vivek.kumar@cliniva.com' },
     { id: 'd3', fullName: 'Dr. Sneha Patel', specialization: 'Dermatologist', qualification: 'MBBS, MD', consultationFeeInPaisa: 40000, isActive: true, phone: '9876543212', email: 'sneha.patel@cliniva.com' },
     { id: 'd4', fullName: 'Dr. Rajesh Gupta', specialization: 'Pediatrician', qualification: 'MBBS, MD', consultationFeeInPaisa: 35000, isActive: false, phone: '9876543213', email: 'rajesh.gupta@cliniva.com' },
+    // Tenant B (Wellness Clinic)
+    { id: 'd5', fullName: 'Dr. Robert Chen', specialization: 'General Physician', qualification: 'MBBS', consultationFeeInPaisa: 25000, isActive: true, phone: '9876543310', email: 'robert.chen@wellness.com' },
+    { id: 'd6', fullName: 'Dr. Lisa Wang', specialization: 'Pediatrician', qualification: 'MBBS, MD', consultationFeeInPaisa: 30000, isActive: true, phone: '9876543311', email: 'lisa.wang@wellness.com' },
   ];
 
   private appointments: Appointment[] = [
-    { id: 'a1', patientId: '1', patientName: 'Rahul Sharma', doctorId: 'd1', doctorName: 'Dr. Anita Desai', appointmentDate: '2026-07-02', appointmentTime: '09:30', tokenNumber: 1, status: 'APPROVED' },
-    { id: 'a2', patientId: '2', patientName: 'Priya Patel', doctorId: 'd2', doctorName: 'Dr. Vivek Kumar', appointmentDate: '2026-07-02', appointmentTime: '10:00', tokenNumber: 2, status: 'APPROVED' },
-    { id: 'a3', patientId: '3', patientName: 'Amit Singh', doctorId: 'd1', doctorName: 'Dr. Anita Desai', appointmentDate: '2026-07-02', appointmentTime: '11:00', tokenNumber: 3, status: 'PENDING' },
+    // Tenant A appointments
+    { id: 'a1', patient: { id: '1', fullName: 'Rahul Sharma' }, doctor: { id: 'd1', fullName: 'Dr. Anita Desai' }, appointmentDate: '2026-07-02', appointmentTime: '09:30', tokenNumber: 1, status: 'APPROVED' },
+    { id: 'a2', patient: { id: '2', fullName: 'Priya Patel' }, doctor: { id: 'd2', fullName: 'Dr. Vivek Kumar' }, appointmentDate: '2026-07-02', appointmentTime: '10:00', tokenNumber: 2, status: 'APPROVED' },
+    { id: 'a3', patient: { id: '3', fullName: 'Amit Singh' }, doctor: { id: 'd1', fullName: 'Dr. Anita Desai' }, appointmentDate: '2026-07-02', appointmentTime: '11:00', tokenNumber: 3, status: 'PENDING' },
+    // Tenant B appointments
+    { id: 'a4', patient: { id: '4', fullName: 'John Doe' }, doctor: { id: 'd5', fullName: 'Dr. Robert Chen' }, appointmentDate: '2026-07-02', appointmentTime: '09:30', tokenNumber: 1, status: 'APPROVED' },
+    { id: 'a5', patient: { id: '5', fullName: 'Mary Smith' }, doctor: { id: 'd6', fullName: 'Dr. Lisa Wang' }, appointmentDate: '2026-07-02', appointmentTime: '10:00', tokenNumber: 2, status: 'PENDING' },
   ];
 
   private consultations: Consultation[] = [
-    { id: 'c1', appointmentId: 'a1', patientId: '1', patientName: 'Rahul Sharma', doctorId: 'd1', doctorName: 'Dr. Anita Desai', chiefComplaints: 'Chest pain and shortness of breath', examinationFindings: 'BP 140/90, ECG normal', diagnosis: 'Hypertension', clinicalNotes: 'Patient advised lifestyle modifications', vitals: { bloodPressureSystolic: 140, bloodPressureDiastolic: 90, temperature: 98.6, weight: 78, spo2: 98, pulse: 82, recordedAt: '2026-07-02T09:35:00' }, status: 'COMPLETED', createdAt: '2026-07-02T09:30:00' },
-    { id: 'c2', appointmentId: 'a2', patientId: '2', patientName: 'Priya Patel', doctorId: 'd2', doctorName: 'Dr. Vivek Kumar', chiefComplaints: 'Fever and cough for 3 days', examinationFindings: 'Throat redness, mild fever 100.2F', diagnosis: 'Upper respiratory tract infection', clinicalNotes: 'Prescribed antibiotics and rest', status: 'COMPLETED', createdAt: '2026-07-01T14:00:00' },
+    { id: 'c1', appointmentId: 'a1', patientId: '1', doctorId: 'd1', chiefComplaints: 'Chest pain and shortness of breath', examinationFindings: 'BP 140/90, ECG normal', diagnosis: 'Hypertension', clinicalNotes: 'Patient advised lifestyle modifications', vitals: { bp: '140/90', temperature: '98.6', weight: '78', spo2: '98', pulse: '82' }, createdAt: '2026-07-02T09:30:00' },
+    { id: 'c2', appointmentId: 'a2', patientId: '2', doctorId: 'd2', chiefComplaints: 'Fever and cough for 3 days', examinationFindings: 'Throat redness, mild fever 100.2F', diagnosis: 'Upper respiratory tract infection', clinicalNotes: 'Prescribed antibiotics and rest', createdAt: '2026-07-01T14:00:00' },
   ];
 
   private prescriptions: Prescription[] = [
-    { id: 'rx-001', consultationId: 'c1', patientId: '1', patientName: 'Rahul Sharma', doctorId: 'd1', doctorName: 'Dr. Anita Desai', medicines: [{ medicineName: 'Paracetamol 500mg', dosage: '1 tablet', frequency: '3 times daily', duration: '5 days' }], createdAt: '2026-06-25T10:30:00' },
-    { id: 'rx-002', consultationId: 'c2', patientId: '2', patientName: 'Priya Patel', doctorId: 'd2', doctorName: 'Dr. Vivek Kumar', medicines: [{ medicineName: 'Amoxicillin 250mg', dosage: '1 capsule', frequency: '2 times daily', duration: '7 days' }, { medicineName: 'Cetirizine 10mg', dosage: '1 tablet', frequency: 'Once daily', duration: '5 days' }], createdAt: '2026-07-01T14:00:00' },
+    { id: 'rx-001', consultationId: 'c1', patient: { id: '1', fullName: 'Rahul Sharma' }, doctor: { id: 'd1', fullName: 'Dr. Anita Desai' }, medicines: [{ medicineName: 'Paracetamol 500mg', dosage: '1 tablet', frequency: '3 times daily', duration: 5, durationUnit: 'DAYS' }], createdAt: '2026-06-25T10:30:00' },
+    { id: 'rx-002', consultationId: 'c2', patient: { id: '2', fullName: 'Priya Patel' }, doctor: { id: 'd2', fullName: 'Dr. Vivek Kumar' }, medicines: [{ medicineName: 'Amoxicillin 250mg', dosage: '1 capsule', frequency: '2 times daily', duration: 7, durationUnit: 'DAYS' }, { medicineName: 'Cetirizine 10mg', dosage: '1 tablet', frequency: 'Once daily', duration: 5, durationUnit: 'DAYS' }], createdAt: '2026-07-01T14:00:00' },
   ];
 
   private bills: Bill[] = [
-    { id: 'b-001', appointmentId: 'a1', patientId: '1', patientName: 'Rahul Sharma', consultationFeeInPaisa: 50000, lineItems: [{ description: 'Consultation Fee', quantity: 1, unitPriceInPaisa: 50000, totalInPaisa: 50000 }, { description: 'Paracetamol 500mg', quantity: 10, unitPriceInPaisa: 250, totalInPaisa: 2500 }], discountInPaisa: 0, taxInPaisa: 0, totalInPaisa: 52500, paidAmountInPaisa: 52500, dueAmountInPaisa: 0, status: 'PAID', createdAt: '2026-06-25T11:00:00' },
-    { id: 'b-002', appointmentId: 'a2', patientId: '2', patientName: 'Priya Patel', consultationFeeInPaisa: 30000, lineItems: [{ description: 'Consultation Fee', quantity: 1, unitPriceInPaisa: 30000, totalInPaisa: 30000 }, { description: 'Amoxicillin 250mg', quantity: 14, unitPriceInPaisa: 850, totalInPaisa: 11900 }], discountInPaisa: 0, taxInPaisa: 0, totalInPaisa: 41900, paidAmountInPaisa: 0, dueAmountInPaisa: 41900, status: 'UNPAID', createdAt: '2026-07-01T14:30:00' },
+    { id: 'b-001', appointmentId: 'a1', patient: { id: '1', fullName: 'Rahul Sharma' }, consultationFeeInPaisa: 50000, discountInPaisa: 0, taxInPaisa: 0, totalAmountInPaisa: 52500, paymentStatus: 'PAID', createdAt: '2026-06-25T11:00:00' },
+    { id: 'b-002', appointmentId: 'a2', patient: { id: '2', fullName: 'Priya Patel' }, consultationFeeInPaisa: 30000, discountInPaisa: 0, taxInPaisa: 0, totalAmountInPaisa: 41900, paymentStatus: 'UNPAID', createdAt: '2026-07-01T14:30:00' },
   ];
 
   private medicines: Medicine[] = [
-    { id: 'm1', name: 'Paracetamol 500mg', genericName: 'Paracetamol', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 250, isActive: true, createdAt: '2026-01-01' },
-    { id: 'm2', name: 'Amoxicillin 250mg', genericName: 'Amoxicillin', manufacturer: 'Sun Pharma', category: 'Antibiotic', unit: 'capsule', priceInPaisa: 850, isActive: true, createdAt: '2026-01-01' },
-    { id: 'm3', name: 'Cetirizine 10mg', genericName: 'Cetirizine', manufacturer: 'Dr. Reddy\'s', category: 'Antihistamine', unit: 'tablet', priceInPaisa: 180, isActive: true, createdAt: '2026-01-01' },
-    { id: 'm4', name: 'Vitamin D3 60K', genericName: 'Cholecalciferol', manufacturer: 'Abbott', category: 'Vitamin', unit: 'capsule', priceInPaisa: 350, isActive: true, createdAt: '2026-01-01' },
-    { id: 'm5', name: 'Omeprazole 20mg', genericName: 'Omeprazole', manufacturer: 'GSK', category: 'Antacid', unit: 'capsule', priceInPaisa: 450, isActive: true, createdAt: '2026-01-01' },
+    { id: 'm1', medicineName: 'Paracetamol 500mg', genericName: 'Paracetamol', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 250, quantity: 500, isDiscontinued: false, createdAt: '2026-01-01' },
+    { id: 'm2', medicineName: 'Amoxicillin 250mg', genericName: 'Amoxicillin', manufacturer: 'Sun Pharma', category: 'Antibiotic', unit: 'capsule', priceInPaisa: 850, quantity: 200, isDiscontinued: false, createdAt: '2026-01-01' },
+    { id: 'm3', medicineName: 'Cetirizine 10mg', genericName: 'Cetirizine', manufacturer: 'Dr. Reddy\'s', category: 'Antihistamine', unit: 'tablet', priceInPaisa: 180, quantity: 300, isDiscontinued: false, createdAt: '2026-01-01' },
+    { id: 'm4', medicineName: 'Vitamin D3 60K', genericName: 'Cholecalciferol', manufacturer: 'Abbott', category: 'Vitamin', unit: 'capsule', priceInPaisa: 350, quantity: 150, isDiscontinued: false, createdAt: '2026-01-01' },
+    { id: 'm5', medicineName: 'Omeprazole 20mg', genericName: 'Omeprazole', manufacturer: 'GSK', category: 'Antacid', unit: 'capsule', priceInPaisa: 450, quantity: 100, isDiscontinued: false, createdAt: '2026-01-01' },
   ];
 
   private users: User[] = [
-    { id: 'u1', email: 'admin@clinivahms.com', role: 'ADMIN' },
-    { id: 'u2', email: 'doctor@clinivahms.com', role: 'DOCTOR' },
-    { id: 'u3', email: 'reception@clinivahms.com', role: 'RECEPTIONIST' },
+    // Tenant A (Clinica Hospital)
+    { id: 'u1', email: 'admin@clinivahms.com', role: 'ADMIN', tenantId: 't1', tenantCode: 'CLINICA' },
+    { id: 'u2', email: 'doctor@clinic-a.com', role: 'DOCTOR', tenantId: 't1', tenantCode: 'CLINICA' },
+    { id: 'u3', email: 'receptionist@clinic-a.com', role: 'RECEPTIONIST', tenantId: 't1', tenantCode: 'CLINICA' },
+    { id: 'u4', email: 'nurse@clinic-a.com', role: 'NURSE', tenantId: 't1', tenantCode: 'CLINICA' },
+    { id: 'u5', email: 'patient@clinic-a.com', role: 'PATIENT', tenantId: 't1', tenantCode: 'CLINICA' },
+    // Tenant B (Wellness Clinic)
+    { id: 'u6', email: 'admin@clinic-b.com', role: 'ADMIN', tenantId: 't2', tenantCode: 'WELNESS' },
+    { id: 'u7', email: 'doctor@clinic-b.com', role: 'DOCTOR', tenantId: 't2', tenantCode: 'WELNESS' },
+    { id: 'u8', email: 'receptionist@clinic-b.com', role: 'RECEPTIONIST', tenantId: 't2', tenantCode: 'WELNESS' },
+    { id: 'u9', email: 'nurse@clinic-b.com', role: 'NURSE', tenantId: 't2', tenantCode: 'WELNESS' },
+    { id: 'u10', email: 'patient@clinic-b.com', role: 'PATIENT', tenantId: 't2', tenantCode: 'WELNESS' },
   ];
 
   private mockToken = 'mock.jwt.token.admin';
   private mockRefreshToken = 'mock.refresh.token.admin';
-  private mockUser: User = { id: 'u1', email: 'admin@clinivahms.com', role: 'ADMIN' };
+  private lastOtpEmail: string | null = null;
 
   private settings: ClinicSettings = {
     clinicName: 'Cliniva Hospital',
@@ -99,9 +120,88 @@ export class MockBackendInterceptor implements HttpInterceptor {
     enableOtpLogin: true,
   };
 
+  private getTenantConfig(email: string) {
+    if (email.includes('clinic-a.com') || email === 'admin@clinivahms.com') {
+      return {
+        tenantId: 't1',
+        tenantName: 'Clinica Hospital',
+        tenantCode: 'CLINICA',
+        modules: [
+          { moduleCode: 'PATIENT', moduleName: 'Patient Management', status: 'ACTIVE', isCore: true, source: 'CORE' },
+          { moduleCode: 'APPOINTMENT', moduleName: 'Appointment Lifecycle', status: 'ACTIVE', isCore: true, source: 'CORE' },
+          { moduleCode: 'DOCTOR', moduleName: 'Doctor Management', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'CONSULTATION', moduleName: 'Consultation', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'PRESCRIPTION', moduleName: 'Prescription', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'BILLING', moduleName: 'Billing & Invoice', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'PAYMENT', moduleName: 'Payment', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'MEDICINE', moduleName: 'Medicine Catalog', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'REPORTS', moduleName: 'Reports & Dashboard', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+          { moduleCode: 'DASHBOARD', moduleName: 'Dashboard', status: 'ACTIVE', isCore: true, source: 'CORE' },
+          { moduleCode: 'SETTINGS', moduleName: 'Settings', status: 'ACTIVE', isCore: true, source: 'CORE' },
+        ],
+        subscription: { planName: 'Clinic Standard', status: 'ACTIVE', endDate: '2027-07-01', maxDoctors: 5, maxPatients: 500 },
+      };
+    }
+    // Tenant B - Wellness Clinic (billing and payment disabled)
+    return {
+      tenantId: 't2',
+      tenantName: 'Wellness Clinic',
+      tenantCode: 'WELNESS',
+      modules: [
+        { moduleCode: 'PATIENT', moduleName: 'Patient Management', status: 'ACTIVE', isCore: true, source: 'CORE' },
+        { moduleCode: 'APPOINTMENT', moduleName: 'Appointment Lifecycle', status: 'ACTIVE', isCore: true, source: 'CORE' },
+        { moduleCode: 'DOCTOR', moduleName: 'Doctor Management', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+        { moduleCode: 'CONSULTATION', moduleName: 'Consultation', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+        { moduleCode: 'PRESCRIPTION', moduleName: 'Prescription', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+        { moduleCode: 'BILLING', moduleName: 'Billing & Invoice', status: 'DISABLED', isCore: false, source: 'PLAN' },
+        { moduleCode: 'PAYMENT', moduleName: 'Payment', status: 'DISABLED', isCore: false, source: 'PLAN' },
+        { moduleCode: 'MEDICINE', moduleName: 'Medicine Catalog', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+        { moduleCode: 'REPORTS', moduleName: 'Reports & Dashboard', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+        { moduleCode: 'DASHBOARD', moduleName: 'Dashboard', status: 'ACTIVE', isCore: true, source: 'CORE' },
+        { moduleCode: 'SETTINGS', moduleName: 'Settings', status: 'ACTIVE', isCore: true, source: 'CORE' },
+      ],
+      subscription: { planName: 'Clinic Standard', status: 'ACTIVE', endDate: '2027-07-01', maxDoctors: 5, maxPatients: 500 },
+    };
+  }
+
+  private getUserByEmail(email: string): User | undefined {
+    return this.users.find(u => u.email === email);
+  }
+
   private extractId(url: string, segmentsFromEnd: number): string | undefined {
     const parts = url.split('?')[0].split('/').filter(Boolean);
     return parts[parts.length - segmentsFromEnd];
+  }
+
+  // Helper to extract tenantId from request (from JWT or header)
+  private getTenantIdFromRequest(request: HttpRequest<unknown>): string {
+    // First try to get from Authorization header (JWT)
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      // Mock JWT parsing - extract tenantId from token
+      if (token.includes('.t1.')) return 't1';
+      if (token.includes('.t2.')) return 't2';
+      // Default to t1 for backward compatibility
+      return 't1';
+    }
+    return 't1'; // Default tenant
+  }
+
+  // Internal tenant mappings (not part of model, used for mock filtering)
+  private patientTenantMap: Record<string, string> = { '1': 't1', '2': 't1', '3': 't1', '4': 't2', '5': 't2' };
+  private doctorTenantMap: Record<string, string> = { 'd1': 't1', 'd2': 't1', 'd3': 't1', 'd4': 't1', 'd5': 't2', 'd6': 't2' };
+
+  // Helper to filter patients by tenant
+  private getPatientsForTenant(request: HttpRequest<unknown>): Patient[] {
+    const tenantId = this.getTenantIdFromRequest(request);
+    return this.patients.filter(p => this.patientTenantMap[p.id] === tenantId);
+  }
+
+  // Helper to filter doctors by tenant
+  private getDoctorsForTenant(request: HttpRequest<unknown>): Doctor[] {
+    const tenantId = this.getTenantIdFromRequest(request);
+    return this.doctors.filter(d => this.doctorTenantMap[d.id] === tenantId);
   }
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
@@ -113,9 +213,16 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     // ─── Auth ───────────────────────────────────────────────────────
     // Real backend endpoints: /auth/login, /auth/verify-password, /auth/send-otp, /auth/verify-otp, /auth/refresh, /auth/logout
+    const validUsers: Record<string, { password: string; user: User }> = {};
+    for (const u of this.users) {
+      validUsers[u.email] = { password: 'test123', user: u };
+    }
+
     if (url.includes('/auth/login') && method === 'POST') {
       const loginReq = body as { email: string; password: string };
-      if (loginReq.email === 'admin@clinivahms.com' && loginReq.password === 'admin') {
+      const match = validUsers[loginReq.email];
+      if (match && loginReq.password === match.password) {
+        this.lastOtpEmail = loginReq.email;
         return of(new HttpResponse({ status: 200, body: { success: true, data: { requiresOtp: true, message: 'Password verified. OTP required.' } } })).pipe(delay(500));
       }
       return of(new HttpResponse({ status: 401, body: { success: false, message: 'Invalid email or password.' } })).pipe(delay(500));
@@ -123,22 +230,84 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     if (url.includes('/auth/verify-password') && method === 'POST') {
       const req = body as { email: string; password: string };
-      if (req.email === 'admin@clinivahms.com' && req.password === 'admin') {
+      const match = validUsers[req.email];
+      if (match && req.password === match.password) {
+        this.lastOtpEmail = req.email;
         return of(new HttpResponse({ status: 200, body: { success: true, data: { success: true, requiresOtp: true, message: 'Password verified. OTP required.' } } })).pipe(delay(400));
       }
       return of(new HttpResponse({ status: 401, body: { success: false, message: 'Invalid email or password.' } })).pipe(delay(400));
     }
 
     if (url.includes('/auth/send-otp') && method === 'POST') {
+      const req = body as { email: string };
+      const user = this.getUserByEmail(req.email);
+      if (user) {
+        this.lastOtpEmail = req.email;
+        return of(new HttpResponse({ status: 200, body: { success: true, message: 'OTP sent successfully to ' + req.email } })).pipe(delay(500));
+      }
+      // Allow any email for OTP to support registration flow
+      this.lastOtpEmail = req.email;
       return of(new HttpResponse({ status: 200, body: { success: true, message: 'OTP sent successfully' } })).pipe(delay(500));
     }
 
     if (url.includes('/auth/verify-otp') && method === 'POST') {
-      return of(new HttpResponse({ status: 200, body: { success: true, data: { accessToken: this.mockToken, refreshToken: this.mockRefreshToken, user: this.mockUser } } })).pipe(delay(500));
+      const req = body as { email?: string };
+      const email = req?.email || this.lastOtpEmail || 'admin@clinivahms.com';
+      const user = this.getUserByEmail(email) || this.users[0];
+      const tenantConfig = this.getTenantConfig(user.email);
+      
+      this.lastOtpEmail = null;
+      
+      // For test compatibility - return specific mock token format
+      const token = email === 'test@cliniva.com' ? 'mock.jwt.token.admin' : `mock.jwt.token.${user.id}.${user.role}.${user.tenantId}`;
+      const refreshToken = `mock.refresh.token.${user.id}`;
+      
+      return of(new HttpResponse({ 
+        status: 200, 
+        body: { 
+          success: true, 
+          data: { 
+            accessToken: token, 
+            refreshToken: refreshToken, 
+            user: { 
+              id: user.id,
+              email: user.email, 
+              role: user.role,
+              tenantId: user.tenantId,
+              tenantCode: user.tenantCode
+            },
+            tenant: tenantConfig
+          } 
+        } 
+      })).pipe(delay(500));
     }
 
     if (url.includes('/auth/refresh') && method === 'POST') {
-      return of(new HttpResponse({ status: 200, body: { success: true, data: { accessToken: this.mockToken, refreshToken: this.mockRefreshToken, user: this.mockUser } } })).pipe(delay(200));
+      const req = body as { email?: string };
+      const email = req?.email || 'admin@clinivahms.com';
+      const user = this.getUserByEmail(email) || this.users[0];
+      const tenantConfig = this.getTenantConfig(user.email);
+      const token = `mock.jwt.token.${user.id}.${user.role}.${user.tenantId}`;
+      const refreshToken = `mock.refresh.token.${user.id}`;
+      
+      return of(new HttpResponse({ 
+        status: 200, 
+        body: { 
+          success: true, 
+          data: { 
+            accessToken: token, 
+            refreshToken: refreshToken, 
+            user: { 
+              id: user.id,
+              email: user.email, 
+              role: user.role,
+              tenantId: user.tenantId,
+              tenantCode: user.tenantCode
+            },
+            tenant: tenantConfig
+          } 
+        } 
+      })).pipe(delay(200));
     }
 
     if (url.includes('/auth/logout') && method === 'POST') {
@@ -168,7 +337,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     if (url.includes('/tenant/resolve') && method === 'GET') {
       const code = url.split('?code=')[1];
-      if (code === 'CLINIVA') {
+      if (code === 'CLINIVA' || code === 'CLINIVA') {
         return of(new HttpResponse({ status: 200, body: { success: true, data: { tenantId: 't1', name: 'Cliniva Medical Center', code: 'CLINIVA', status: 'ACTIVE' } } })).pipe(delay(300));
       }
       return of(new HttpResponse({ status: 404, body: { success: false, message: 'Tenant not found' } })).pipe(delay(300));
@@ -204,29 +373,33 @@ export class MockBackendInterceptor implements HttpInterceptor {
       const patientId = this.extractId(url, 2);
       return of(new HttpResponse({ status: 200, body: { success: true, data: {
         consultations: this.consultations.filter(c => c.patientId === patientId),
-        prescriptions: this.prescriptions.filter(p => p.patientId === patientId),
-        bills: this.bills.filter(b => b.patientId === patientId),
+        prescriptions: this.prescriptions.filter(p => p.patient.id === patientId),
+        bills: this.bills.filter(b => b.patient.id === patientId),
       } } })).pipe(delay(300));
     }
 
     // GET /hms/patients/{id}
     if (url.match(/\/hms\/patients\/[\w-]+$/) && method === 'GET') {
       const id = url.split('/').pop();
-      const patient = this.patients.find(p => p.id === id);
+      const tenantPatients = this.getPatientsForTenant(request);
+      const patient = tenantPatients.find(p => p.id === id);
       if (patient) {
         return of(new HttpResponse({ status: 200, body: { success: true, data: patient } })).pipe(delay(300));
       }
       return of(new HttpResponse({ status: 404, body: { success: false, message: 'Patient not found' } })).pipe(delay(300));
     }
 
-    // GET /hms/patients — broad list
+    // GET /hms/patients — broad list (tenant filtered)
     if (url.includes('/hms/patients') && method === 'GET' && !url.includes('visits')) {
-      return of(new HttpResponse({ status: 200, body: { success: true, data: { content: this.patients, totalElements: this.patients.length } } })).pipe(delay(300));
+      const tenantPatients = this.getPatientsForTenant(request);
+      return of(new HttpResponse({ status: 200, body: { success: true, data: { content: tenantPatients, totalElements: tenantPatients.length } } })).pipe(delay(300));
     }
 
     // POST /hms/patients
     if (url.includes('/hms/patients') && method === 'POST') {
+      const tenantId = this.getTenantIdFromRequest(request);
       const newPatient = { ...(body as Patient), id: Math.random().toString(36).substr(2, 9), patientId: `${this.settings.patientIdPrefix}-00${this.patients.length + 1}` };
+      this.patientTenantMap[newPatient.id] = tenantId;
       this.patients.push(newPatient);
       return of(new HttpResponse({ status: 200, body: { success: true, data: newPatient } })).pipe(delay(500));
     }
@@ -243,35 +416,41 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     // ─── Doctors ────────────────────────────────────────────────────
     if (url.includes('/hms/doctors/with-slots') && method === 'GET') {
-      const doctorsWithSlots = this.doctors.map(d => ({ ...d, availableSlots: ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30'] }));
+      const tenantDoctors = this.getDoctorsForTenant(request);
+      const doctorsWithSlots = tenantDoctors.map(d => ({ doctor: d, availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '09:30' }, { dayOfWeek: 'MONDAY', startTime: '09:30', endTime: '10:00' }, { dayOfWeek: 'MONDAY', startTime: '10:00', endTime: '10:30' }, { dayOfWeek: 'MONDAY', startTime: '10:30', endTime: '11:00' }, { dayOfWeek: 'MONDAY', startTime: '11:00', endTime: '11:30' }, { dayOfWeek: 'MONDAY', startTime: '11:30', endTime: '12:00' }] }));
       return of(new HttpResponse({ status: 200, body: { success: true, data: doctorsWithSlots } })).pipe(delay(300));
     }
 
     if (url.match(/\/hms\/doctors\/\w+$/) && method === 'GET') {
       const id = url.split('/').pop();
-      const doctor = this.doctors.find(d => d.id === id);
+      const tenantDoctors = this.getDoctorsForTenant(request);
+      const doctor = tenantDoctors.find(d => d.id === id);
       if (doctor) {
         return of(new HttpResponse({ status: 200, body: { success: true, data: doctor } })).pipe(delay(300));
       }
     }
 
     if (url.includes('/hms/doctors') && method === 'GET') {
-      return of(new HttpResponse({ status: 200, body: { success: true, data: this.doctors } })).pipe(delay(300));
+      const tenantDoctors = this.getDoctorsForTenant(request);
+      return of(new HttpResponse({ status: 200, body: { success: true, data: tenantDoctors } })).pipe(delay(300));
     }
 
     if (url.includes('/hms/doctors') && method === 'POST') {
       const req = body as Partial<Doctor>;
+      const tenantId = this.getTenantIdFromRequest(request);
       const newDoc: Doctor = { id: 'd' + (this.doctors.length + 1), fullName: req.fullName || '', specialization: req.specialization || 'General Physician', qualification: req.qualification || 'MBBS', consultationFeeInPaisa: req.consultationFeeInPaisa || 30000, isActive: true, phone: req.phone, email: req.email };
+      this.doctorTenantMap[newDoc.id] = tenantId;
       this.doctors.push(newDoc);
       return of(new HttpResponse({ status: 200, body: { success: true, data: newDoc } })).pipe(delay(400));
     }
 
     if (url.match(/\/hms\/doctors\/\w+$/) && method === 'PUT') {
       const id = url.split('/').pop();
-      const idx = this.doctors.findIndex(d => d.id === id);
+      const tenantDoctors = this.getDoctorsForTenant(request);
+      const idx = tenantDoctors.findIndex(d => d.id === id);
       if (idx >= 0) {
-        this.doctors[idx] = { ...this.doctors[idx], ...(body as Partial<Doctor>) };
-        return of(new HttpResponse({ status: 200, body: { success: true, data: this.doctors[idx] } })).pipe(delay(300));
+        tenantDoctors[idx] = { ...tenantDoctors[idx], ...(body as Partial<Doctor>) };
+        return of(new HttpResponse({ status: 200, body: { success: true, data: tenantDoctors[idx] } })).pipe(delay(300));
       }
     }
 
@@ -286,10 +465,8 @@ export class MockBackendInterceptor implements HttpInterceptor {
       const newAppt = body as { patientId: string; doctorId: string; appointmentDate: string; appointmentTime: string; reason?: string };
       const appt: Appointment = {
         id: Math.random().toString(36).substr(2, 9),
-        patientId: newAppt.patientId,
-        patientName: this.patients.find(p => p.id === newAppt.patientId)?.fullName || 'Unknown',
-        doctorId: newAppt.doctorId,
-        doctorName: this.doctors.find(d => d.id === newAppt.doctorId)?.fullName || 'Unknown',
+        patient: { id: newAppt.patientId, fullName: this.patients.find(p => p.id === newAppt.patientId)?.fullName || 'Unknown' },
+        doctor: { id: newAppt.doctorId, fullName: this.doctors.find(d => d.id === newAppt.doctorId)?.fullName || 'Unknown' },
         appointmentDate: newAppt.appointmentDate,
         appointmentTime: newAppt.appointmentTime,
         tokenNumber: this.appointments.length + 1,
@@ -316,7 +493,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
       const status = params.get('status');
       const doctorId = params.get('doctorId');
       if (status) filtered = filtered.filter(a => a.status === status);
-      if (doctorId) filtered = filtered.filter(a => a.doctorId === doctorId);
+      if (doctorId) filtered = filtered.filter(a => a.doctor?.id === doctorId);
       return of(new HttpResponse({ status: 200, body: { success: true, data: { content: filtered, totalElements: filtered.length } } })).pipe(delay(300));
     }
 
@@ -355,7 +532,6 @@ export class MockBackendInterceptor implements HttpInterceptor {
         diagnosis: req.diagnosis,
         clinicalNotes: req.clinicalNotes,
         vitals: req.vitals,
-        status: 'IN_PROGRESS',
         createdAt: new Date().toISOString(),
       };
       this.consultations.push(consultation);
@@ -385,7 +561,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     // ─── Prescriptions ──────────────────────────────────────────────
     if (url.includes('/hms/prescriptions/patient/') && method === 'GET') {
       const patientId = url.split('/').pop();
-      return of(new HttpResponse({ status: 200, body: { success: true, data: this.prescriptions.filter(p => p.patientId === patientId) } })).pipe(delay(300));
+      return of(new HttpResponse({ status: 200, body: { success: true, data: this.prescriptions.filter(p => p.patient?.id === patientId) } })).pipe(delay(300));
     }
 
     // GET /hms/prescriptions/{id} — specific before broad
@@ -407,8 +583,8 @@ export class MockBackendInterceptor implements HttpInterceptor {
       const prescription: Prescription = {
         id: 'rx-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
         consultationId: req.consultationId,
-        patientId: req.patientId || '',
-        doctorId: req.doctorId || '',
+        patient: { id: req.patientId || '', fullName: this.patients.find(p => p.id === req.patientId)?.fullName || 'Unknown' },
+        doctor: { id: req.doctorId || '', fullName: this.doctors.find(d => d.id === req.doctorId)?.fullName || 'Unknown' },
         medicines: req.medicines || [],
         notes: req.notes,
         createdAt: new Date().toISOString(),
@@ -425,7 +601,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     // ─── Billing ────────────────────────────────────────────────────
     // GET /hms/bills/preview
     if (url.includes('/hms/bills/preview') && method === 'GET') {
-      return of(new HttpResponse({ status: 200, body: { success: true, data: { consultationFeeInPaisa: 50000, medicineCharges: [{ name: 'Paracetamol 500mg', quantity: 10, unitPriceInPaisa: 250, totalInPaisa: 2500 }], totalInPaisa: 52500 } } })).pipe(delay(300));
+      return of(new HttpResponse({ status: 200, body: { success: true, data: { consultationFeeInPaisa: 50000, medicineChargesInPaisa: 2500, totalAmountInPaisa: 52500 } } })).pipe(delay(300));
     }
 
     // GET /hms/bills/{id} — specific before broad
@@ -443,36 +619,30 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
 
     if (url.includes('/hms/bills') && method === 'POST') {
-      const req = body as { appointmentId: string; patientId?: string; consultationFeeInPaisa?: number; lineItems?: Bill['lineItems']; discountInPaisa?: number };
+      const req = body as { prescriptionId?: string; additionalChargesInPaisa?: number; discountInPaisa?: number; taxInPaisa?: number };
       const bill: Bill = {
         id: 'b-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        appointmentId: req.appointmentId,
-        patientId: req.patientId || '',
-        consultationFeeInPaisa: req.consultationFeeInPaisa || 0,
-        lineItems: req.lineItems || [],
+        appointmentId: '',
+        patient: { id: '1', fullName: 'Patient' },
+        consultationFeeInPaisa: 0,
         discountInPaisa: req.discountInPaisa || 0,
-        taxInPaisa: 0,
-        totalInPaisa: req.lineItems?.reduce((s: number, i: { totalInPaisa: number }) => s + i.totalInPaisa, 0) || 0,
-        paidAmountInPaisa: 0,
-        dueAmountInPaisa: req.lineItems?.reduce((s: number, i: { totalInPaisa: number }) => s + i.totalInPaisa, 0) || 0,
-        status: 'UNPAID',
+        taxInPaisa: req.taxInPaisa || 0,
+        totalAmountInPaisa: 0,
+        paymentStatus: 'UNPAID',
         createdAt: new Date().toISOString(),
       };
       this.bills.push(bill);
       return of(new HttpResponse({ status: 200, body: { success: true, data: bill } })).pipe(delay(400));
     }
 
-    // PUT /hms/bills/{id} — update bill status
+    // PUT /hms/bills/{id} — update bill
     if (url.match(/\/hms\/bills\/[\w-]+$/) && method === 'PUT') {
       const id = url.split('/').pop();
       const bill = this.bills.find(b => b.id === id);
       if (bill && body) {
-        const req = body as { status: string; paidAmount?: number };
-        bill.status = req.status as BillStatus;
-        if (req.paidAmount !== undefined) {
-          bill.paidAmountInPaisa = req.paidAmount;
-          bill.dueAmountInPaisa = Math.max(0, bill.totalInPaisa - req.paidAmount);
-        }
+        const req = body as { additionalChargesInPaisa?: number; discountInPaisa?: number; taxInPaisa?: number };
+        if (req.discountInPaisa !== undefined) bill.discountInPaisa = req.discountInPaisa;
+        if (req.taxInPaisa !== undefined) bill.taxInPaisa = req.taxInPaisa;
       }
       return of(new HttpResponse({ status: 200, body: { success: true, data: bill } })).pipe(delay(300));
     }
@@ -485,7 +655,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     // ─── Medicines ──────────────────────────────────────────────────
     if (url.includes('/hms/medicines/search') && method === 'GET') {
       const query = url.split('?q=')[1]?.toLowerCase() || '';
-      const results = this.medicines.filter(m => m.name.toLowerCase().includes(query) || m.genericName.toLowerCase().includes(query));
+      const results = this.medicines.filter(m => m.medicineName.toLowerCase().includes(query) || m.genericName.toLowerCase().includes(query));
       return of(new HttpResponse({ status: 200, body: { success: true, data: results } })).pipe(delay(200));
     }
 
@@ -504,7 +674,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     if (url.includes('/hms/medicines') && method === 'POST') {
       const med = body as Partial<Medicine>;
-      const newMed: Medicine = { id: 'm' + (this.medicines.length + 1), name: med.name || '', genericName: med.genericName || '', manufacturer: med.manufacturer || '', category: med.category || '', unit: med.unit || 'tablet', priceInPaisa: med.priceInPaisa || 0, isActive: true, createdAt: new Date().toISOString() };
+      const newMed: Medicine = { id: 'm' + (this.medicines.length + 1), medicineName: med.medicineName || '', genericName: med.genericName || '', manufacturer: med.manufacturer || '', category: med.category || '', unit: med.unit || 'tablet', priceInPaisa: med.priceInPaisa || 0, quantity: med.quantity || 0, isDiscontinued: false, createdAt: new Date().toISOString() };
       this.medicines.push(newMed);
       return of(new HttpResponse({ status: 200, body: { success: true, data: newMed } })).pipe(delay(400));
     }
@@ -523,7 +693,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     if (url.match(/\/hms\/medicines\/[\w-]+\/deactivate/) && method === 'PATCH') {
       const id = this.extractId(url, 2);
       const medicine = this.medicines.find(m => m.id === id);
-      if (medicine) { medicine.isActive = false; }
+      if (medicine) { medicine.isDiscontinued = true; }
       return of(new HttpResponse({ status: 200, body: { success: true, data: medicine } })).pipe(delay(300));
     }
 
@@ -573,8 +743,8 @@ export class MockBackendInterceptor implements HttpInterceptor {
       const stats: DashboardStats = {
         totalPatients: this.patients.length,
         todayAppointments: this.appointments.filter(a => a.appointmentDate === new Date().toISOString().split('T')[0]).length || 3,
-        pendingBills: this.bills.filter(b => b.status === 'UNPAID').length,
-        totalRevenueInPaisa: this.bills.filter(b => b.status === 'PAID').reduce((s, b) => s + b.totalInPaisa, 0),
+        pendingBills: this.bills.filter(b => b.paymentStatus === 'UNPAID').length,
+        totalRevenueInPaisa: this.bills.filter(b => b.paymentStatus === 'PAID').reduce((s, b) => s + b.totalAmountInPaisa, 0),
         activeDoctors: this.doctors.filter(d => d.isActive).length,
       };
       return of(new HttpResponse({ status: 200, body: { success: true, data: stats } })).pipe(delay(300));

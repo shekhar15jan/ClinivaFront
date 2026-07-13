@@ -52,12 +52,12 @@ import { DatePipe } from '@angular/common';
                 @for (bill of bills; track bill.id) {
                   <tr class="border-t border-outline-variant hover:bg-surface-container transition-colors">
                     <td class="px-4 py-3 text-sm font-mono font-medium text-on-surface">INV-{{ bill.id.substring(0, 6) }}</td>
-                    <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ bill.patientName }}</td>
+                    <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ bill.patient?.fullName }}</td>
                     <td class="px-4 py-3 text-sm text-on-surface-variant">{{ bill.createdAt | date: 'mediumDate' }}</td>
-                    <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm text-on-surface-variant">₹{{ (bill.paidAmountInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm text-red-600 font-medium">₹{{ (bill.dueAmountInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3"><span [class]="statusClass(bill.status)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">{{ bill.status }}</span></td>
+                    <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</td>
+                    <td class="px-4 py-3 text-sm text-on-surface-variant">₹{{ (bill.paymentStatus === 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
+                    <td class="px-4 py-3 text-sm text-red-600 font-medium">₹{{ (bill.paymentStatus !== 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
+                    <td class="px-4 py-3"><span [class]="statusClass(bill.paymentStatus)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span></td>
                     <td class="px-4 py-3">
                       <a [routerLink]="['/billing', bill.id]" class="text-primary hover:underline text-sm font-medium">View</a>
                     </td>
@@ -73,13 +73,13 @@ import { DatePipe } from '@angular/common';
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
                     <span class="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-primary-container text-primary-on-container">INV-{{ bill.id.substring(0, 6) }}</span>
-                    <span [class]="statusClass(bill.status)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.status }}</span>
+                    <span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span>
                   </div>
-                  <p class="text-sm font-medium text-on-surface truncate">{{ bill.patientName }}</p>
+                  <p class="text-sm font-medium text-on-surface truncate">{{ bill.patient?.fullName }}</p>
                   <p class="text-xs text-on-surface-variant mt-0.5">{{ bill.createdAt | date: 'mediumDate' }}</p>
                 </div>
                 <div class="flex items-center gap-2 ml-3 shrink-0">
-                  <span class="text-sm font-semibold text-on-surface whitespace-nowrap">₹{{ (bill.totalInPaisa || 0) / 100 }}</span>
+                  <span class="text-sm font-semibold text-on-surface whitespace-nowrap">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</span>
                   <span class="material-symbols-outlined text-on-surface-variant text-lg">chevron_right</span>
                 </div>
               </a>

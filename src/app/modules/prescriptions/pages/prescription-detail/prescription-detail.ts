@@ -42,11 +42,11 @@ import { DatePipe } from '@angular/common';
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 border-b border-gray-100">
             <div>
               <p class="text-xs font-semibold text-[#64748B] uppercase mb-1">Patient</p>
-              <p class="text-sm font-medium text-[#1E293B]">{{ prescription.patientName }}</p>
+              <p class="text-sm font-medium text-[#1E293B]">{{ prescription.patient.fullName }}</p>
             </div>
             <div>
               <p class="text-xs font-semibold text-[#64748B] uppercase mb-1">Doctor</p>
-              <p class="text-sm font-medium text-[#1E293B]">{{ prescription.doctorName }}</p>
+              <p class="text-sm font-medium text-[#1E293B]">{{ prescription.doctor.fullName }}</p>
             </div>
           </div>
           <div class="p-6">

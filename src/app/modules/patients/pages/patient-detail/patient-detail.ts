@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PatientService } from '../../../../core/services/patient.service';
-import { Patient, PatientVisit } from '../../../../core/models/patient.model';
+import { Patient, VisitItem } from '../../../../core/models/patient.model';
 import { NgClass } from '@angular/common';
 
 @Component({
@@ -16,7 +16,7 @@ export class PatientDetail implements OnInit {
 
   patientId = '';
   patient: Patient | null = null;
-  visits: PatientVisit[] = [];
+  visits: VisitItem[] = [];
   isLoading = false;
 
   ngOnInit(): void {

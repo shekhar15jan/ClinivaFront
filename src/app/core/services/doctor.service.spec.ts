@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { DoctorService } from './doctor.service';
-import { Doctor, DoctorWithSlots, DoctorAvailability, UpdateAvailabilityRequest } from '../models/doctor.model';
+import { Doctor, DoctorWithSlotsResponse, DoctorAvailability, UpdateAvailabilityRequest } from '../models/doctor.model';
 import { ApiResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -49,7 +49,7 @@ describe('DoctorService', () => {
 
   describe('getDoctorsWithSlots', () => {
     it('should GET with-slots with date param', () => {
-      const mockResponse: ApiResponse<DoctorWithSlots[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
+      const mockResponse: ApiResponse<DoctorWithSlotsResponse[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
 
       service.getDoctorsWithSlots('2024-06-15').subscribe((res) => {
         expect(res.success).toBe(true);

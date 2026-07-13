@@ -122,14 +122,14 @@ describe('TenantService', () => {
     it('should GET tenant/onboarding', () => {
       const mockResponse: ApiResponse<OnboardingStatus> = {
         success: true,
-        data: { isComplete: false, currentStep: 1, totalSteps: 5, steps: [] },
+        data: { step: 'CLINIC', completed: false },
         message: '',
         timestamp: '',
         requestId: '',
       };
 
       service.getOnboardingStatus().subscribe((res) => {
-        expect(res.data.isComplete).toBe(false);
+        expect(res.data.completed).toBe(false);
       });
 
       const req = httpMock.expectOne(`${apiUrl}/tenant/onboarding`);

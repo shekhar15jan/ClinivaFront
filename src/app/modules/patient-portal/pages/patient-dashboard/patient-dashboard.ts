@@ -67,7 +67,7 @@ import { DatePipe } from '@angular/common';
           } @else {
             @for (rx of prescriptions.slice(0, 5); track rx.id) {
               <div class="px-4 py-3 border-b border-outline-variant last:border-0">
-                <p class="text-sm font-medium text-on-surface">Rx #{{ rx.id?.substring(0, 8) }}</p>
+                <p class="text-sm font-medium text-on-surface">Rx #{{ rx.id.substring(0, 8) }}</p>
                 <p class="text-xs text-outline">{{ rx.createdAt | date:'mediumDate' }} · {{ rx.notes || '—' }}</p>
               </div>
             }
@@ -95,7 +95,7 @@ export class PatientDashboard implements OnInit {
   }
 
   get pendingBills(): number {
-    return this.bills.filter((b) => b.status === 'UNPAID' || b.status === 'PARTIALLY_PAID').length;
+    return this.bills.filter((b) => b.paymentStatus === 'UNPAID' || b.paymentStatus === 'PARTIALLY_PAID').length;
   }
 
   ngOnInit() {

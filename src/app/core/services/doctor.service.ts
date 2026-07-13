@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Doctor, DoctorWithSlots, DoctorAvailability, UpdateAvailabilityRequest } from '../models/doctor.model';
-import { ApiResponse } from '../models/common.model';
+import { Observable, map } from 'rxjs';
+import { Doctor, DoctorWithSlotsResponse, DoctorAvailability, UpdateAvailabilityRequest } from '../models/doctor.model';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -13,12 +13,22 @@ export class DoctorService {
 
   private readonly apiUrl = `${environment.apiUrl}/hms/doctors`;
 
-  getDoctors(): Observable<ApiResponse<Doctor[]>> {
-    return this.http.get<ApiResponse<Doctor[]>>(this.apiUrl);
+  getDoctors(
+    page = 0,
+    size = 20,
+  ): Observable<ApiResponse<PagedResponse<Doctor>>> {
+    return this.http
+      .get<ApiResponse<RawPagedResponse<Doctor>>>(`${this.apiUrl}?page=${page}&size=${size}`)
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
-  getDoctorsWithSlots(date: string): Observable<ApiResponse<DoctorWithSlots[]>> {
-    return this.http.get<ApiResponse<DoctorWithSlots[]>>(`${this.apiUrl}/with-slots?date=${date}`);
+  getDoctorsWithSlots(date: string): Observable<ApiResponse<DoctorWithSlotsResponse[]>> {
+    return this.http.get<ApiResponse<DoctorWithSlotsResponse[]>>(`${this.apiUrl}/with-slots?date=${date}`);
   }
 
   getDoctorById(id: string): Observable<ApiResponse<Doctor>> {

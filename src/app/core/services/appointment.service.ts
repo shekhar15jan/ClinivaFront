@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Appointment, CreateAppointmentRequest, UpdateAppointmentRequest } from '../models/appointment.model';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -22,7 +22,14 @@ export class AppointmentService {
     let url = `${this.apiUrl}?page=${page}&size=${size}`;
     if (status) url += `&status=${status}`;
     if (doctorId) url += `&doctorId=${doctorId}`;
-    return this.http.get<ApiResponse<PagedResponse<Appointment>>>(url);
+    return this.http
+      .get<ApiResponse<RawPagedResponse<Appointment>>>(url)
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
   createAppointment(request: CreateAppointmentRequest): Observable<ApiResponse<Appointment>> {

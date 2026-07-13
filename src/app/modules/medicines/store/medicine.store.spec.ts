@@ -12,21 +12,21 @@ describe('MedicineStore', () => {
 
   const mockMedicine: Medicine = {
     id: 'm1',
-    name: 'Paracetamol',
+    medicineName: 'Paracetamol',
     genericName: 'Acetaminophen',
     manufacturer: 'Generic Pharma',
     category: 'Analgesic',
     unit: 'tablet',
     priceInPaisa: 500,
-    isActive: true,
+    isDiscontinued: false,
     createdAt: '2026-01-01T00:00:00Z',
   };
 
   const mockInactiveMedicine: Medicine = {
     ...mockMedicine,
     id: 'm2',
-    name: 'Old Med',
-    isActive: false,
+    medicineName: 'Old Med',
+    isDiscontinued: true,
   };
 
   const mockPagedResponse: ApiResponse<PagedResponse<Medicine>> = {
@@ -143,7 +143,7 @@ describe('MedicineStore', () => {
     store.loadMedicines();
     tick();
     const initialCount = store.medicines().length;
-    store.createMedicine({ name: 'New Med' } as Partial<Medicine>);
+    store.createMedicine({ medicineName: 'New Med' } as Partial<Medicine>);
     tick();
     expect(mockMedicineService.createMedicine).toHaveBeenCalled();
     expect(store.medicines().length).toBe(initialCount + 1);
@@ -153,7 +153,7 @@ describe('MedicineStore', () => {
   it('should handle create medicine error', fakeAsync(() => {
     mockMedicineService.createMedicine = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(MedicineStore);
-    errorStore.createMedicine({ name: 'Bad' } as Partial<Medicine>);
+    errorStore.createMedicine({ medicineName: 'Bad' } as Partial<Medicine>);
     tick();
     expect(errorStore.error()).toBe('Create failed');
   }));
@@ -169,7 +169,7 @@ describe('MedicineStore', () => {
   it('should handle update medicine error', fakeAsync(() => {
     mockMedicineService.updateMedicine = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(MedicineStore);
-    errorStore.updateMedicine({ id: 'm1', medicine: { name: 'Bad' } });
+    errorStore.updateMedicine({ id: 'm1', medicine: { medicineName: 'Bad' } });
     tick();
     expect(errorStore.error()).toBe('Update failed');
   }));

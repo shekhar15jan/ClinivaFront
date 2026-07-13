@@ -1,20 +1,25 @@
 export interface PrescriptionMedicine {
   id?: string;
+  medicineId?: string;
   medicineName: string;
   dosage: string;
   frequency: string;
-  duration: string;
+  duration: number;
+  durationUnit: string;
   instructions?: string;
-  quantity?: number;
+  morning?: boolean;
+  afternoon?: boolean;
+  night?: boolean;
 }
 
 export interface Prescription {
   id: string;
   consultationId: string;
-  patientId: string;
-  patientName?: string;
-  doctorId: string;
-  doctorName?: string;
+  appointmentId?: string;
+  doctor: { id: string; fullName: string; specialization?: string };
+  patient: { id: string; fullName: string; patientId?: string };
+  diagnosis?: string;
+  date?: string;
   medicines: PrescriptionMedicine[];
   notes?: string;
   createdAt: string;

@@ -33,11 +33,11 @@ export const PatientStore = signalStore(
   withMethods((store) => {
     const patientService = inject(PatientService);
     return {
-    loadPatients: rxMethod<{ page?: number; size?: number; search?: string } | void>(
+    loadPatients: rxMethod<{ page?: number; size?: number } | void>(
       pipe(
         tap(() => patchState(store, { loading: true, error: null })),
         switchMap((params) =>
-          patientService.getPatients(params?.page || 0, params?.size || 20, params?.search).pipe(
+          patientService.getPatients(params?.page || 0, params?.size || 20).pipe(
             tap((response: ApiResponse<PagedResponse<Patient>>) => {
               patchState(store, {
                 patients: response.data.content,

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import {
   CreateHealthPackageRequest, UpdateHealthPackageRequest,
   HealthPackageResponse, BookHealthPackageRequest, HealthPackageBookingResponse
@@ -18,7 +18,14 @@ export class HealthPackageService {
     let params = new HttpParams();
     if (page !== undefined) params = params.set('page', page);
     if (size !== undefined) params = params.set('size', size);
-    return this.http.get<ApiResponse<PagedResponse<HealthPackageResponse>>>(this.baseUrl, { params });
+    return this.http
+      .get<ApiResponse<RawPagedResponse<HealthPackageResponse>>>(this.baseUrl, { params })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
   create(request: CreateHealthPackageRequest): Observable<ApiResponse<HealthPackageResponse>> {

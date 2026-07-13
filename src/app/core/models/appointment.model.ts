@@ -1,11 +1,22 @@
 export type AppointmentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
 
+export interface PatientSummary {
+  id: string;
+  patientId?: string;
+  fullName: string;
+  phone?: string;
+}
+
+export interface DoctorSummary {
+  id: string;
+  fullName: string;
+  specialization?: string;
+}
+
 export interface Appointment {
   id: string;
-  patientId: string;
-  patientName: string; // denormalized for UI
-  doctorId: string;
-  doctorName: string; // denormalized for UI
+  patient: PatientSummary;
+  doctor: DoctorSummary;
   appointmentDate: string;
   appointmentTime: string;
   tokenNumber: number;

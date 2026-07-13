@@ -32,7 +32,7 @@ describe('BillList', () => {
 
   it('should load bills from API on init', () => {
     const mockBills = [
-      { id: 'b-001', appointmentId: 'a1', patientId: '1', patientName: 'Rahul Sharma', consultationFeeInPaisa: 0, lineItems: [], discountInPaisa: 0, taxInPaisa: 0, totalInPaisa: 0, paidAmountInPaisa: 0, dueAmountInPaisa: 0, status: 'PAID' as const, createdAt: '' },
+      { id: 'b-001', appointmentId: 'a1', patient: { id: '1', fullName: 'Rahul Sharma' }, consultationFeeInPaisa: 0, discountInPaisa: 0, taxInPaisa: 0, totalAmountInPaisa: 0, paymentStatus: 'PAID' as const, createdAt: '' },
     ];
     const component = createComponent({
       getBills: vi.fn().mockReturnValue(of({
@@ -42,7 +42,7 @@ describe('BillList', () => {
     });
     component.ngOnInit();
     expect(component.bills.length).toBe(1);
-    expect(component.bills[0].patientName).toBe('Rahul Sharma');
+    expect(component.bills[0].patient?.fullName).toBe('Rahul Sharma');
   });
 
   it('should return correct status CSS class', () => {

@@ -1,57 +1,46 @@
-<div class="min-h-screen flex">
-  <!-- Left Side: Illustration -->
-  <div class="hidden lg:flex lg:w-3/5 bg-medical-blue items-center justify-center p-12 relative overflow-hidden">
-    <div class="absolute inset-0 bg-medical-blue/30 backdrop-blur-[2px]"></div>
-    <div class="z-10 text-white max-w-xl">
-      <h1 class="text-5xl font-bold mb-4 leading-tight">Advanced Healthcare Management.</h1>
-      <p class="text-lg text-white/90 leading-relaxed">
-        Precision technology for modern clinical environments. Cliniva HMS provides a unified ecosystem for patient care, diagnostics, and administration.
-      </p>
+<main class="min-h-screen flex flex-col md:flex-row overflow-hidden">
+  <!-- Left Side: Illustration Panel -->
+  <section class="hidden md:flex md:w-1/2 lg:w-3/5 bg-primary relative items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img alt="Cliniva Medical Illustration" class="w-full h-full object-cover opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCcGngF9gUoufjgT8YeAxJD5L_dlW0BMP9jF9PFUBwxu_UgLunBucOXItNizAZ_hooFy5c7LAyq9FDTJ6JAVX4APL-v95AFx9S57zIMTyurK2X-PTEQD4kjkWyQcBggT9YvzfPnhf5F4E5RNGcoXx1OmwVxSJvGdtBjHUHxTj8ew3uXP5cyjuMjl_rIKU5iP7yYTjFXKSruasLzfH2SHxzd5WY8a4BkrgcPUzmafKkVBnk0bz954202F5alYxZEeose8YrCUgIqJbP"/>
     </div>
-  </div>
+    <!-- Overlay glass effect for depth -->
+    <div class="absolute inset-0 bg-primary/20 backdrop-blur-[2px]"></div>
+    <div class="relative z-10 p-xl max-w-xl text-primary-on">
+      <h1 class="text-display-lg font-bold mb-md leading-tight text-white">Advanced Healthcare Management.</h1>
+      <p class="text-body-lg text-white opacity-90">Precision technology for modern clinical environments. Cliniva HMS provides a unified ecosystem for patient care, diagnostics, and administration.</p>
+    </div>
+  </section>
 
   <!-- Right Side: Login Panel -->
-  <div class="w-full lg:w-2/5 flex flex-col bg-surface-container-lowest">
-    <div class="flex-grow flex items-center justify-center p-8 sm:p-12">
-      <div class="w-full max-w-md">
-        <!-- Brand Logo -->
-        <div class="mb-8 flex items-center gap-3">
-          <div class="w-10 h-10 bg-medical-blue rounded-lg flex items-center justify-center">
-            <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1">medical_services</span>
+  <section class="flex-1 flex flex-col bg-surface-container-lowest justify-between px-md py-lg md:px-xl md:py-xl">
+    <!-- Branding & Header -->
+    <div class="w-full max-w-md mx-auto mt-auto md:mt-0">
+      <div class="mb-xl flex items-center gap-sm">
+        <div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary-on-container" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+        </div>
+        <span class="text-headline-md font-bold text-primary">Cliniva HMS</span>
+      </div>
+
+      <!-- Router outlet for login steps -->
+      <router-outlet></router-outlet>
+    </div>
+
+    <!-- Footer: Shared Component Logic -->
+    <footer class="mt-auto pt-xl w-full max-w-md mx-auto">
+      <div class="flex flex-col gap-md border-t border-outline-variant pt-lg">
+        <div class="flex justify-between items-center">
+          <span class="text-label-sm text-on-surface-variant">© 2024 Cliniva HMS.</span>
+          <div class="flex gap-md">
+            <a class="text-label-sm text-secondary hover:text-primary transition-colors" href="#">Help Center</a>
+            <a class="text-label-sm text-secondary hover:text-primary transition-colors" href="#">Support</a>
           </div>
-          <span class="text-xl font-bold text-medical-blue">Cliniva HMS</span>
         </div>
-
-        <div class="mb-8">
-          <h2 class="text-2xl font-bold text-on-surface mb-1">Welcome Back</h2>
-          <p class="text-sm text-outline">Sign in to access your clinic management dashboard.</p>
-        </div>
-
-        <!-- Router outlet for login steps -->
-        <router-outlet></router-outlet>
-
-        <!-- Secure Portal Divider -->
-        <div class="flex items-center gap-3 my-6">
-          <div class="h-px flex-1 bg-outline-variant"></div>
-          <span class="text-xs font-medium text-outline uppercase tracking-wider">Secure Portal</span>
-          <div class="h-px flex-1 bg-outline-variant"></div>
-        </div>
-
         <div class="text-center">
-          <p class="text-sm text-outline">
-            Having trouble? <a href="#" class="text-medical-blue font-semibold hover:underline">Contact Administrator</a>
-          </p>
+          <p class="text-label-sm text-outline">Powered by CodeAtCloud</p>
         </div>
       </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="p-6 text-center border-t border-outline-variant">
-      <p class="text-xs text-outline mb-2">Powered by CodeAtCloud</p>
-      <div class="flex justify-center gap-6">
-        <a href="#" class="text-xs text-outline hover:text-medical-blue transition-colors">Help Center</a>
-        <a href="#" class="text-xs text-outline hover:text-medical-blue transition-colors">Support</a>
-      </div>
-    </div>
-  </div>
-</div>
+    </footer>
+  </section>
+</main>

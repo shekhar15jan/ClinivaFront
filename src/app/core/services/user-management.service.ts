@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { ManagedUser, CreateManagedUserRequest } from '../models/user-management.model';
 import { environment } from '../../../environments/environment';
 
@@ -15,8 +15,10 @@ export class UserManagementService {
 
   getUsers(page = 0, size = 20): Observable<PagedResponse<ManagedUser>> {
     return this.http
-      .get<ApiResponse<PagedResponse<ManagedUser>>>(`${this.apiUrl}?page=${page}&size=${size}`)
-      .pipe(map((res) => res.data));
+      .get<ApiResponse<RawPagedResponse<ManagedUser>>>(`${this.apiUrl}?page=${page}&size=${size}`)
+      .pipe(
+        map((res) => PagedResponse.from(res.data)),
+      );
   }
 
   getUserById(id: string): Observable<ManagedUser> {

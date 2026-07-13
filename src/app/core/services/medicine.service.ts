@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { Medicine } from '../models/medicine.model';
 import { environment } from '../../../environments/environment';
 
@@ -20,7 +20,14 @@ export class MedicineService {
     if (page !== undefined) params = params.set('page', page);
     if (size !== undefined) params = params.set('size', size);
     if (search) params = params.set('q', search);
-    return this.http.get<ApiResponse<PagedResponse<Medicine>>>(this.baseUrl, { params });
+    return this.http
+      .get<ApiResponse<RawPagedResponse<Medicine>>>(this.baseUrl, { params })
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
   getMedicineById(id: string): Observable<ApiResponse<Medicine>> {

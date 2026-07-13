@@ -24,11 +24,11 @@ export class InvoiceDetail implements OnInit {
   }
 
   get status(): string {
-    return this.bill?.status || 'UNPAID';
+    return this.bill?.paymentStatus || 'UNPAID';
   }
 
   get total(): number {
-    return (this.bill?.totalInPaisa || 0) / 100;
+    return (this.bill?.totalAmountInPaisa || 0) / 100;
   }
 
   ngOnInit() {
@@ -55,10 +55,10 @@ export class InvoiceDetail implements OnInit {
   collectPayment() {
     if (this.status === 'PAID' || !this.id) return;
     this.isCollecting = true;
-    this.billingService.updateBillStatus(this.id, 'PAID').subscribe({
+    this.billingService.updateBill(this.id, {}).subscribe({
       next: () => {
         if (this.bill) {
-          this.bill = { ...this.bill, status: 'PAID' };
+          this.bill = { ...this.bill, paymentStatus: 'PAID' };
         }
         this.isCollecting = false;
       },

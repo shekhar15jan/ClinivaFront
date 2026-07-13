@@ -14,7 +14,7 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:4200',
+    baseURL: process.env.BASE_URL || 'http://localhost:4201',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -34,11 +34,5 @@ export default defineConfig({
     },
   ],
 
-  webServer: process.env.SKIP_WEBSERVER
-    ? undefined
-    : {
-        command: 'npm run start -- --port 4200',
-        port: 4200,
-        reuseExistingServer: !process.env.CI,
-      },
+  webServer: undefined,
 });

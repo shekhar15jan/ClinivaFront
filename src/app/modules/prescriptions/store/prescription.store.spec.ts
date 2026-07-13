@@ -13,11 +13,9 @@ describe('PrescriptionStore', () => {
   const mockPrescription: Prescription = {
     id: 'rx1',
     consultationId: 'c1',
-    patientId: 'p1',
-    patientName: 'John Doe',
-    doctorId: 'd1',
-    doctorName: 'Dr. Smith',
-    medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: 'BD', duration: '5' }],
+    patient: { id: 'p1', fullName: 'John Doe' },
+    doctor: { id: 'd1', fullName: 'Dr. Smith' },
+    medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: 'BD', duration: 5, durationUnit: 'days' }],
     createdAt: '2026-07-15T10:00:00Z',
   };
 

@@ -5,42 +5,42 @@ export type SubscriptionStatus = 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
 
 export interface Tenant {
   id: string;
-  tenantId: string;
+  tenantId?: string;
   name: string;
   displayName?: string;
   domain?: string;
-  contactEmail: string;
+  contactEmail?: string;
   contactPhone?: string;
   address?: string;
-  status: TenantStatus;
-  timezone: string;
-  currency: string;
-  patientIdPrefix: string;
+  status?: TenantStatus;
+  timezone?: string;
+  currency?: string;
+  patientIdPrefix?: string;
   logoUrl?: string;
   trialEndsAt?: string;
 }
 
 export interface TenantModule {
-  id: string;
-  moduleId: string;
+  id?: string;
+  moduleId?: string;
   moduleCode: string;
   moduleName: string;
-  status: ModuleStatus;
-  source: LicenseSource;
+  status: string;
+  source?: string;
   isCore: boolean;
   activatedAt?: string;
   expiresAt?: string;
 }
 
 export interface Subscription {
-  id: string;
-  tenantId: string;
-  productId: string;
-  planId: string;
+  id?: string;
+  tenantId?: string;
+  productId?: string;
+  planId?: string;
   planName: string;
-  status: SubscriptionStatus;
-  startDate: string;
-  endDate: string;
+  status: string;
+  startDate?: string;
+  endDate?: string;
   maxDoctors?: number;
   maxPatients?: number;
 }
@@ -52,10 +52,8 @@ export interface TenantResolution {
 }
 
 export interface OnboardingStatus {
-  isComplete: boolean;
-  currentStep: number;
-  totalSteps: number;
-  steps: OnboardingStep[];
+  step: string;
+  completed: boolean;
 }
 
 export interface OnboardingStep {

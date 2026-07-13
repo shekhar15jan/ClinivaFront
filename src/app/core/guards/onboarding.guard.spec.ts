@@ -38,7 +38,7 @@ describe('OnboardingGuard', () => {
 
   it('should redirect to onboarding when onboarding is NOT complete', async () => {
     (onboardingService.getStatus as ReturnType<typeof vi.fn>).mockReturnValue(
-      of({ success: true, data: { isComplete: false, currentStep: 1, totalSteps: 5, steps: [] }, message: '' }),
+      of({ success: true, data: { step: 'CLINIC', completed: false }, message: '' }),
     );
     const route = { params: { hospitalCode: 'hosp1' } } as unknown as ActivatedRouteSnapshot;
 
@@ -50,7 +50,7 @@ describe('OnboardingGuard', () => {
 
   it('should allow activation when onboarding is complete', async () => {
     (onboardingService.getStatus as ReturnType<typeof vi.fn>).mockReturnValue(
-      of({ success: true, data: { isComplete: true, currentStep: 5, totalSteps: 5, steps: [] }, message: '' }),
+      of({ success: true, data: { step: 'COMPLETE', completed: true }, message: '' }),
     );
     const route = { params: { hospitalCode: 'hosp1' } } as unknown as ActivatedRouteSnapshot;
 

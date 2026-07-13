@@ -1,42 +1,62 @@
-<div class="space-y-6">
+<div class="space-y-lg">
+  <header>
+    <h2 class="text-headline-md font-bold text-on-surface mb-xs">Welcome Back</h2>
+    <p class="text-body-md text-secondary">Enter your professional email to receive a secure access code.</p>
+  </header>
+
   @if (errorMessage) {
-    <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-md">
-      <p class="text-sm text-red-700">{{ errorMessage }}</p>
+    <div class="bg-error-container text-error px-md py-sm rounded-lg mb-4 text-body-sm">
+      {{ errorMessage }}
     </div>
   }
 
-  <form #loginForm="ngForm" (ngSubmit)="sendOtp()" class="space-y-6">
-    <div class="relative">
-      <input
+  <form #loginForm="ngForm" (ngSubmit)="sendOtp()" class="space-y-lg">
+    <div class="relative floating-label-input group">
+      <input 
         type="email"
         name="email"
         [(ngModel)]="email"
         #emailCtrl="ngModel"
         required
         email
-        class="peer w-full border border-outline-variant rounded-lg px-4 py-4 pt-6 text-on-surface focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue transition-all placeholder-transparent bg-transparent"
-        placeholder="name@clinic.com"
+        id="email" 
+        class="peer w-full px-md py-4 rounded-lg border border-outline-variant bg-transparent text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder-transparent" 
+        placeholder=" "
       />
-      <label
-        for="email"
-        class="absolute left-4 top-1 text-xs text-outline transition-all peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-medical-blue bg-white px-1"
+      <label 
+        for="email" 
+        class="absolute left-md top-4 text-body-md text-secondary transition-all origin-[0] transform peer-focus:-translate-y-6 peer-focus:scale-85 peer-focus:text-primary peer-focus:bg-surface-container-lowest peer-focus:px-1 peer-[&:not(:placeholder-shown)]:-translate-y-6 peer-[&:not(:placeholder-shown)]:scale-85 peer-[&:not(:placeholder-shown)]:bg-surface-container-lowest peer-[&:not(:placeholder-shown)]:px-1 pointer-events-none"
       >
         Email Address
       </label>
+      <div class="mt-xs flex items-center gap-xs text-secondary opacity-0 group-focus-within:opacity-100 transition-opacity">
+        <span class="material-symbols-outlined text-[16px]">info</span>
+        <span class="text-label-sm">Use your registered hospital domain email.</span>
+      </div>
     </div>
 
-    <button
+    <button 
       type="submit"
       [disabled]="loginForm.invalid || isLoading"
-      class="w-full bg-medical-blue hover:bg-medical-blue-dark text-white font-medium py-3.5 px-4 rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+      class="w-full bg-primary-container text-primary-on-container font-label-md py-4 px-lg rounded-lg shadow-sm hover:shadow-md hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-sm group disabled:opacity-50 disabled:cursor-not-allowed"
     >
       @if (isLoading) {
         <span class="material-symbols-outlined animate-spin">progress_activity</span>
       }
-      <span>{{ isLoading ? 'Sending OTP...' : 'Send OTP' }}</span>
-      <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform"
-        >arrow_forward</span
-      >
+      <span>{{ isLoading ? 'Sending...' : 'Send OTP' }}</span>
+      <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
     </button>
   </form>
+
+  <div class="flex items-center justify-center gap-md py-md">
+    <div class="h-[1px] flex-1 bg-outline-variant"></div>
+    <span class="text-label-sm text-outline uppercase tracking-wider">Secure Portal</span>
+    <div class="h-[1px] flex-1 bg-outline-variant"></div>
+  </div>
+
+  <div class="text-center">
+    <p class="text-body-sm text-secondary">
+      Having trouble? <a class="text-primary font-semibold hover:underline" href="#">Contact Administrator</a>
+    </p>
+  </div>
 </div>

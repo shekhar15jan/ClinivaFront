@@ -36,7 +36,7 @@ export const DoctorStore = signalStore(
             doctorService.getDoctors().pipe(
               tap((response) => {
                 patchState(store, {
-                  doctors: response.data,
+                  doctors: response.data.content,
                   loading: false
                 });
               }),

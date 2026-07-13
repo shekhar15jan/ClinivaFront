@@ -78,11 +78,10 @@ export class ConsultationWorkspace implements OnInit {
       diagnosis: formVal.notes?.diagnosis || '',
       clinicalNotes: '',
       vitals: {
-        bloodPressureSystolic: parseInt(formVal.notes?.vitals?.bp?.split('/')[0]) || undefined,
-        bloodPressureDiastolic: parseInt(formVal.notes?.vitals?.bp?.split('/')[1]) || undefined,
-        temperature: parseFloat(formVal.notes?.vitals?.temp) || undefined,
-        weight: parseFloat(formVal.notes?.vitals?.weight) || undefined,
-        pulse: parseInt(formVal.notes?.vitals?.pulse) || undefined,
+        bp: formVal.notes?.vitals?.bp || undefined,
+        temperature: formVal.notes?.vitals?.temp ? String(formVal.notes.vitals.temp) : undefined,
+        weight: formVal.notes?.vitals?.weight ? String(formVal.notes.vitals.weight) : undefined,
+        pulse: formVal.notes?.vitals?.pulse ? String(formVal.notes.vitals.pulse) : undefined,
       },
     }).subscribe({
       next: (res) => {

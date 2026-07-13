@@ -3,13 +3,12 @@ import { signalStore, withState, withMethods, withComputed, patchState } from '@
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { pipe, switchMap, tap, catchError, EMPTY } from 'rxjs';
 import { BillingService } from '../../../core/services/billing.service';
-import { Bill, BillPreview, CreateBillRequest } from '../../../core/models/billing.model';
+import { Bill, CreateBillRequest, UpdateBillRequest } from '../../../core/models/billing.model';
 import { ApiResponse, PagedResponse } from '../../../core/models/common.model';
 
 export interface BillingState {
   bills: Bill[];
   selectedBill: Bill | null;
-  billPreview: BillPreview | null;
   loading: boolean;
   error: string | null;
   totalElements: number;
@@ -19,7 +18,6 @@ export interface BillingState {
 const initialState: BillingState = {
   bills: [],
   selectedBill: null,
-  billPreview: null,
   loading: false,
   error: null,
   totalElements: 0,
@@ -31,11 +29,11 @@ export const BillingStore = signalStore(
   withState(initialState),
   withComputed((state) => ({
     hasBills: computed(() => state.bills().length > 0),
-    unpaidBills: computed(() => state.bills().filter((b) => b.status === 'UNPAID')),
+    unpaidBills: computed(() => state.bills().filter((b) => b.paymentStatus === 'UNPAID')),
     totalOutstanding: computed(() =>
       state.bills()
-        .filter((b) => b.status === 'UNPAID')
-        .reduce((sum, b) => sum + b.dueAmountInPaisa, 0)
+        .filter((b) => b.paymentStatus === 'UNPAID')
+        .reduce((sum, b) => sum + b.totalAmountInPaisa, 0)
     )
   })),
   withMethods((store) => {
@@ -80,23 +78,6 @@ export const BillingStore = signalStore(
         )
       ),
 
-      loadBillPreview: rxMethod<string>(
-        pipe(
-          tap(() => patchState(store, { loading: true, error: null })),
-          switchMap((appointmentId) =>
-            billingService.getBillPreview(appointmentId).pipe(
-              tap((response: ApiResponse<BillPreview>) => {
-                patchState(store, { billPreview: response.data, loading: false });
-              }),
-              catchError((error) => {
-                patchState(store, { error: error.message, loading: false });
-                return EMPTY;
-              })
-            )
-          )
-        )
-      ),
-
       createBill: rxMethod<CreateBillRequest>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
@@ -119,11 +100,11 @@ export const BillingStore = signalStore(
         )
       ),
 
-      updateBillStatus: rxMethod<{ id: string; status: string; paidAmount?: number }>(
+      updateBill: rxMethod<{ id: string; request: UpdateBillRequest }>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          switchMap(({ id, status, paidAmount }) =>
-            billingService.updateBillStatus(id, status, paidAmount).pipe(
+          switchMap(({ id, request }) =>
+            billingService.updateBill(id, request).pipe(
               tap((response: ApiResponse<Bill>) => {
                 patchState(store, (state) => ({
                   bills: state.bills.map((b) => (b.id === id ? response.data : b)),
@@ -141,7 +122,7 @@ export const BillingStore = signalStore(
       ),
 
       clearSelectedBill: () => {
-        patchState(store, { selectedBill: null, billPreview: null });
+        patchState(store, { selectedBill: null });
       },
 
       clearError: () => {

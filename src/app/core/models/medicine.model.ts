@@ -1,12 +1,14 @@
 export interface Medicine {
   id: string;
-  name: string;
+  medicineName: string;
   genericName: string;
   manufacturer: string;
   category: string;
   unit: string;
   priceInPaisa: number;
-  stockQuantity?: number;
-  isActive: boolean;
-  createdAt: string;
+  quantity: number;
+  stockStatus?: string;
+  isDiscontinued: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

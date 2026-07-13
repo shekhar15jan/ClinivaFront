@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { BillingService } from './billing.service';
-import { Bill, BillPreview, CreateBillRequest } from '../models/billing.model';
+import { Bill, CreateBillRequest } from '../models/billing.model';
 import { ApiResponse, PagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -64,26 +64,6 @@ describe('BillingService', () => {
     });
   });
 
-  describe('getBillPreview', () => {
-    it('should GET preview with appointmentId param', () => {
-      const mockResponse: ApiResponse<BillPreview> = {
-        success: true,
-        data: { consultationFeeInPaisa: 50000, medicineCharges: [], totalInPaisa: 50000 },
-        message: '',
-        timestamp: '',
-        requestId: '',
-      };
-
-      service.getBillPreview('a1').subscribe((res) => {
-        expect(res.data.totalInPaisa).toBe(50000);
-      });
-
-      const req = httpMock.expectOne(`${baseUrl}/preview?prescriptionId=a1`);
-      expect(req.request.method).toBe('GET');
-      req.flush(mockResponse);
-    });
-  });
-
   describe('createBill', () => {
     it('should POST to create bill', () => {
       const request: CreateBillRequest = {
@@ -131,21 +111,13 @@ describe('BillingService', () => {
     });
   });
 
-  describe('updateBillStatus', () => {
-    it('should PUT status', () => {
-      service.updateBillStatus('b1', 'PAID', 50000).subscribe();
+  describe('updateBill', () => {
+    it('should PUT bill update', () => {
+      service.updateBill('b1', { discountInPaisa: 0 }).subscribe();
 
       const req = httpMock.expectOne(`${baseUrl}/b1`);
       expect(req.request.method).toBe('PUT');
-      expect(req.request.body).toEqual({ status: 'PAID', paidAmount: 50000 });
-      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
-    });
-
-    it('should PUT status without paidAmount', () => {
-      service.updateBillStatus('b1', 'CANCELLED').subscribe();
-
-      const req = httpMock.expectOne(`${baseUrl}/b1`);
-      expect(req.request.body).toEqual({ status: 'CANCELLED' });
+      expect(req.request.body).toEqual({ discountInPaisa: 0 });
       req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
     });
   });

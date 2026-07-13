@@ -12,8 +12,15 @@ export interface Doctor {
   isActive: boolean;
 }
 
-export interface DoctorWithSlots extends Doctor {
-  availableSlots: string[];
+export interface AvailabilityDto {
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface DoctorWithSlotsResponse {
+  doctor: Doctor;
+  availability: AvailabilityDto[];
 }
 
 export interface DoctorAvailability {

@@ -49,8 +49,8 @@
         </div>
         <div class="text-left md:text-right">
           <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-2">Billed To</p>
-          <h3 class="text-lg font-bold text-on-surface">{{ bill.patientName || 'Patient' }}</h3>
-          <p class="text-sm text-outline mt-1">Patient ID: {{ bill.patientId?.substring(0, 8) }}</p>
+          <h3 class="text-lg font-bold text-on-surface">{{ bill.patient.fullName || 'Patient' }}</h3>
+          <p class="text-sm text-outline mt-1">Patient ID: {{ bill.patient.id.substring(0, 8) }}</p>
         </div>
       </div>
 
@@ -65,17 +65,12 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            @for (item of bill.lineItems || []; track item) {
               <tr>
-                <td class="py-4 text-sm font-medium text-on-surface">{{ item.description }}</td>
-                <td class="py-4 text-sm text-outline text-right">{{ item.quantity }}</td>
-                <td class="py-4 text-sm text-outline text-right">{{ (item.unitPriceInPaisa || 0) / 100 | number: '1.2-2' }}</td>
-                <td class="py-4 text-sm text-on-surface font-medium text-right">{{ (item.totalInPaisa || 0) / 100 | number: '1.2-2' }}</td>
+                <td class="py-4 text-sm font-medium text-on-surface">Consultation Fee</td>
+                <td class="py-4 text-sm text-outline text-right">1</td>
+                <td class="py-4 text-sm text-outline text-right">{{ ((bill.consultationFeeInPaisa || 0) / 100) | number: '1.2-2' }}</td>
+                <td class="py-4 text-sm text-on-surface font-medium text-right">{{ ((bill.consultationFeeInPaisa || 0) / 100) | number: '1.2-2' }}</td>
               </tr>
-            }
-            @if (!bill.lineItems || bill.lineItems.length === 0) {
-              <tr><td colspan="4" class="py-4 text-sm text-outline text-center">Consultation Fee</td></tr>
-            }
           </tbody>
         </table>
       </div>
@@ -108,11 +103,11 @@
           </div>
           <div class="flex justify-between text-sm text-outline">
             <span>Paid</span>
-            <span>₹{{ ((bill.paidAmountInPaisa || 0) / 100) | number: '1.2-2' }}</span>
+            <span>₹{{ ((bill.paymentStatus === 'PAID' ? bill.totalAmountInPaisa : 0) / 100) | number: '1.2-2' }}</span>
           </div>
           <div class="flex justify-between text-sm font-semibold text-red-600">
             <span>Due</span>
-            <span>₹{{ ((bill.dueAmountInPaisa || 0) / 100) | number: '1.2-2' }}</span>
+            <span>₹{{ ((bill.paymentStatus !== 'PAID' ? bill.totalAmountInPaisa : 0) / 100) | number: '1.2-2' }}</span>
           </div>
         </div>
       </div>

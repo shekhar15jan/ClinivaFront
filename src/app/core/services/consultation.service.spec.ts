@@ -102,7 +102,7 @@ describe('ConsultationService', () => {
 
   describe('recordVitals', () => {
     it('should PUT vitals for appointment', () => {
-      const vitals: Vitals = { bloodPressureSystolic: 120, bloodPressureDiastolic: 80, temperature: 98.6 };
+      const vitals: Vitals = { bp: '120/80', temperature: '98.6' };
 
       service.recordVitals('a1', vitals).subscribe();
 

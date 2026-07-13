@@ -36,7 +36,7 @@
           <p class="text-xs text-outline truncate">{{ user.role }}</p>
         </div>
       </div>
-      <button routerLink="/login" class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-status-red border border-status-red/20 rounded-lg hover:bg-status-red/5 transition-colors">
+      <button (click)="onLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-status-red border border-status-red/20 rounded-lg hover:bg-status-red/5 transition-colors">
         <span class="material-symbols-outlined text-[20px]">logout</span>
         Logout
       </button>

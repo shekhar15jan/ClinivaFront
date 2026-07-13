@@ -2,10 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { GenericLogin } from './generic-login';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantService } from '../../../core/services/tenant.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { ChangeDetectorRef } from '@angular/core';
 import { TenantResolution } from '../../../core/models/tenant.model';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
+import { User } from '../../../core/models/auth.model';
 
 const mockResolution: TenantResolution = {
   tenant: {
@@ -34,22 +36,36 @@ const mockResolution: TenantResolution = {
 };
 
 function createGenericLogin() {
+  const authStateSubject = new Subject<{ isAuthenticated: boolean; user: User | null }>();
+  
   const resolveByEmail = vi.fn();
   const setTenantResolution = vi.fn();
-  const authSpy = { setTenantResolution, pendingEmail: null };
+  const authSpy = { 
+    setTenantResolution, 
+    pendingEmail: null,
+    authState$: authStateSubject.asObservable()
+  };
   const tenantSpy = { resolveByEmail };
   const routerSpy = { navigate: vi.fn() };
+  const routeSpy = { snapshot: { queryParams: {} } };
+  const cdrSpy = { markForCheck: vi.fn(), detectChanges: vi.fn() };
 
   TestBed.configureTestingModule({
     providers: [
       { provide: AuthService, useValue: authSpy },
       { provide: TenantService, useValue: tenantSpy },
       { provide: Router, useValue: routerSpy },
+      { provide: ActivatedRoute, useValue: routeSpy },
+      { provide: ChangeDetectorRef, useValue: cdrSpy },
     ],
   });
 
   const component = TestBed.runInInjectionContext(() => new GenericLogin());
-  return { component, authSpy, tenantSpy, routerSpy };
+  
+  // Trigger ngOnInit manually since TestBed.runInInjectionContext doesn't call lifecycle hooks
+  component.ngOnInit();
+  
+  return { component, authSpy, tenantSpy, routerSpy, authStateSubject, routeSpy };
 }
 
 describe('GenericLogin', () => {

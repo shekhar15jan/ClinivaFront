@@ -12,12 +12,24 @@ export interface Patient {
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   medicalHistory?: string;
-  lastVisitDate?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface PatientVisit {
-  id: string;
-  date: string;
+export interface VisitItem {
+  appointmentId: string;
+  appointmentDate: string;
+  appointmentTime: string;
   doctorName: string;
-  diagnosis: string;
+  status: string;
+  consultation?: string;
+  prescription?: string;
+  bill?: string;
+}
+
+export interface PatientVisitResponse {
+  patientId: string;
+  patientName: string;
+  visits: VisitItem[];
 }

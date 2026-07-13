@@ -16,7 +16,6 @@ describe('ConsultationStore', () => {
     patientId: 'p1',
     doctorId: 'd1',
     chiefComplaints: 'Headache',
-    status: 'IN_PROGRESS',
     createdAt: '2026-07-15T10:00:00Z',
   };
 
@@ -35,7 +34,7 @@ describe('ConsultationStore', () => {
       updateConsultation: vi.fn().mockReturnValue(of(mockApiResponse)),
       recordVitals: vi.fn().mockReturnValue(of({
         ...mockApiResponse,
-        data: { ...mockConsultation, vitals: { bloodPressureSystolic: 120, bloodPressureDiastolic: 80 } },
+        data: { ...mockConsultation, vitals: { bp: '120/80' } },
       })),
     };
 
@@ -104,11 +103,11 @@ describe('ConsultationStore', () => {
   }));
 
   it('should record vitals', fakeAsync(() => {
-    const vitals: Vitals = { bloodPressureSystolic: 120, bloodPressureDiastolic: 80 };
+    const vitals: Vitals = { bp: '120/80' };
     store.recordVitals({ appointmentId: 'a1', vitals });
     tick();
     expect(mockConsultationService.recordVitals).toHaveBeenCalledWith('a1', vitals);
-    expect(store.consultation()?.vitals?.bloodPressureSystolic).toBe(120);
+    expect(store.consultation()?.vitals?.bp).toBe('120/80');
   }));
 
   it('should handle record vitals error', fakeAsync(() => {

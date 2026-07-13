@@ -7,6 +7,7 @@ import {
   AppointmentTrend,
   RevenueReport,
   DoctorPerformance,
+  BillsStatusReport,
 } from '../models/report.model';
 import { environment } from '../../../environments/environment';
 
@@ -36,7 +37,7 @@ export class ReportService {
     return this.http.get<ApiResponse<AppointmentTrend[]>>(`${this.baseUrl}/appointments-per-month`);
   }
 
-  getBillsStatus(): Observable<ApiResponse<DashboardStats>> {
-    return this.http.get<ApiResponse<DashboardStats>>(`${this.baseUrl}/bills-status`);
+  getBillsStatus(): Observable<ApiResponse<BillsStatusReport>> {
+    return this.http.get<ApiResponse<BillsStatusReport>>(`${this.baseUrl}/bills-status`);
   }
 }

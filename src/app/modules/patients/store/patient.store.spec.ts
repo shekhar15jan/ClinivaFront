@@ -79,7 +79,7 @@ describe('PatientStore', () => {
   it('should load patients with default params', fakeAsync(() => {
     store.loadPatients();
     tick();
-    expect(mockPatientService.getPatients).toHaveBeenCalledWith(0, 20, undefined);
+    expect(mockPatientService.getPatients).toHaveBeenCalledWith(0, 20);
   }));
 
   it('should handle load patients error', fakeAsync(() => {

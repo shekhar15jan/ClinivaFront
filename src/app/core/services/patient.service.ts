@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Patient, PatientVisit } from '../models/patient.model';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { Observable, map } from 'rxjs';
+import { Patient, PatientVisitResponse } from '../models/patient.model';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -16,13 +16,15 @@ export class PatientService {
   getPatients(
     page = 0,
     size = 10,
-    search?: string,
   ): Observable<ApiResponse<PagedResponse<Patient>>> {
-    let url = `${this.apiUrl}?page=${page}&size=${size}`;
-    if (search) {
-      url += `&search=${encodeURIComponent(search)}`;
-    }
-    return this.http.get<ApiResponse<PagedResponse<Patient>>>(url);
+    return this.http
+      .get<ApiResponse<RawPagedResponse<Patient>>>(`${this.apiUrl}?page=${page}&size=${size}`)
+      .pipe(
+        map((response) => ({
+          ...response,
+          data: PagedResponse.from(response.data),
+        })),
+      );
   }
 
   getPatientById(id: string): Observable<ApiResponse<Patient>> {
@@ -37,8 +39,8 @@ export class PatientService {
     return this.http.put<ApiResponse<Patient>>(`${this.apiUrl}/${id}`, patient);
   }
 
-  getPatientVisits(id: string): Observable<ApiResponse<PatientVisit[]>> {
-    return this.http.get<ApiResponse<PatientVisit[]>>(`${this.apiUrl}/${id}/visits`);
+  getPatientVisits(id: string): Observable<ApiResponse<PatientVisitResponse>> {
+    return this.http.get<ApiResponse<PatientVisitResponse>>(`${this.apiUrl}/${id}/visits`);
   }
 
   searchPatients(query: string): Observable<ApiResponse<Patient[]>> {
