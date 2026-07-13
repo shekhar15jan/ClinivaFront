@@ -10,12 +10,12 @@ describe('PlatformAdminService', () => {
   let httpMock: HttpTestingController;
   const apiUrl = environment.apiUrl;
 
-  const mockUser: PlatformUser = { id: 'u1', email: 'staff@test.com', isActive: true, roles: ['STAFF_ADMIN'], createdAt: '2026-01-01T00:00:00Z' };
+  const mockUser: PlatformUser = { id: 'u1', email: 'staff@test.com', isActive: true, role: 'STAFF_ADMIN', createdAt: '2026-01-01T00:00:00Z' };
   const mockProduct: Product = { id: 'p1', name: 'Cliniva HMS', code: 'CLINIVA', description: 'HMS', isActive: true };
   const mockModule: PlatformModule = { id: 'm1', productId: 'p1', name: 'Patient', code: 'PATIENT', description: 'Patient management', isCore: true, displayOrder: 1 };
   const mockPlan: SubscriptionPlan = { id: 'sp1', productId: 'p1', name: 'Clinic', code: 'CLINIC', description: 'Basic', priceInPaisa: 299900, billingCycle: 'MONTHLY', maxDoctors: 5, maxPatients: 500, isActive: true };
   const mockTicket: SupportTicket = { id: 'st1', tenantId: 't1', subject: 'Issue', description: 'Help needed', status: 'OPEN', priority: 'HIGH', createdAt: '2026-01-01T00:00:00Z' };
-  const mockReport: PlatformReport = { totalTenants: 10, activeTenants: 8, totalRevenue: 5000000, monthlyRevenue: 500000 };
+  const mockReport: PlatformReport = { totalTenants: 10, activeTenants: 8, totalRevenueInPaisa: 5000000, monthlyBreakdown: [{ month: '2026-01', billed: 500000, collected: 400000 }] };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -175,7 +175,7 @@ describe('PlatformAdminService', () => {
       const apiResp: ApiResponse<PlatformReport> = { success: true, data: mockReport, message: '', timestamp: '', requestId: '' };
 
       service.getRevenueReport().subscribe((res) => {
-        expect(res.data?.monthlyRevenue).toBe(500000);
+        expect(res.data?.totalRevenueInPaisa).toBe(5000000);
       });
 
       httpMock.expectOne(`${apiUrl}/platform/reports/revenue`).flush(apiResp);

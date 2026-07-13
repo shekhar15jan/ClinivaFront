@@ -168,7 +168,7 @@ describe('AppointmentService', () => {
 
   describe('updateAppointment', () => {
     it('should PUT to update appointment', () => {
-      const update: UpdateAppointmentRequest = { status: 'CONFIRMED' };
+      const update: UpdateAppointmentRequest = { status: 'APPROVED' };
 
       service.updateAppointment('a1', update).subscribe();
 

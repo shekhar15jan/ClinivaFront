@@ -18,6 +18,7 @@ describe('MedicineStore', () => {
     category: 'Analgesic',
     unit: 'tablet',
     priceInPaisa: 500,
+    quantity: 100,
     isDiscontinued: false,
     createdAt: '2026-01-01T00:00:00Z',
   };

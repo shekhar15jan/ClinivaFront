@@ -79,7 +79,7 @@ describe('Auth Flow Integration', () => {
 
     it('Step 3: AuthGuard should allow access to dashboard after login', () => {
       const authData = {
-        accessToken: 'mock.jwt.token',
+        token: 'mock.jwt.token',
         refreshToken: 'mock.refresh.token',
         user: { id: 'u1', email: 'admin@cliniva.com', role: 'ADMIN' },
         tenant: { id: 't1', name: 'Cliniva', activeModules: [] },

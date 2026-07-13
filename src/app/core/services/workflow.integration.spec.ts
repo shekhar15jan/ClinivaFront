@@ -9,7 +9,7 @@ import { ConsultationService } from './consultation.service';
 import { PrescriptionService } from './prescription.service';
 import { BillingService } from './billing.service';
 import { PaymentService } from './payment.service';
-import { AuthResponse } from '../models/auth.model';
+import { AuthResponse, SendOtpRequest } from '../models/auth.model';
 import { ApiResponse } from '../models/common.model';
 
 describe('Full Workflow Integration: Patient → Appointment → Consultation → Prescription → Billing → Payment', () => {
@@ -23,12 +23,12 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
   let paymentService: PaymentService;
   let httpMock: HttpTestingController;
 
-  const mockPatient = { id: 'p1', tenantId: 't1', fullName: 'John Doe', dateOfBirth: '1990-01-01', age: 36, gender: 'MALE', phone: '9999999999', email: 'john@test.com', address: '123 Main St', bloodGroup: 'O+', emergencyContactName: 'Jane Doe', emergencyContactPhone: '8888888888', medicalHistory: '', isDeleted: false, patientId: 'CLI-001', createdAt: '2026-01-01', updatedAt: '2026-01-01' };
-  const mockDoctor = { id: 'd1', tenantId: 't1', userId: null, fullName: 'Dr. Test', specialization: 'General', qualification: 'MBBS', licenseNumber: 'LIC123', experienceYears: 10, consultationFeeInPaisa: 50000, phone: '7777777777', email: 'dr@test.com', profilePhotoUrl: '', isActive: true };
-  const mockAppointment = { id: 'a1', tenantId: 't1', patientId: 'p1', doctorId: 'd1', appointmentDate: '2026-01-15', appointmentTime: '09:00', tokenNumber: 1, status: 'APPROVED', reason: 'Checkup', notes: '', isDeleted: false, createdAt: '2026-01-15', updatedAt: '2026-01-15' };
-  const mockConsultation = { id: 'c1', tenantId: 't1', appointmentId: 'a1', doctorId: 'd1', patientId: 'p1', chiefComplaints: 'Headache', examinationFindings: 'Normal', diagnosis: 'Migraine', clinicalNotes: 'Rest advised', vitalsBp: '120/80', vitalsTemperature: '98.6', vitalsWeight: '70', vitalsSpo2: '98', vitalsPulse: '72', createdAt: '2026-01-15', updatedAt: '2026-01-15' };
-  const mockPrescription = { id: 'pr1', tenantId: 't1', consultationId: 'c1', appointmentId: 'a1', doctorId: 'd1', patientId: 'p1', diagnosis: 'Migraine', date: '2026-01-15', notes: '', medicines: [], createdAt: '2026-01-15' };
-  const mockBill = { id: 'b1', tenantId: 't1', patientId: 'p1', appointmentId: 'a1', prescriptionId: 'pr1', billNumber: 'INV-001', consultationFeeInPaisa: 50000, medicineChargesInPaisa: 15000, additionalChargesInPaisa: 0, discountInPaisa: 0, taxInPaisa: 0, totalAmountInPaisa: 65000, paymentStatus: 'UNPAID', billDate: '2026-01-15', isVoided: false, createdAt: '2026-01-15' };
+  const mockPatient = { id: 'p1', fullName: 'John Doe', dateOfBirth: '1990-01-01', age: 36, gender: 'MALE' as const, phone: '9999999999', email: 'john@test.com', address: '123 Main St', bloodGroup: 'O+', emergencyContactName: 'Jane Doe', emergencyContactPhone: '8888888888', medicalHistory: '', isDeleted: false, patientId: 'CLI-001', createdAt: '2026-01-01', updatedAt: '2026-01-01' };
+  const mockDoctor = { id: 'd1', fullName: 'Dr. Test', specialization: 'General', qualification: 'MBBS', licenseNumber: 'LIC123', experienceYears: 10, consultationFeeInPaisa: 50000, phone: '7777777777', email: 'dr@test.com', profilePhotoUrl: '', isActive: true };
+  const mockAppointment = { id: 'a1', patient: { id: 'p1', fullName: 'John Doe' }, doctor: { id: 'd1', fullName: 'Dr. Test', specialization: 'General' }, appointmentDate: '2026-01-15', appointmentTime: '09:00', tokenNumber: 1, status: 'APPROVED' as const, reason: 'Checkup', notes: '', createdAt: '2026-01-15' };
+  const mockConsultation = { id: 'c1', appointmentId: 'a1', doctorId: 'd1', patientId: 'p1', chiefComplaints: 'Headache', examinationFindings: 'Normal', diagnosis: 'Migraine', clinicalNotes: 'Rest advised', vitals: { bp: '120/80', temperature: '98.6', weight: '70', spo2: '98', pulse: '72' }, createdAt: '2026-01-15' };
+  const mockPrescription = { id: 'pr1', consultationId: 'c1', appointmentId: 'a1', doctor: { id: 'd1', fullName: 'Dr. Test', specialization: 'General' }, patient: { id: 'p1', fullName: 'John Doe' }, diagnosis: 'Migraine', date: '2026-01-15', notes: '', medicines: [], createdAt: '2026-01-15' };
+  const mockBill = { id: 'b1', patient: { id: 'p1', fullName: 'John Doe', patientId: 'CLI-001' }, appointmentId: 'a1', prescriptionId: 'pr1', billNumber: 'INV-001', consultationFeeInPaisa: 50000, medicineChargesInPaisa: 15000, additionalChargesInPaisa: 0, discountInPaisa: 0, taxInPaisa: 0, totalAmountInPaisa: 65000, paymentStatus: 'UNPAID' as const, billDate: '2026-01-15', isVoided: false, createdAt: '2026-01-15' };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -69,7 +69,7 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
 
     const mockAuth: ApiResponse<AuthResponse> = {
       success: true,
-      data: { token: 'jwt-token', refreshToken: 'refresh-token', user: { id: 'u1', email: 'admin@cliniva.com', role: 'ADMIN', name: 'Admin' }, tenant: { id: 't1', name: 'Test Clinic', code: 'test', activeModules: [] } },
+      data: { token: 'jwt-token', refreshToken: 'refresh-token', user: { id: 'u1', email: 'admin@cliniva.com', role: 'ADMIN' }, tenant: { id: 't1', name: 'Test Clinic', activeModules: [] } },
       message: '', timestamp: '', requestId: '',
     };
 
@@ -117,12 +117,12 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
   it('Step 3: should create consultation with vitals', () => {
     const consultationResp: ApiResponse<typeof mockConsultation> = { success: true, data: mockConsultation, message: '', timestamp: '', requestId: '' };
     consultationService.createConsultation({
-      appointmentId: 'a1', doctorId: 'd1', patientId: 'p1',
+      appointmentId: 'a1',
       chiefComplaints: 'Headache', examinationFindings: 'Normal', diagnosis: 'Migraine',
-      vitalsBp: '120/80', vitalsTemperature: '98.6', vitalsWeight: '70', vitalsSpo2: '98', vitalsPulse: '72',
+      vitals: { bp: '120/80', temperature: '98.6', weight: '70', spo2: '98', pulse: '72' },
     }).subscribe((res) => {
       expect(res.data?.diagnosis).toBe('Migraine');
-      expect(res.data?.vitalsBp).toBe('120/80');
+      expect(res.data?.vitals?.bp).toBe('120/80');
     });
 
     const req = httpMock.expectOne((r: HttpRequest<unknown>) => r.url.includes('/hms/consultations') && r.method === 'POST');
@@ -132,7 +132,7 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
   it('Step 4: should create prescription with medicines', () => {
     const prescriptionResp: ApiResponse<typeof mockPrescription> = { success: true, data: mockPrescription, message: '', timestamp: '', requestId: '' };
     prescriptionService.createPrescription({
-      consultationId: 'c1', appointmentId: 'a1', doctorId: 'd1', patientId: 'p1',
+      consultationId: 'c1',
       diagnosis: 'Migraine', medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: '1-0-1', duration: 5, durationUnit: 'DAYS' }],
     }).subscribe((res) => {
       expect(res.data?.diagnosis).toBe('Migraine');
@@ -144,7 +144,7 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
 
   it('Step 5: should generate bill from prescription', () => {
     const billResp: ApiResponse<typeof mockBill> = { success: true, data: mockBill, message: '', timestamp: '', requestId: '' };
-    const billReq = { appointmentId: 'a1', prescriptionId: 'pr1', patientId: 'p1' };
+    const billReq = { prescriptionId: 'pr1' };
     billingService.createBill('pr1', billReq).subscribe((res) => {
       expect(res.data?.totalAmountInPaisa).toBe(65000);
       expect(res.data?.paymentStatus).toBe('UNPAID');
@@ -185,7 +185,7 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
     expect(p2.request.method).toBe('GET');
     p2.flush({ success: true, data: [], message: '', timestamp: '', requestId: '' });
 
-    appointmentService.getAppointments({ page: 0, size: 20 }).subscribe({ next: step, error: step });
+    appointmentService.getAppointments(0, 20).subscribe({ next: step, error: step });
     const p3 = httpMock.expectOne((r: HttpRequest<unknown>) => r.url.includes('/hms/appointments'));
     expect(p3.request.method).toBe('GET');
     p3.flush({ success: true, data: { content: [], pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0, last: true }, message: '', timestamp: '', requestId: '' });

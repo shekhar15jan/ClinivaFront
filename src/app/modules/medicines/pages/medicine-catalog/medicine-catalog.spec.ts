@@ -8,7 +8,7 @@ import { ApiResponse, PagedResponse } from '../../../../core/models/common.model
 import { Medicine } from '../../../../core/models/medicine.model';
 
 describe('MedicineCatalog', () => {
-  const mockMedicine: Medicine = { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 1000, isDiscontinued: false, createdAt: '2026-01-01' };
+  const mockMedicine: Medicine = { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 1000, quantity: 100, isDiscontinued: false, createdAt: '2026-01-01' };
 
   const mockPaged: ApiResponse<PagedResponse<Medicine>> = { success: true, data: { content: [mockMedicine, { ...mockMedicine, id: 'm2', medicineName: 'Amoxicillin', category: 'Antibiotic' }], pageNumber: 0, pageSize: 20, totalElements: 2, totalPages: 1, last: true }, message: 'ok', timestamp: '', requestId: 'r1' };
 

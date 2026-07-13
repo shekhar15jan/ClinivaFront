@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { ReportService } from './report.service';
-import { DashboardStats, AppointmentTrend, RevenueReport, DoctorPerformance } from '../models/report.model';
+import { DashboardStats, AppointmentTrend, RevenueReport, DoctorPerformance, BillsStatusReport } from '../models/report.model';
 import { ApiResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -140,16 +140,16 @@ describe('ReportService', () => {
 
   describe('getBillsStatus', () => {
     it('should GET bills status', () => {
-      const mockResponse: ApiResponse<DashboardStats> = {
+      const mockResponse: ApiResponse<BillsStatusReport> = {
         success: true,
-        data: { totalPatients: 0, todayAppointments: 0, pendingBills: 3, totalRevenueInPaisa: 0, activeDoctors: 0 },
+        data: { totalBills: 100, unpaidCount: 3, partiallyPaidCount: 5, paidCount: 90, voidedCount: 2, totalAmountInPaisa: 0, paidAmountInPaisa: 0, unpaidAmountInPaisa: 0, monthlyBreakdown: [] },
         message: '',
         timestamp: '',
         requestId: '',
       };
 
       service.getBillsStatus().subscribe((res) => {
-        expect(res.data.pendingBills).toBe(3);
+        expect(res.data.unpaidCount).toBe(3);
       });
 
       const req = httpMock.expectOne(`${baseUrl}/bills-status`);

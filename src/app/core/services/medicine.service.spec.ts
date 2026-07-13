@@ -58,7 +58,7 @@ describe('MedicineService', () => {
     it('should GET medicine by id', () => {
       const mockResponse: ApiResponse<Medicine> = {
         success: true,
-        data: { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'ABC', category: 'Analgesic', unit: 'Tablet', priceInPaisa: 500, isDiscontinued: false, createdAt: '' },
+        data: { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'ABC', category: 'Analgesic', unit: 'Tablet', priceInPaisa: 500, quantity: 100, isDiscontinued: false, createdAt: '' },
         message: '',
         timestamp: '',
         requestId: '',

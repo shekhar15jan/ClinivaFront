@@ -31,7 +31,7 @@ describe('ConsultationService', () => {
     it('should GET by appointment id', () => {
       const mockResponse: ApiResponse<Consultation> = {
         success: true,
-        data: { id: 'c1', appointmentId: 'a1', patientId: 'p1', doctorId: 'd1', chiefComplaints: 'Fever', status: 'IN_PROGRESS', createdAt: '' },
+        data: { id: 'c1', appointmentId: 'a1', patientId: 'p1', doctorId: 'd1', chiefComplaints: 'Fever', createdAt: '' },
         message: '',
         timestamp: '',
         requestId: '',

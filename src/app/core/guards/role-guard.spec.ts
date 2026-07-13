@@ -61,7 +61,7 @@ describe('RoleGuard', () => {
   });
 
   it('should allow activation when user has one of the required roles', () => {
-    authService.currentUserValue = { id: '1', email: 'admin@test.com', role: 'ADMIN' };
+    (authService as any).currentUserValue = { id: '1', email: 'admin@test.com', role: 'ADMIN' };
     const route = { data: { roles: ['ADMIN'] }, params: {} } as unknown as ActivatedRouteSnapshot;
 
     const result = guard.canActivate(route);
@@ -70,7 +70,7 @@ describe('RoleGuard', () => {
   });
 
   it('should allow activation when user has multiple matching roles', () => {
-    authService.currentUserValue = { id: '1', email: 'user@test.com', role: 'SUPER_ADMIN' };
+    (authService as any).currentUserValue = { id: '1', email: 'user@test.com', role: 'SUPER_ADMIN' };
     const route = { data: { roles: ['ADMIN', 'SUPER_ADMIN'] }, params: {} } as unknown as ActivatedRouteSnapshot;
 
     const result = guard.canActivate(route);
@@ -79,7 +79,7 @@ describe('RoleGuard', () => {
   });
 
   it('should block and redirect when user lacks required roles', () => {
-    authService.currentUserValue = { id: '1', email: 'doctor@test.com', role: 'DOCTOR' };
+    (authService as any).currentUserValue = { id: '1', email: 'doctor@test.com', role: 'DOCTOR' };
     const route = {
       data: { roles: ['ADMIN'] },
       params: { hospitalCode: 'hosp1' },
@@ -92,7 +92,7 @@ describe('RoleGuard', () => {
   });
 
   it('should use parent params hospitalCode when not on current route', () => {
-    authService.currentUserValue = { id: '1', email: 'nurse@test.com', role: 'NURSE' };
+    (authService as any).currentUserValue = { id: '1', email: 'nurse@test.com', role: 'NURSE' };
     const route = {
       data: { roles: ['ADMIN'] },
       params: {},

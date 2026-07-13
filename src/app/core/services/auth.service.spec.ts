@@ -33,7 +33,7 @@ describe('AuthService', () => {
   describe('sendOtp', () => {
     it('should POST to send-otp with email', () => {
       const request: SendOtpRequest = { email: 'test@cliniva.com' };
-      const mockResponse: ApiResponse<void> = { success: true, data: undefined, message: 'OTP sent' };
+      const mockResponse: ApiResponse<void> = { success: true, data: undefined, message: 'OTP sent', timestamp: '', requestId: '' };
 
       service.sendOtp(request).subscribe((res) => {
         expect(res.success).toBe(true);
@@ -72,7 +72,7 @@ describe('AuthService', () => {
 
       service.verifyOtp(request).subscribe((res) => {
         expect(res.success).toBe(true);
-        expect(res.data?.accessToken).toBe('test-token');
+        expect(res.data?.token).toBe('test-token');
 
         expect(service.isLoggedIn()).toBe(true);
         expect(service.getToken()).toBe('test-token');
@@ -88,7 +88,7 @@ describe('AuthService', () => {
 
     it('should NOT store session when verifyOtp returns success: false', () => {
       const request: VerifyOtpRequest = { email: 'test@cliniva.com', otp: '000000' };
-      const mockResponse = { success: false, data: undefined, message: 'Invalid OTP' };
+      const mockResponse = { success: false, data: undefined, message: 'Invalid OTP', timestamp: '', requestId: '' };
 
       service.verifyOtp(request).subscribe((res) => {
         expect(res.success).toBe(false);

@@ -83,7 +83,7 @@ describe('PrescriptionService', () => {
     it('should POST a new prescription', () => {
       const request: CreatePrescriptionRequest = {
         consultationId: 'c1',
-        medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: 'BD', duration: '5 days' }],
+        medicines: [{ medicineName: 'Paracetamol', dosage: '500mg', frequency: 'BD', duration: 5, durationUnit: 'DAYS' }],
       };
 
       service.createPrescription(request).subscribe();
@@ -140,7 +140,7 @@ describe('PrescriptionService', () => {
   describe('updatePrescription', () => {
     it('should PUT to update prescription', () => {
       const request: UpdatePrescriptionRequest = {
-        medicines: [{ medicineName: 'Aspirin', dosage: '100mg', frequency: 'OD', duration: '3 days' }],
+        medicines: [{ medicineName: 'Aspirin', dosage: '100mg', frequency: 'OD', duration: 3, durationUnit: 'DAYS' }],
       };
 
       service.updatePrescription('rx1', request).subscribe();

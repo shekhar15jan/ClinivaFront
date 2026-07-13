@@ -22,9 +22,9 @@ describe('BookingFlow', () => {
     TestBed.configureTestingModule({
       providers: [
         FormBuilder,
-        { provide: DoctorService, useValue: { getDoctorsWithSlots: vi.fn().mockReturnValue(of(mockDocResponse)), ...(overrides?.doctorService || {}) } },
-        { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPatientPaged)), ...(overrides?.patientService || {}) } },
-        { provide: AppointmentService, useValue: { createAppointment: vi.fn().mockReturnValue(of({ success: true, data: {}, message: 'ok', timestamp: '', requestId: 'r1' })), ...(overrides?.appointmentService || {}) } },
+        { provide: DoctorService, useValue: { getDoctorsWithSlots: vi.fn().mockReturnValue(of(mockDocResponse)), ...(overrides?.['doctorService'] as object || {}) } },
+        { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPatientPaged)), ...(overrides?.['patientService'] as object || {}) } },
+        { provide: AppointmentService, useValue: { createAppointment: vi.fn().mockReturnValue(of({ success: true, data: {}, message: 'ok', timestamp: '', requestId: 'r1' })), ...(overrides?.['appointmentService'] as object || {}) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
       ],
     });

@@ -14,9 +14,9 @@ describe('AuthService — Full Coverage', () => {
   const apiUrl = environment.apiUrl;
 
   const mockAuthData: AuthResponse = {
-    accessToken: 'access-token',
+    token: 'access-token',
     refreshToken: 'refresh-token',
-    user: { id: 'u1', email: 'test@test.com', role: 'ADMIN', name: 'Test' },
+    user: { id: 'u1', email: 'test@test.com', role: 'ADMIN' },
     tenant: { id: 't1', name: 'Test Clinic', activeModules: [] },
   };
 
@@ -39,8 +39,8 @@ describe('AuthService — Full Coverage', () => {
   it('setTenantResolution should call tenantContext.setTenantContext', () => {
     const spy = vi.spyOn(tenantContext, 'setTenantContext');
     const resolution: TenantResolution = {
-      tenant: { id: 't1', name: 'Clinic', code: 'clinic' },
-      modules: [{ id: 'm1', code: 'PATIENT', name: 'Patient', status: 'ACTIVE' }],
+      tenant: { id: 't1', name: 'Clinic' },
+      modules: [{ id: 'm1', moduleCode: 'PATIENT', moduleName: 'Patient', status: 'ACTIVE', isCore: false }],
       subscription: { status: 'ACTIVE', planName: 'Clinic', endDate: '2027-01-01' },
     };
     service.setTenantResolution(resolution);
@@ -51,7 +51,7 @@ describe('AuthService — Full Coverage', () => {
   describe('verifyOtp — normalization', () => {
     it('should normalize verifyOtp response', () => {
       service.verifyOtp({ email: 'test@test.com', otp: '123456' }).subscribe((res) => {
-        expect(res.data?.accessToken).toBe('access-token');
+        expect(res.data?.token).toBe('access-token');
         expect(res.data?.user.email).toBe('test@test.com');
         expect(res.data?.tenant.name).toBe('Test Clinic');
       });

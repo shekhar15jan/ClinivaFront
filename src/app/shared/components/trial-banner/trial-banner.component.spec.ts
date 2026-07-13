@@ -4,7 +4,7 @@ import { EffectiveLicenseService } from '../../../core/services/effective-licens
 import { vi } from 'vitest';
 
 describe('TrialBannerComponent', () => {
-  function setup({ isTrial = false, trialEndsAt = null, planName = 'Free' } = {}) {
+  function setup({ isTrial = false, trialEndsAt = null, planName = 'Free' }: { isTrial?: boolean; trialEndsAt?: string | null; planName?: string } = {}) {
     const mockLicenseService = {
       isTrial: vi.fn().mockReturnValue(isTrial),
       trialEndsAt: vi.fn().mockReturnValue(trialEndsAt),

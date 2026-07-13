@@ -11,7 +11,8 @@ import { vi } from 'vitest';
 describe('TenantResolverGuard', () => {
   let guard: TenantResolverGuard;
   let tenantService: TenantService;
-  let tenantContext: TenantContextService;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let tenantContext: any;
   let authService: AuthService;
   let router: Router;
 

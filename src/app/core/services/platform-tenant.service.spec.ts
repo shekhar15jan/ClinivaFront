@@ -39,7 +39,7 @@ describe('PlatformTenantService', () => {
       const apiResp: ApiResponse<PlatformTenant[]> = { success: true, data: [mockTenant], message: '', timestamp: '', requestId: '' };
 
       service.list().subscribe((res) => {
-        expect(res.data?.length).toBe(1);
+        expect(res.data?.content.length).toBe(1);
       });
 
       const req = httpMock.expectOne(baseUrl);

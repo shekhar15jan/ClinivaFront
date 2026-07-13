@@ -12,7 +12,7 @@ describe('AppointmentCalendar', () => {
   const mockDoctor: Doctor = { id: 'd1', fullName: 'Dr. A', specialization: 'Cardio', qualification: 'MD', consultationFeeInPaisa: 500, isActive: true };
   const mockAppt: Appointment = { id: 'a1', patient: { id: 'p1', fullName: 'Rahul' }, doctor: { id: 'd1', fullName: 'Dr. A' }, appointmentDate: '2026-07-03', appointmentTime: '09:00 AM', tokenNumber: 1, status: 'APPROVED' };
 
-  const mockDocResponse: ApiResponse<Doctor[]> = { success: true, data: [mockDoctor], message: 'ok', timestamp: '', requestId: 'r1' };
+  const mockDocResponse: ApiResponse<PagedResponse<Doctor>> = { success: true, data: { content: [mockDoctor], pageNumber: 0, pageSize: 20, totalElements: 1, totalPages: 1, last: true }, message: 'ok', timestamp: '', requestId: 'r1' };
   const mockApptResponse: ApiResponse<PagedResponse<Appointment>> = { success: true, data: { content: [mockAppt], pageNumber: 0, pageSize: 50, totalElements: 1, totalPages: 1, last: true }, message: 'ok', timestamp: '', requestId: 'r1' };
 
   function createComponent(overrides?: Partial<{ appointmentService: Partial<AppointmentService>; doctorService: Partial<DoctorService> }>) {

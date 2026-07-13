@@ -30,7 +30,7 @@ describe('UserManagementService', () => {
   describe('getUsers', () => {
     it('should GET paged users and unwrap data', () => {
       const pagedData: PagedResponse<ManagedUser> = {
-        content: [{ id: 'u1', email: 'admin@test.com', firstName: 'Admin', lastName: 'User', role: 'ADMIN', isActive: true, lastLoginAt: null, createdAt: '' }],
+        content: [{ id: 'u1', email: 'admin@test.com', firstName: 'Admin', lastName: 'User', roles: 'ADMIN', isActive: true, createdAt: '' }],
         pageNumber: 0,
         pageSize: 20,
         totalElements: 1,
@@ -53,12 +53,12 @@ describe('UserManagementService', () => {
 
   describe('getUserById', () => {
     it('should GET user by id and unwrap data', () => {
-      const user: ManagedUser = { id: 'u1', email: 'user@test.com', firstName: 'John', lastName: 'Doe', role: 'DOCTOR', isActive: true, lastLoginAt: null, createdAt: '' };
+      const user: ManagedUser = { id: 'u1', email: 'user@test.com', firstName: 'John', lastName: 'Doe', roles: 'DOCTOR', isActive: true, createdAt: '' };
       const mockResponse: ApiResponse<ManagedUser> = { success: true, data: user, message: '', timestamp: '', requestId: '' };
 
       service.getUserById('u1').subscribe((result) => {
         expect(result.id).toBe('u1');
-        expect(result.role).toBe('DOCTOR');
+        expect(result.roles).toBe('DOCTOR');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/u1`);
@@ -70,7 +70,7 @@ describe('UserManagementService', () => {
   describe('createUser', () => {
     it('should POST and unwrap data', () => {
       const request: CreateManagedUserRequest = { email: 'new@test.com', firstName: 'New', lastName: 'User', role: 'RECEPTIONIST' };
-      const created: ManagedUser = { id: 'u2', email: 'new@test.com', firstName: 'New', lastName: 'User', role: 'RECEPTIONIST', isActive: true, lastLoginAt: null, createdAt: '' };
+      const created: ManagedUser = { id: 'u2', email: 'new@test.com', firstName: 'New', lastName: 'User', roles: 'RECEPTIONIST', isActive: true, createdAt: '' };
       const mockResponse: ApiResponse<ManagedUser> = { success: true, data: created, message: '', timestamp: '', requestId: '' };
 
       service.createUser(request).subscribe((result) => {
