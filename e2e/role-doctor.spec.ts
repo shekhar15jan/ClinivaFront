@@ -16,25 +16,25 @@ test.describe('DOCTOR Role Workflows (E2E)', () => {
   });
 
   test('should access Appointments module', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page).toHaveURL(/\/appointments/);
     await expect(page.getByText('Dr. Anita Desai')).toBeVisible();
   });
 
   test('should see appointment calendar with time slots', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await expect(page.getByRole('button', { name: 'Day' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Week' })).toBeVisible();
   });
 
   test('should access Consultations module', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await expect(page).toHaveURL(/\/consultations/);
   });
 
   test('should navigate to consultation workspace', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await page.waitForURL(/\/consultations/);
     const startBtn = page.getByRole('button', { name: /Start|New Consultation/i });
     if (await startBtn.first().isVisible()) {
@@ -44,19 +44,19 @@ test.describe('DOCTOR Role Workflows (E2E)', () => {
   });
 
   test('should access Prescriptions module', async ({ page }) => {
-    await page.getByText('Prescriptions').click();
+    await page.getByText('Prescriptions').first().click();
     await expect(page).toHaveURL(/\/prescriptions/);
     await expect(page.getByText(/Prescription/i).first()).toBeVisible();
   });
 
   test('should access Patients module for viewing', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await expect(page).toHaveURL(/\/patients/);
     await expect(page.getByText('Rahul Sharma')).toBeVisible();
   });
 
   test('should view patient detail page', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await expect(page).toHaveURL(/\/patients\//);
@@ -64,7 +64,7 @@ test.describe('DOCTOR Role Workflows (E2E)', () => {
   });
 
   test('should access Reports module', async ({ page }) => {
-    await page.getByText('Reports').click();
+    await page.getByText('Reports').first().click();
     await expect(page).toHaveURL(/\/reports/);
   });
 
@@ -78,7 +78,7 @@ test.describe('DOCTOR Role Workflows (E2E)', () => {
   });
 
   test('should access Medicines module', async ({ page }) => {
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await expect(page).toHaveURL(/\/medicines/);
   });
 
@@ -111,7 +111,7 @@ test.describe('DOCTOR Role Workflows (E2E)', () => {
   });
 
   test('should see medicines with search functionality', async ({ page }) => {
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await page.waitForURL(/\/medicines/);
     const searchInput = page.getByPlaceholder(/Search/i);
     if (await searchInput.isVisible()) {
@@ -122,7 +122,7 @@ test.describe('DOCTOR Role Workflows (E2E)', () => {
   });
 
   test('should navigate to booking flow from New Appointment', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await page.getByRole('button', { name: 'New Appointment' }).click();
     await expect(page).toHaveURL(/\/appointments\/book/);

@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('Prescription Flow (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText('Prescriptions').click();
+    await page.getByText('Prescriptions').first().click();
     await page.waitForURL(/\/prescriptions/);
   });
 
@@ -37,7 +37,7 @@ test.describe('Prescription Flow (E2E)', () => {
 
   // ────────── CREATE (from consultation) ──────────
   test('should navigate to consultation workspace to create prescription', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await page.waitForURL(/\/consultations/);
     await expect(page.getByText(/Consultation/i).first()).toBeVisible();
   });

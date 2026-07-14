@@ -72,19 +72,19 @@ test.describe('Navigation Structure (E2E)', () => {
   });
 
   test('should display correct breadcrumb on patient list page', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await expect(page.getByText('Patients').or(page.getByText(/All Patients/i)).first()).toBeVisible();
   });
 
   test('should display correct breadcrumb on appointments page', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await expect(page.getByText('Appointments').first()).toBeVisible();
   });
 
   test('should display correct breadcrumb on billing page', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     await expect(page.getByText(/Bills/i).or(page.getByText('Billing')).first()).toBeVisible();
   });
@@ -111,9 +111,9 @@ test.describe('Navigation Structure (E2E)', () => {
   });
 
   test('should maintain session when navigating via browser back/forward', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await page.waitForURL(/\/dashboard/);
     await page.goBack();
     await page.waitForTimeout(300);

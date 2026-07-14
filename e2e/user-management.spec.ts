@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('User Management (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText('Users').click();
+    await page.getByText('Users').first().click();
     await page.waitForURL(/\/users/);
   });
 

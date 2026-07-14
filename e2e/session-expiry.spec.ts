@@ -21,10 +21,10 @@ test.describe('Session & Auth Resilience (E2E)', () => {
     await login(page);
     await expect(page).toHaveURL(/\/dashboard/);
 
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await page.waitForURL(/\/dashboard/);
     await expect(page.getByText('Dashboard')).toBeVisible();
   });
@@ -35,7 +35,7 @@ test.describe('Session & Auth Resilience (E2E)', () => {
 
     const tabs = ['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Billing', 'Dashboard'];
     for (const tab of tabs) {
-      await page.getByText(tab).click();
+      await page.getByText(tab).first().click();
       await page.waitForTimeout(200);
     }
 
@@ -49,7 +49,7 @@ test.describe('Session & Auth Resilience (E2E)', () => {
 
     await page.waitForTimeout(3000);
 
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await expect(page.getByText('Patients')).toBeVisible();
   });
@@ -149,7 +149,7 @@ test.describe('Session & Auth Resilience (E2E)', () => {
   // ────────── BROWSER REFRESH MID-ACTION ──────────
   test('should recover after refresh mid-navigation', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     await page.reload();

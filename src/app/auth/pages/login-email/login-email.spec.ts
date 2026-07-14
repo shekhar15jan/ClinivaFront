@@ -49,7 +49,7 @@ describe('LoginEmail', () => {
         { provide: AuthService, useValue: { sendOtp: vi.fn() } },
         { provide: TenantContextService, useValue: { tenant: vi.fn().mockReturnValue(null) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
-        { provide: ActivatedRoute, useValue: { parent: { snapshot: { params: { hospitalCode: '' } } } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { params: {} }, parent: { snapshot: { params: { hospitalCode: '' } } } } },
       ],
     });
     const component = TestBed.runInInjectionContext(() => new LoginEmail());

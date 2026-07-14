@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('Appointment Flow (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page).toHaveURL(/\/appointments/);
   });
 

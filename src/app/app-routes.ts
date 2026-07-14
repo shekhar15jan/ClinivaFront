@@ -1,5 +1,4 @@
-﻿import { NgModule } from '@angular/core';
-import { RouterModule, Routes, PreloadAllModules } from '@angular/router';
+import { Routes } from '@angular/router';
 import { Shell } from './layout/shell/shell';
 import { AuthGuard } from './core/guards/auth.guard';
 import { TenantResolverGuard } from './core/guards/tenant-resolver.guard';
@@ -7,7 +6,7 @@ import { ModuleGuard } from './core/guards/module.guard';
 import { RoleGuard } from './core/guards/role-guard';
 import { NotFoundComponent } from './shared/pages/not-found/not-found';
 
-const routes: Routes = [
+export const routes: Routes = [
   { path: 'login', loadChildren: () => import('./auth/generic-login-module').then(m => m.GenericLoginModule) },
   {
     path: ':hospitalCode',
@@ -97,9 +96,3 @@ const routes: Routes = [
   },
   { path: '**', component: NotFoundComponent }
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }

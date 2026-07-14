@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('Doctor CRUD (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await expect(page).toHaveURL(/\/doctors/);
   });
 

@@ -12,13 +12,13 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should access Patients module for registration', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await expect(page).toHaveURL(/\/patients/);
     await expect(page.getByRole('button', { name: 'Add Patient' })).toBeVisible();
   });
 
   test('should register a new patient', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.locator('#patientFullName').fill('Walk-in Patient');
@@ -31,13 +31,13 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should access Appointments module', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page).toHaveURL(/\/appointments/);
     await expect(page.getByRole('button', { name: 'New Appointment' })).toBeVisible();
   });
 
   test('should book a new appointment for a patient', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await page.getByRole('button', { name: 'New Appointment' }).click();
     await expect(page).toHaveURL(/\/appointments\/book/);
@@ -50,7 +50,7 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should approve a pending appointment', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     const approveBtn = page.getByRole('button', { name: /Approve/i });
     if (await approveBtn.first().isVisible()) {
@@ -60,7 +60,7 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should reject a pending appointment', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     const rejectBtn = page.getByRole('button', { name: /Reject/i });
     if (await rejectBtn.first().isVisible()) {
@@ -70,12 +70,12 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should access Billing module', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await expect(page).toHaveURL(/\/billing/);
   });
 
   test('should view invoice detail', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     const viewBtn = page.getByRole('link', { name: 'View' }).first();
     if (await viewBtn.isVisible()) {
@@ -86,7 +86,7 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should search patients by name', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const searchInput = page.getByPlaceholder(/Search patients/i);
     await searchInput.fill('Rahul');
@@ -95,7 +95,7 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should view doctor list', async ({ page }) => {
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await expect(page).toHaveURL(/\/doctors/);
     await expect(page.getByText('Dr. Anita Desai')).toBeVisible();
   });
@@ -130,7 +130,7 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should filter billing by status', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     const statusFilter = page.locator('select').first();
     if (await statusFilter.isVisible()) {
@@ -142,7 +142,7 @@ test.describe('RECEPTIONIST Role Workflows (E2E)', () => {
   });
 
   test('should see payment status badges on bills', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     await expect(page.getByText('PAID').or(page.getByText('UNPAID')).first()).toBeVisible();
   });

@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('Reviews (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText(/Review/i).click();
+    await page.getByText(/Review/i).first().click();
     await page.waitForURL(/\/reviews/);
   });
 

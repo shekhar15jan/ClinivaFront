@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('Settings Flow (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
   });
 

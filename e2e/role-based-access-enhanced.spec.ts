@@ -23,7 +23,7 @@ test.describe('Role-Based Access Control - Enhanced (E2E)', () => {
   });
 
   test('should access Users page as ADMIN', async ({ page }) => {
-    await page.getByText('Users').click();
+    await page.getByText('Users').first().click();
     await page.waitForTimeout(500);
     const url = page.url().toLowerCase();
     const isOk = url.includes('/users') || url.includes('/dashboard');
@@ -31,7 +31,7 @@ test.describe('Role-Based Access Control - Enhanced (E2E)', () => {
   });
 
   test('should access Audit Logs page as ADMIN', async ({ page }) => {
-    await page.getByText('Audit Logs').click();
+    await page.getByText('Audit Logs').first().click();
     await page.waitForTimeout(500);
     const url = page.url().toLowerCase();
     const isOk = url.includes('/audit-logs') || url.includes('/dashboard');
@@ -40,52 +40,52 @@ test.describe('Role-Based Access Control - Enhanced (E2E)', () => {
 
   // ────────── MODULE ACCESS BY ROLE ──────────
   test('should access Patients module as ADMIN', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await expect(page).toHaveURL(/\/patients/);
   });
 
   test('should access Doctors module as ADMIN', async ({ page }) => {
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await expect(page).toHaveURL(/\/doctors/);
   });
 
   test('should access Appointments module as ADMIN', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page).toHaveURL(/\/appointments/);
   });
 
   test('should access Billing module as ADMIN', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await expect(page).toHaveURL(/\/billing/);
   });
 
   test('should access Settings module as ADMIN', async ({ page }) => {
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await expect(page).toHaveURL(/\/settings/);
   });
 
   test('should access Medicines module as ADMIN', async ({ page }) => {
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await expect(page).toHaveURL(/\/medicines/);
   });
 
   test('should access Reports module as ADMIN', async ({ page }) => {
-    await page.getByText('Reports').click();
+    await page.getByText('Reports').first().click();
     await expect(page).toHaveURL(/\/reports/);
   });
 
   test('should access Health Packages module as ADMIN', async ({ page }) => {
-    await page.getByText(/Health Package/i).click();
+    await page.getByText(/Health Package/i).first().click();
     await expect(page).toHaveURL(/\/health-packages/);
   });
 
   test('should access Contacts module as ADMIN', async ({ page }) => {
-    await page.getByText('Contacts').click();
+    await page.getByText('Contacts').first().click();
     await expect(page).toHaveURL(/\/contacts/);
   });
 
   test('should access Reviews module as ADMIN', async ({ page }) => {
-    await page.getByText(/Review/i).click();
+    await page.getByText(/Review/i).first().click();
     await expect(page).toHaveURL(/\/reviews/);
   });
 
@@ -213,7 +213,7 @@ test.describe('Role-Based Access Control - Enhanced (E2E)', () => {
 
   // ────────── PAYMENTS MODULE ACCESS ──────────
   test('should access Payments page (no role guard)', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     await page.goto(`/${HOSPITAL_CODE}/payments`);
     await page.waitForTimeout(500);

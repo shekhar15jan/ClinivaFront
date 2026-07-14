@@ -32,14 +32,14 @@ test.describe('Shared Component Interactions (E2E)', () => {
 
   // ────────── PAGINATOR ──────────
   test('should display paginator on patient list', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const paginator = page.locator('app-paginator, mat-paginator, [class*="paginator"]');
     await expect(paginator.first()).toBeVisible();
   });
 
   test('should show page size selector in paginator', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const pageSizeSelector = page.locator('select, mat-select, [class*="page-size"]').first();
     const count = await pageSizeSelector.count();
@@ -47,13 +47,13 @@ test.describe('Shared Component Interactions (E2E)', () => {
   });
 
   test('should show pagination info text', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await expect(page.getByText(/Showing/i)).toBeVisible();
   });
 
   test('should navigate to next page via paginator', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const nextBtn = page.getByRole('button', { name: /Next|chevron_right|>/i }).first();
     if (await nextBtn.isEnabled().catch(() => false)) {
@@ -63,7 +63,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
   });
 
   test('should navigate to previous page via paginator', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const nextBtn = page.getByRole('button', { name: /Next|chevron_right|>/i }).first();
     if (await nextBtn.isEnabled().catch(() => false)) {
@@ -79,7 +79,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
 
   // ────────── TOAST NOTIFICATIONS ──────────
   test('should display toast on successful patient creation', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.locator('#patientFullName').fill('Toast Patient');
@@ -94,7 +94,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
   });
 
   test('should dismiss toast after timeout', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.locator('#patientFullName').fill('Dismiss Toast');
@@ -110,7 +110,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
 
   // ────────── CONFIRM DIALOG ──────────
   test('should show confirm dialog before soft-delete', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await page.waitForTimeout(300);
@@ -123,7 +123,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
   });
 
   test('should have Cancel and Confirm buttons in dialog', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await page.waitForTimeout(300);
@@ -138,7 +138,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
   });
 
   test('should dismiss dialog when clicking Cancel', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await page.waitForTimeout(300);
@@ -176,7 +176,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
 
   // ────────── STATUS BADGE ──────────
   test('should display status badges in patient list', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const badges = page.locator('app-status-badge, [class*="badge"]');
     const count = await badges.count();
@@ -184,7 +184,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
   });
 
   test('should show different status badge colors', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     const badges = page.locator('app-status-badge, [class*="badge"], [class*="status"]');
     const count = await badges.count();
@@ -221,7 +221,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
   // ────────── BOTTOM SHEET ──────────
   test('should display bottom sheet on mobile action', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const bottomSheet = page.locator('app-bottom-sheet, [class*="bottom-sheet"]');
     const count = await bottomSheet.count();

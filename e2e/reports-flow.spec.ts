@@ -4,7 +4,7 @@ import { login } from './helpers/login';
 test.describe('Reports Dashboard (E2E)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByText('Reports').click();
+    await page.getByText('Reports').first().click();
     await page.waitForURL(/\/reports/);
   });
 

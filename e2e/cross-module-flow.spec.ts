@@ -24,25 +24,25 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate from patient list to detail and see appointments tab', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await expect(page).toHaveURL(/\/patients\//);
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page.getByText(/Appointments/i)).toBeVisible();
   });
 
   test('should navigate from patient detail to appointment billing tab', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await expect(page).toHaveURL(/\/patients\//);
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await expect(page.getByText(/Billing|Bill/i)).toBeVisible();
   });
 
   test('should navigate from patient detail to medical history', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await expect(page).toHaveURL(/\/patients\//);
@@ -51,7 +51,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate from doctor detail to availability schedule', async ({ page }) => {
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await page.waitForURL(/\/doctors/);
     await page.getByText('Dr. Anita Desai').click();
     await expect(page).toHaveURL(/\/doctors\//);
@@ -59,7 +59,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate from appointment calendar to booking wizard', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await page.getByRole('button', { name: 'New Appointment' }).click();
     await expect(page).toHaveURL(/\/appointments\/book/);
@@ -69,7 +69,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate from billing list to invoice detail', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     const viewBtn = page.getByRole('link', { name: 'View' }).first();
     await viewBtn.click();
@@ -79,7 +79,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate from reports dashboard to revenue report', async ({ page }) => {
-    await page.getByText('Reports').click();
+    await page.getByText('Reports').first().click();
     await page.waitForURL(/\/reports/);
     const revenueTab = page.getByText(/Revenue/i);
     if (await revenueTab.isVisible()) {
@@ -90,24 +90,24 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate from medicines to prescription creation flow', async ({ page }) => {
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await page.waitForURL(/\/medicines/);
     await expect(page.getByText(/Medicine/i).first()).toBeVisible();
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await page.waitForURL(/\/consultations/);
     await expect(page.getByText(/Consultation/i).first()).toBeVisible();
   });
 
   test('should navigate from settings back to dashboard', async ({ page }) => {
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     await expect(page.getByText(/Settings/i).first()).toBeVisible();
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
   test('should switch between day/week/month calendar views', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await page.getByRole('button', { name: 'Week' }).click();
     await page.waitForTimeout(300);
@@ -117,7 +117,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate back from invoice detail to billing list', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     await page.getByRole('link', { name: 'View' }).first().click();
     await expect(page).toHaveURL(/\/billing\//);
@@ -126,7 +126,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should open booking wizard step 1 and return to appointments list', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     await page.getByRole('button', { name: 'New Appointment' }).click();
     await expect(page).toHaveURL(/\/appointments\/book/);
@@ -146,7 +146,7 @@ test.describe('Cross-Module Integration Flow (E2E)', () => {
   });
 
   test('should navigate between patient list pages', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const nextBtn = page.getByRole('button', { name: /Next|>/i });
     if (await nextBtn.isEnabled()) {

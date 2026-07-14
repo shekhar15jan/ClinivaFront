@@ -1,11 +1,9 @@
-import { NgModule, provideBrowserGlobalErrorListeners, APP_INITIALIZER } from '@angular/core';
-import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { LayoutModule } from './layout/layout-module';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, APP_INITIALIZER } from '@angular/core';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
+import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 
-import { AppRoutingModule } from './app-routing-module';
-import { App } from './app';
-
+import { routes } from './app-routes';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { GlobalErrorInterceptor } from './core/interceptors/global-error.interceptor';
 import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
@@ -13,25 +11,14 @@ import { TenantInterceptor } from './core/interceptors/tenant.interceptor';
 import { MockBackendInterceptor } from './core/interceptors/mock-backend.interceptor';
 import { AuthService } from './core/services/auth.service';
 import { initializeAuth } from './core/services/auth-initializer';
-import { ToastComponent } from './shared/components/toast/toast.component';
-import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
-import { TrialBannerComponent } from './shared/components/trial-banner/trial-banner.component';
 import { environment } from '../environments/environment';
 
-@NgModule({
-  declarations: [],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    AppRoutingModule,
-    LayoutModule,
-    App,
-    ToastComponent,
-    LoadingSpinnerComponent,
-    TrialBannerComponent,
-  ],
+export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideRouter(routes, withPreloading(PreloadAllModules)),
+    provideHttpClient(withInterceptorsFromDi()),
+    provideClientHydration(withEventReplay()),
     {
       provide: APP_INITIALIZER,
       useFactory: initializeAuth,
@@ -45,8 +32,5 @@ import { environment } from '../environments/environment';
     ...(environment.enableMock
       ? [{ provide: HTTP_INTERCEPTORS, useClass: MockBackendInterceptor, multi: true }]
       : []),
-    provideClientHydration(withEventReplay()),
   ],
-  bootstrap: [App],
-})
-export class AppModule {}
+};

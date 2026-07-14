@@ -79,7 +79,7 @@ export class AuthService {
           const rawUser = raw['user'] as Record<string, unknown> | undefined;
           const rawTenant = raw['tenant'] as Record<string, unknown> | undefined;
           const authResponse: AuthResponse = {
-            token: (raw['token'] as string) || '',
+            token: (raw['token'] as string) || (raw['accessToken'] as string) || '',
             refreshToken: (raw['refreshToken'] as string) || '',
             user: {
               id: (rawUser?.['id'] as string) || '',
@@ -149,7 +149,7 @@ export class AuthService {
     const rawUser = raw['user'] as Record<string, unknown> | undefined;
     const rawTenant = raw['tenant'] as Record<string, unknown> | undefined;
     return {
-      token: (raw['token'] as string) || '',
+      token: (raw['token'] as string) || (raw['accessToken'] as string) || '',
       refreshToken: (raw['refreshToken'] as string) || '',
       user: {
         id: (rawUser?.['id'] as string) || '',

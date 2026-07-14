@@ -209,7 +209,9 @@ export class MockBackendInterceptor implements HttpInterceptor {
       return next.handle(request);
     }
 
-    const { url, method, body } = request;
+    const { method, body } = request;
+    const fullUrl = request.urlWithParams;
+    const url = request.url;
 
     // ─── Auth ───────────────────────────────────────────────────────
     // Real backend endpoints: /auth/login, /auth/verify-password, /auth/send-otp, /auth/verify-otp, /auth/refresh, /auth/logout
@@ -336,9 +338,44 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
 
     if (url.includes('/tenant/resolve') && method === 'GET') {
-      const code = url.split('?code=')[1];
-      if (code === 'CLINIVA' || code === 'CLINIVA') {
-        return of(new HttpResponse({ status: 200, body: { success: true, data: { tenantId: 't1', name: 'Cliniva Medical Center', code: 'CLINIVA', status: 'ACTIVE' } } })).pipe(delay(300));
+      const code = fullUrl.split('code=')[1]?.split('&')[0];
+      if (code === 'CLINICA' || code === 'CLINIVA') {
+        return of(new HttpResponse({ status: 200, body: { success: true, data: {
+          tenant: { tenantId: 't1', name: 'Cliniva Medical Center', code: 'CLINICA', status: 'ACTIVE' },
+          modules: [
+            { moduleCode: 'PATIENT', moduleName: 'Patient Management', status: 'ACTIVE', isCore: true, source: 'CORE' },
+            { moduleCode: 'APPOINTMENT', moduleName: 'Appointment Lifecycle', status: 'ACTIVE', isCore: true, source: 'CORE' },
+            { moduleCode: 'DOCTOR', moduleName: 'Doctor Management', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'CONSULTATION', moduleName: 'Consultation', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'PRESCRIPTION', moduleName: 'Prescription', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'BILLING', moduleName: 'Billing & Invoice', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'PAYMENT', moduleName: 'Payment', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'MEDICINE', moduleName: 'Medicine Catalog', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'REPORTS', moduleName: 'Reports & Dashboard', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'DASHBOARD', moduleName: 'Dashboard', status: 'ACTIVE', isCore: true, source: 'CORE' },
+            { moduleCode: 'SETTINGS', moduleName: 'Settings', status: 'ACTIVE', isCore: true, source: 'CORE' },
+          ],
+          subscription: { planName: 'Clinic Standard', status: 'ACTIVE', endDate: '2027-07-01', maxDoctors: 5, maxPatients: 500 },
+        } } })).pipe(delay(300));
+      }
+      if (code === 'WELNESS') {
+        return of(new HttpResponse({ status: 200, body: { success: true, data: {
+          tenant: { tenantId: 't2', name: 'Wellness Clinic', code: 'WELNESS', status: 'ACTIVE' },
+          modules: [
+            { moduleCode: 'PATIENT', moduleName: 'Patient Management', status: 'ACTIVE', isCore: true, source: 'CORE' },
+            { moduleCode: 'APPOINTMENT', moduleName: 'Appointment Lifecycle', status: 'ACTIVE', isCore: true, source: 'CORE' },
+            { moduleCode: 'DOCTOR', moduleName: 'Doctor Management', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'CONSULTATION', moduleName: 'Consultation', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'PRESCRIPTION', moduleName: 'Prescription', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'BILLING', moduleName: 'Billing & Invoice', status: 'DISABLED', isCore: false, source: 'PLAN' },
+            { moduleCode: 'PAYMENT', moduleName: 'Payment', status: 'DISABLED', isCore: false, source: 'PLAN' },
+            { moduleCode: 'MEDICINE', moduleName: 'Medicine Catalog', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'REPORTS', moduleName: 'Reports & Dashboard', status: 'ACTIVE', isCore: false, source: 'PLAN' },
+            { moduleCode: 'DASHBOARD', moduleName: 'Dashboard', status: 'ACTIVE', isCore: true, source: 'CORE' },
+            { moduleCode: 'SETTINGS', moduleName: 'Settings', status: 'ACTIVE', isCore: true, source: 'CORE' },
+          ],
+          subscription: { planName: 'Clinic Standard', status: 'ACTIVE', endDate: '2027-07-01', maxDoctors: 5, maxPatients: 500 },
+        } } })).pipe(delay(300));
       }
       return of(new HttpResponse({ status: 404, body: { success: false, message: 'Tenant not found' } })).pipe(delay(300));
     }
@@ -489,7 +526,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     // GET /hms/appointments — broad list
     if (url.includes('/hms/appointments') && method === 'GET') {
       let filtered = [...this.appointments];
-      const params = new URLSearchParams(url.split('?')[1] || '');
+      const params = new URLSearchParams(fullUrl.split('?')[1] || '');
       const status = params.get('status');
       const doctorId = params.get('doctorId');
       if (status) filtered = filtered.filter(a => a.status === status);
@@ -654,7 +691,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
 
     // ─── Medicines ──────────────────────────────────────────────────
     if (url.includes('/hms/medicines/search') && method === 'GET') {
-      const query = url.split('?q=')[1]?.toLowerCase() || '';
+      const query = fullUrl.split('?q=')[1]?.toLowerCase() || '';
       const results = this.medicines.filter(m => m.medicineName.toLowerCase().includes(query) || m.genericName.toLowerCase().includes(query));
       return of(new HttpResponse({ status: 200, body: { success: true, data: results } })).pipe(delay(200));
     }

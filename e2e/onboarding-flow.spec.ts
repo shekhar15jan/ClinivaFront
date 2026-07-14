@@ -28,14 +28,14 @@ test.describe('Onboarding Flow (E2E)', () => {
 
   test('should navigate to settings after login if tenant needs setup', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     await expect(page.getByText(/Settings/i).first()).toBeVisible();
   });
 
   test('should show clinic name field in settings', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     const nameInput = page.locator('input[placeholder*="Clinic"], input[formControlName="name"]').first();
     await expect(nameInput).toBeVisible();
@@ -43,7 +43,7 @@ test.describe('Onboarding Flow (E2E)', () => {
 
   test('should update clinic name during onboarding setup', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     const nameInput = page.locator('input[placeholder*="Clinic"], input[formControlName="name"]').first();
     if (await nameInput.isVisible()) {
@@ -58,7 +58,7 @@ test.describe('Onboarding Flow (E2E)', () => {
 
   test('should configure patient ID prefix in settings', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     const prefixInput = page.locator('input[formControlName="patientIdPrefix"], input[placeholder*="prefix"]');
     if (await prefixInput.isVisible()) {
@@ -73,21 +73,21 @@ test.describe('Onboarding Flow (E2E)', () => {
 
   test('should configure timezone in settings', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     await expect(page.getByText(/Timezone/i)).toBeVisible();
   });
 
   test('should show address field in settings for clinic setup', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     await expect(page.locator('textarea, [formControlName="address"]')).toBeVisible();
   });
 
   test('should show phone and email fields for clinic contact', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
     await expect(page.locator('input[type="tel"], input[placeholder*="Phone"]').first()).toBeVisible();
     await expect(page.locator('input[type="email"]').first()).toBeVisible();
@@ -101,9 +101,9 @@ test.describe('Onboarding Flow (E2E)', () => {
 
   test('should navigate to dashboard after settings update', async ({ page }) => {
     await login(page);
-    await page.getByText('Settings').click();
+    await page.getByText('Settings').first().click();
     await page.waitForURL(/\/settings/);
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText("Today's Appointments")).toBeVisible();
   });

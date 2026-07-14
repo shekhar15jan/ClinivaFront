@@ -5,7 +5,7 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
   // ────────── DOUBLE SUBMIT ──────────
   test('should prevent double submit on patient create', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     await page.getByRole('button', { name: 'Add Patient' }).click();
@@ -27,7 +27,7 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
   // ────────── EMPTY FORM SUBMIT ──────────
   test('should show validation on completely empty patient form', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     await page.getByRole('button', { name: 'Add Patient' }).click();
@@ -37,7 +37,7 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
 
   test('should show validation on empty doctor form', async ({ page }) => {
     await login(page);
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await page.waitForURL(/\/doctors/);
 
     const addBtn = page.getByRole('button', { name: /Add Doctor/i });
@@ -51,16 +51,16 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
   // ────────── NAVIGATION AWAY MID-FLOW ──────────
   test('should handle navigating away from Add Patient without saving', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.locator('#patientFullName').fill('Unsaved Patient');
 
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await page.waitForURL(/\/dashboard/);
 
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await expect(page.getByText('Unsaved Patient')).toHaveCount(0);
   });
@@ -69,26 +69,26 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
   test('should handle rapid sidebar navigation', async ({ page }) => {
     await login(page);
 
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForTimeout(200);
 
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await page.waitForTimeout(200);
 
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await page.waitForTimeout(200);
 
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await page.waitForTimeout(200);
 
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await page.waitForURL(/\/dashboard/);
   });
 
   // ────────── LONG INPUT ──────────
   test('should handle very long patient name', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     await page.getByRole('button', { name: 'Add Patient' }).click();
@@ -102,7 +102,7 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
   // ────────── SPECIAL CHARACTERS ──────────
   test('should handle special characters in patient name', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     await page.getByRole('button', { name: 'Add Patient' }).click();
@@ -117,7 +117,7 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
   // ────────── SEARCH EDGE CASES ──────────
   test('should handle very long search query', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const longQuery = 'x'.repeat(500);
@@ -129,7 +129,7 @@ test.describe('Edge Cases & Resilience (E2E)', () => {
 
   test('should handle special characters in search', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const searchInput = page.getByPlaceholder(/Search patients/i);

@@ -86,7 +86,7 @@ test.describe('Role-Based Access Control (E2E)', () => {
 
     const modules = ['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Billing'];
     for (const mod of modules) {
-      await page.getByText(mod).click();
+      await page.getByText(mod).first().click();
       await page.waitForTimeout(200);
     }
   });

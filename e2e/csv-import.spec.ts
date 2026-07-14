@@ -5,7 +5,7 @@ test.describe('CSV Import (E2E)', () => {
   // ────────── PATIENT CSV IMPORT ──────────
   test('should show CSV upload button for patients', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -15,7 +15,7 @@ test.describe('CSV Import (E2E)', () => {
 
   test('should open CSV upload dialog for patients', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -28,7 +28,7 @@ test.describe('CSV Import (E2E)', () => {
 
   test('should show file input for CSV upload', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -43,7 +43,7 @@ test.describe('CSV Import (E2E)', () => {
 
   test('should upload a valid patient CSV file', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -70,7 +70,7 @@ test.describe('CSV Import (E2E)', () => {
 
   test('should show error for invalid CSV format', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -97,7 +97,7 @@ test.describe('CSV Import (E2E)', () => {
   // ────────── MEDICINE CSV IMPORT ──────────
   test('should show CSV upload button for medicines', async ({ page }) => {
     await login(page);
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await page.waitForURL(/\/medicines/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -107,7 +107,7 @@ test.describe('CSV Import (E2E)', () => {
 
   test('should open CSV upload dialog for medicines', async ({ page }) => {
     await login(page);
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await page.waitForURL(/\/medicines/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -120,7 +120,7 @@ test.describe('CSV Import (E2E)', () => {
 
   test('should upload a valid medicine CSV file', async ({ page }) => {
     await login(page);
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await page.waitForURL(/\/medicines/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });
@@ -148,7 +148,7 @@ test.describe('CSV Import (E2E)', () => {
   // ────────── DOWNLOAD TEMPLATE ──────────
   test('should have download template option for CSV', async ({ page }) => {
     await login(page);
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
 
     const importBtn = page.getByRole('button', { name: /Import|Upload/i });

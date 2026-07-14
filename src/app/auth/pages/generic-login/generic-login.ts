@@ -89,7 +89,7 @@ export class GenericLogin implements OnInit, OnDestroy {
             const resolution = this.resolutions[0];
             this.authService.setTenantResolution(resolution);
             this.authService.pendingEmail = this.email;
-            this.router.navigate([`/${resolution.tenant.tenantId}/login`]);
+            this.router.navigate([`/${resolution.tenant.code || resolution.tenant.tenantId}/login`]);
             return;
           } else if (this.resolutions.length > 1) {
             this.showSelection = true;
@@ -112,7 +112,7 @@ export class GenericLogin implements OnInit, OnDestroy {
   selectTenant(resolution: TenantResolution): void {
     this.authService.setTenantResolution(resolution);
     this.authService.pendingEmail = this.email;
-    this.router.navigate([`/${resolution.tenant.tenantId}/login`]);
+    this.router.navigate([`/${resolution.tenant.code || resolution.tenant.tenantId}/login`]);
   }
 
   goToHospitalCode(): void {

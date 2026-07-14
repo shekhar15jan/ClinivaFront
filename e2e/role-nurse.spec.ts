@@ -12,13 +12,13 @@ test.describe('NURSE Role Workflows (E2E)', () => {
   });
 
   test('should access Patients module for viewing', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await expect(page).toHaveURL(/\/patients/);
     await expect(page.getByText('Rahul Sharma')).toBeVisible();
   });
 
   test('should view patient detail', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await expect(page).toHaveURL(/\/patients\//);
@@ -26,12 +26,12 @@ test.describe('NURSE Role Workflows (E2E)', () => {
   });
 
   test('should access Consultations module for vitals recording', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await expect(page).toHaveURL(/\/consultations/);
   });
 
   test('should navigate to consultation for vitals', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await page.waitForURL(/\/consultations/);
     const startBtn = page.getByRole('button', { name: /Start|New Consultation/i });
     if (await startBtn.first().isVisible()) {
@@ -42,7 +42,7 @@ test.describe('NURSE Role Workflows (E2E)', () => {
   });
 
   test('should record patient vitals', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await page.waitForURL(/\/consultations/);
     const startBtn = page.getByRole('button', { name: /Start|New Consultation/i });
     if (await startBtn.first().isVisible()) {
@@ -71,19 +71,19 @@ test.describe('NURSE Role Workflows (E2E)', () => {
   });
 
   test('should view doctor list', async ({ page }) => {
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await expect(page).toHaveURL(/\/doctors/);
     await expect(page.getByText('Dr. Anita Desai')).toBeVisible();
   });
 
   test('should view appointment calendar', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page).toHaveURL(/\/appointments/);
     await expect(page.getByText('Dr. Anita Desai')).toBeVisible();
   });
 
   test('should view patient medical history', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await page.waitForTimeout(300);
@@ -112,7 +112,7 @@ test.describe('NURSE Role Workflows (E2E)', () => {
   });
 
   test('should NOT add new patients (NURSE can only view)', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const addBtn = page.getByRole('button', { name: 'Add Patient' });
     const visible = await addBtn.isVisible();

@@ -8,7 +8,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should display loading spinner during navigation', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForTimeout(300);
     const spinner = page.locator('app-loading-spinner, [class*="spinner"], .animate-spin');
     const count = await spinner.count();
@@ -16,7 +16,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show loading state on slow operations', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForTimeout(500);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.waitForTimeout(300);
@@ -26,7 +26,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should display empty state when no data available', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const emptyState = page.getByText(/No patients found|No results|No data|Empty/i);
     const count = await emptyState.count();
@@ -34,7 +34,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show empty state component for empty lists', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const emptyComponent = page.locator('app-empty-state, [class*="empty-state"]');
     const count = await emptyComponent.count();
@@ -42,7 +42,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should display paginator on list pages', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const paginator = page.locator('app-paginator, mat-paginator, [class*="paginator"]');
     const count = await paginator.count();
@@ -50,7 +50,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show toast notification on successful actions', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.locator('#patientFullName').fill('Toast Test Patient');
@@ -65,7 +65,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show confirmation dialog before destructive actions', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     await expect(page).toHaveURL(/\/patients\//);
@@ -83,7 +83,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should confirm dialog cancel button works', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByText('Rahul Sharma').click();
     const deleteBtn = page.getByRole('button', { name: /Delete/i });
@@ -101,7 +101,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   test('should display status badges for data states', async ({ page }) => {
     const pages = ['Patients', 'Appointments', 'Billing'];
     for (const p of pages) {
-      await page.getByText(p).click();
+      await page.getByText(p).first().click();
       await page.waitForTimeout(300);
       const badge = page.locator('app-status-badge, [class*="badge"], [class*="status"]');
       const count = await badge.count();
@@ -145,7 +145,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show global error toast for failed operations', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     await page.locator('#patientFullName').fill('');
@@ -157,7 +157,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show select dropdown with options for form fields', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     await page.getByRole('button', { name: 'Add Patient' }).click();
     const genderSelect = page.locator('#patientGender, select[formControlName="gender"]');
@@ -170,7 +170,7 @@ test.describe('Global UI Patterns (E2E)', () => {
   });
 
   test('should show filter dropdown options on list pages', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     const statusFilter = page.locator('select').first();
     if (await statusFilter.isVisible()) {

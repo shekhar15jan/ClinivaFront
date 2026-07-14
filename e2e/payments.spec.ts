@@ -93,12 +93,12 @@ test.describe('Payments Module (E2E)', () => {
   });
 
   test('should navigate back from payments to dashboard', async ({ page }) => {
-    await page.getByText('Dashboard').click();
+    await page.getByText('Dashboard').first().click();
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
   test('should navigate to payments from billing list', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await page.waitForURL(/\/billing/);
     await page.getByText('Payments').or(page.locator('a[routerlink="/payments"]')).first().click().catch(() => {});
     await page.waitForTimeout(500);

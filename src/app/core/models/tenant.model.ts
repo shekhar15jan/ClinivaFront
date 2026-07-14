@@ -6,6 +6,7 @@ export type SubscriptionStatus = 'ACTIVE' | 'CANCELLED' | 'EXPIRED';
 export interface Tenant {
   id: string;
   tenantId?: string;
+  code?: string;
   name: string;
   displayName?: string;
   domain?: string;

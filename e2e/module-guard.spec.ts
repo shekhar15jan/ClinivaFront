@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers/login';
 
-const HOSPITAL_CODE = 'DEMO';
+const HOSPITAL_CODE = 'CLINIVA';
 
 test.describe('Module Guard & License Enforcement (E2E)', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,43 +11,43 @@ test.describe('Module Guard & License Enforcement (E2E)', () => {
 
   // ────────── MODULE-GUARDED ROUTES ──────────
   test('should load Patients module when module is active', async ({ page }) => {
-    await page.getByText('Patients').click();
+    await page.getByText('Patients').first().click();
     await expect(page).toHaveURL(/\/patients/);
-    await expect(page.getByRole('heading', { name: 'Patients' }).or(page.getByText(/Patient/i).first())).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Patients' }).or(page.getByText(/Patient/i).first()).first()).toBeVisible();
   });
 
   test('should load Appointments module when module is active', async ({ page }) => {
-    await page.getByText('Appointments').click();
+    await page.getByText('Appointments').first().click();
     await expect(page).toHaveURL(/\/appointments/);
   });
 
   test('should load Consultations module when module is active', async ({ page }) => {
-    await page.getByText('Consultations').click();
+    await page.getByText('Consultations').first().click();
     await expect(page).toHaveURL(/\/consultations/);
   });
 
   test('should load Billing module when module is active', async ({ page }) => {
-    await page.getByText('Billing').click();
+    await page.getByText('Billing').first().click();
     await expect(page).toHaveURL(/\/billing/);
   });
 
   test('should load Doctors module when module is active', async ({ page }) => {
-    await page.getByText('Doctors').click();
+    await page.getByText('Doctors').first().click();
     await expect(page).toHaveURL(/\/doctors/);
   });
 
   test('should load Medicines module when module is active', async ({ page }) => {
-    await page.getByText(/Medicines|Pharmacy/i).click();
+    await page.getByText(/Medicines|Pharmacy/i).first().click();
     await expect(page).toHaveURL(/\/medicines/);
   });
 
   test('should load Prescriptions module when module is active', async ({ page }) => {
-    await page.getByText('Prescriptions').click();
+    await page.getByText('Prescriptions').first().click();
     await expect(page).toHaveURL(/\/prescriptions/);
   });
 
   test('should load Reports module when module is active', async ({ page }) => {
-    await page.getByText('Reports').click();
+    await page.getByText('Reports').first().click();
     await expect(page).toHaveURL(/\/reports/);
   });
 

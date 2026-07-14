@@ -22,7 +22,7 @@ export class LoginEmail implements OnInit {
   hospitalCode = '';
 
   ngOnInit(): void {
-    this.hospitalCode = this.route.parent?.snapshot.params['hospitalCode'] || '';
+    this.hospitalCode = this.route.parent?.snapshot.params['hospitalCode'] || this.route.snapshot.params['hospitalCode'] || '';
     if (!this.hospitalCode) {
       this.router.navigate(['/login']);
       return;
@@ -30,6 +30,10 @@ export class LoginEmail implements OnInit {
     const tenant = this.tenantContext.tenant();
     if (!tenant) {
       this.router.navigate([`/${this.hospitalCode}/login`]);
+      return;
+    }
+    if (this.authService.pendingEmail) {
+      this.email = this.authService.pendingEmail;
     }
   }
 
