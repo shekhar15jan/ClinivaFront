@@ -84,14 +84,14 @@
           <tbody>
             @for (log of logs; track log.id) {
               <tr class="border-t border-gray-100 hover:bg-surface-container-low/50 cursor-pointer" (click)="openDetail(log)">
-                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.userName || log.userId.substring(0, 8) || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.userId ? log.userId.substring(0, 8) : '—' }}</td>
                 <td class="px-4 py-3">
                   <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getActionClass(log.action)">{{ log.action }}</span>
                 </td>
                 <td class="px-4 py-3 text-sm text-on-surface-variant">{{ log.entity }}</td>
-                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.entityId.substring(0, 8) || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.entityId ? log.entityId.substring(0, 8) : '—' }}</td>
                 <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.ipAddress || '—' }}</td>
-                <td class="px-4 py-3 text-sm text-on-surface-variant whitespace-nowrap">{{ log.timestamp | date:'medium' }}</td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant whitespace-nowrap">{{ log.createdAt | date:'medium' }}</td>
               </tr>
             }
           </tbody>
@@ -124,7 +124,7 @@
       <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
         <div class="flex items-center justify-between">
           <span class="text-sm text-outline">User</span>
-          <span class="text-sm font-medium text-on-surface">{{ selectedLog.userName || selectedLog.userId || '—' }}</span>
+          <span class="text-sm font-medium text-on-surface">{{ selectedLog.userId || '—' }}</span>
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-outline">Action</span>
@@ -144,7 +144,7 @@
         </div>
         <div class="flex items-center justify-between">
           <span class="text-sm text-outline">Timestamp</span>
-          <span class="text-sm text-on-surface-variant">{{ selectedLog.timestamp | date:'medium' }}</span>
+          <span class="text-sm text-on-surface-variant">{{ selectedLog.createdAt | date:'medium' }}</span>
         </div>
         @if (selectedLog.oldValue) {
           <div>
