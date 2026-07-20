@@ -642,7 +642,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
 
     // GET /hms/bills/{id} — specific before broad
-    if (url.match(/\/hms\/billing\/[\w-]+$/) && method === 'GET' && !url.includes('preview') && !url.includes('pdf')) {
+    if (url.match(/\/hms\/bills\/[\w-]+$/) && method === 'GET' && !url.includes('preview') && !url.includes('pdf')) {
       const id = url.split('/').pop();
       const bill = this.bills.find(b => b.id === id);
       if (bill) {

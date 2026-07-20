@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
   test: {
@@ -9,6 +10,12 @@ export default defineConfig({
       '@analogjs/vitest-angular/setup-zone',
       './src/test-setup.ts',
     ],
+    browser: {
+      enabled: true,
+      instances: [{ browser: 'chromium' }],
+      provider: playwright(),
+      headless: true,
+    },
     include: ['src/**/*.spec.ts'],
     exclude: ['src/**/*.cy.spec.ts'],
     coverage: {

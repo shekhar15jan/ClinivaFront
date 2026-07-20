@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers/login';
 
-const HOSPITAL_CODE = 'DEMO';
+const HOSPITAL_CODE = 'CLINIVA';
 
 test.describe('Role-Based Access Control - Enhanced (E2E)', () => {
   test.beforeEach(async ({ page }) => {

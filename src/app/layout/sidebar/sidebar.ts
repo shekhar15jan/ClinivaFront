@@ -35,6 +35,7 @@ export class Sidebar {
     { code: 'REPORTS', label: 'Reports', icon: 'bar_chart', route: 'reports' },
     { code: 'HEALTH_PACKAGE', label: 'Health Packages', icon: 'card_giftcard', route: 'health-packages' },
     { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings' },
+    { code: 'SETTINGS', label: 'Email Templates', icon: 'mail', route: 'settings/email-templates', adminOnly: true },
   ];
 
   readonly patientNavItems = [
@@ -49,8 +50,9 @@ export class Sidebar {
     this.isPatient() ? this.patientNavItems : this.staffNavItems
   );
 
-  isVisible(item: { code: string }) {
+  isVisible(item: { code: string; adminOnly?: boolean }) {
     if (this.isPatient()) return true;
+    if (item.adminOnly && this.userRole() !== 'ADMIN') return false;
     return item.code === 'DASHBOARD' || this.activeModules().includes(item.code);
   }
 }

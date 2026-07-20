@@ -40,4 +40,10 @@ export class ReportService {
   getBillsStatus(): Observable<ApiResponse<BillsStatusReport>> {
     return this.http.get<ApiResponse<BillsStatusReport>>(`${this.baseUrl}/bills-status`);
   }
+
+  exportReportPdf(): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/export/pdf`, {
+      responseType: 'blob'
+    });
+  }
 }

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ClinicSettings } from '../../../../core/models/setting.model';
 import { FormsModule } from '@angular/forms';
 
@@ -131,12 +132,35 @@ import { FormsModule } from '@angular/forms';
             Reset to Default
           </button>
         </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 class="text-lg font-bold text-[#1E293B] mb-4">Advanced</h2>
+          <div class="space-y-3">
+            <button
+              (click)="router.navigate(['email-templates'], { relativeTo: activatedRoute })"
+              class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-[#0052CC] hover:bg-blue-50/50 transition-colors text-left"
+            >
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-[#0052CC]">mail</span>
+                <div>
+                  <p class="text-sm font-medium text-[#1E293B]">Email Templates</p>
+                  <p class="text-xs text-[#64748B]">Customize notification emails sent to patients</p>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-[#94A3B8]">chevron_right</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `,
   imports: [FormsModule],
 })
 export class ClinicSettingsPage {
+  constructor(
+    public router: Router,
+    public activatedRoute: ActivatedRoute,
+  ) {}
   settings: ClinicSettings = {
     clinicName: 'Cliniva Hospital',
     address: '123 Healthcare Avenue, Medical District',

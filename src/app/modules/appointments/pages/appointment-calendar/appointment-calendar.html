@@ -61,6 +61,47 @@
           </div>
         }
       </div>
+      <div class="flex-1 grid grid-flow-col auto-cols-fr divide-x divide-gray-100 relative">
+        @for (doctor of doctors; track doctor) {
+          <div class="relative">
+            @for (appointment of getAppointmentsForDoctor(doctor.id); track appointment.id) {
+              <div 
+                class="absolute left-1 right-1 bg-medical-blue/10 border-l-2 border-medical-blue rounded-r-lg p-2 hover:bg-medical-blue/20 transition-colors group"
+                [style.top.px]="getTopPosition(appointment.appointmentTime)"
+                [style.height.px]="48"
+              >
+                <div class="flex items-start justify-between gap-1">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-medium text-on-surface truncate">{{ appointment.patient.fullName }}</p>
+                    <p class="text-[10px] text-outline truncate">{{ appointment.appointmentTime }}</p>
+                  </div>
+                  <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      (click)="rescheduleAppointment(appointment)"
+                      class="p-1 bg-white rounded shadow-sm hover:bg-surface-container-high text-medical-blue"
+                      title="Reschedule"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">schedule</span>
+                    </button>
+                    <button 
+                      (click)="cancelAppointment(appointment)"
+                      class="p-1 bg-white rounded shadow-sm hover:bg-error/10 text-error"
+                      title="Cancel"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                  </div>
+                </div>
+                @if (appointment.status === 'PENDING') {
+                  <span class="inline-block mt-1 px-1.5 py-0.5 text-[9px] font-medium bg-warning/20 text-warning-dark rounded">Pending</span>
+                } @else if (appointment.status === 'APPROVED') {
+                  <span class="inline-block mt-1 px-1.5 py-0.5 text-[9px] font-medium bg-success/20 text-success-dark rounded">Approved</span>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -71,16 +112,53 @@
     } @else {
       @for (doctor of doctors; track doctor) {
         <div class="bg-white rounded-xl border border-outline-variant p-4">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-3">
             <h3 class="text-sm font-semibold text-on-surface">{{ doctor.fullName }}</h3>
             <span class="text-xs text-outline">{{ doctor.specialization }}</span>
           </div>
-          <div class="flex flex-wrap gap-2">
-            @for (tb of timeBlocks.slice(0, 6); track tb) {
-              <span class="px-2.5 py-1 text-xs rounded-full border border-outline-variant text-outline">{{ tb.time }}</span>
-            }
-            @if (timeBlocks.length > 6) { <span class="text-xs text-outline self-center">+{{ timeBlocks.length - 6 }} more</span> }
-          </div>
+          
+          @if (getAppointmentsForDoctor(doctor.id).length > 0) {
+            <div class="space-y-2">
+              @for (appointment of getAppointmentsForDoctor(doctor.id); track appointment.id) {
+                <div class="flex items-center justify-between p-2 bg-surface-container-low rounded-lg border border-outline-variant/50">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-on-surface truncate">{{ appointment.patient.fullName }}</p>
+                    <div class="flex items-center gap-2 mt-0.5">
+                      <span class="text-xs text-outline">{{ appointment.appointmentTime }}</span>
+                      @if (appointment.status === 'PENDING') {
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium bg-warning/20 text-warning-dark rounded">Pending</span>
+                      } @else if (appointment.status === 'APPROVED') {
+                        <span class="px-1.5 py-0.5 text-[10px] font-medium bg-success/20 text-success-dark rounded">Approved</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="flex gap-1 ml-2">
+                    <button 
+                      (click)="rescheduleAppointment(appointment)"
+                      class="p-1.5 bg-white border border-outline-variant rounded hover:bg-surface-container-high text-medical-blue"
+                      title="Reschedule"
+                    >
+                      <span class="material-symbols-outlined text-[16px]">schedule</span>
+                    </button>
+                    <button 
+                      (click)="cancelAppointment(appointment)"
+                      class="p-1.5 bg-white border border-outline-variant rounded hover:bg-error/10 text-error"
+                      title="Cancel"
+                    >
+                      <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="flex flex-wrap gap-2">
+              @for (tb of timeBlocks.slice(0, 6); track tb) {
+                <span class="px-2.5 py-1 text-xs rounded-full border border-outline-variant text-outline">{{ tb.time }}</span>
+              }
+              @if (timeBlocks.length > 6) { <span class="text-xs text-outline self-center">+{{ timeBlocks.length - 6 }} more</span> }
+            </div>
+          }
         </div>
       }
       @if (doctors.length === 0) {

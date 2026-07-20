@@ -2,7 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
-import { Prescription, CreatePrescriptionRequest, UpdatePrescriptionRequest } from '../models/prescription.model';
+import {
+  Prescription, CreatePrescriptionRequest, UpdatePrescriptionRequest,
+  PrescriptionTemplate, CreatePrescriptionTemplateRequest
+} from '../models/prescription.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -66,5 +69,25 @@ export class PrescriptionService {
 
   downloadPdf(id: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  getTemplates(): Observable<ApiResponse<PrescriptionTemplate[]>> {
+    return this.http.get<ApiResponse<PrescriptionTemplate[]>>(`${this.baseUrl}/templates`);
+  }
+
+  getTemplateById(id: string): Observable<ApiResponse<PrescriptionTemplate>> {
+    return this.http.get<ApiResponse<PrescriptionTemplate>>(`${this.baseUrl}/templates/${id}`);
+  }
+
+  createTemplate(request: CreatePrescriptionTemplateRequest): Observable<ApiResponse<PrescriptionTemplate>> {
+    return this.http.post<ApiResponse<PrescriptionTemplate>>(`${this.baseUrl}/templates`, request);
+  }
+
+  updateTemplate(id: string, request: CreatePrescriptionTemplateRequest): Observable<ApiResponse<PrescriptionTemplate>> {
+    return this.http.put<ApiResponse<PrescriptionTemplate>>(`${this.baseUrl}/templates/${id}`, request);
+  }
+
+  deleteTemplate(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.baseUrl}/templates/${id}`);
   }
 }

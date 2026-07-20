@@ -1,9 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { DoctorService } from '../../../../core/services/doctor.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Appointment } from '../../../../core/models/appointment.model';
 import { Doctor } from '../../../../core/models/doctor.model';
-import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-appointment-calendar',
@@ -14,6 +15,8 @@ import { RouterLink } from '@angular/router';
 export class AppointmentCalendar implements OnInit {
   private appointmentService = inject(AppointmentService);
   private doctorService = inject(DoctorService);
+  private router = inject(Router);
+  private toastService = inject(ToastService);
 
   currentDate = new Date();
   doctors: Doctor[] = [];
@@ -71,5 +74,36 @@ export class AppointmentCalendar implements OnInit {
     const startHour = 9;
     const hoursDiff = hour - startHour;
     return hoursDiff * 64 + (min / 60) * 64;
+  }
+
+  rescheduleAppointment(appointment: Appointment): void {
+    this.appointmentService.cancelAppointment(appointment.id).subscribe({
+      next: () => {
+        this.toastService.success('Appointment cancelled. Redirecting to book a new one...');
+        this.router.navigate(['book'], {
+          queryParams: {
+            doctorId: appointment.doctor?.id,
+            patientId: appointment.patient?.id,
+            rescheduleFrom: appointment.id,
+          }
+        });
+      },
+      error: () => {
+        this.toastService.error('Failed to cancel appointment for reschedule');
+      }
+    });
+  }
+
+  cancelAppointment(appointment: Appointment): void {
+    if (!confirm('Are you sure you want to cancel this appointment?')) return;
+    this.appointmentService.cancelAppointment(appointment.id).subscribe({
+      next: () => {
+        this.toastService.success('Appointment cancelled');
+        this.loadData();
+      },
+      error: () => {
+        this.toastService.error('Failed to cancel appointment');
+      }
+    });
   }
 }

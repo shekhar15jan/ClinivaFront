@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PaymentList } from './payment-list';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { of, throwError } from 'rxjs';
@@ -9,66 +9,141 @@ import { PaymentResponse } from '../../../../core/models/payment.model';
 describe('PaymentList', () => {
   const mockPayment: PaymentResponse = {
     id: 'p1', billId: 'b1', amountInPaisa: 150000, paymentMethod: 'UPI',
-    paymentMode: 'ONLINE', paymentStatus: 'SUCCESS', paidAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z',
+    paymentMode: 'ONLINE', paymentStatus: 'PAID', paidAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z',
   };
 
   const mockResponse: ApiResponse<PaymentResponse[]> = {
     success: true, data: [mockPayment], message: '', timestamp: '', requestId: '',
   };
 
-  function createComponent(overrides?: Partial<PaymentService>) {
+  let fixture: ComponentFixture<PaymentList>;
+  let component: PaymentList;
+
+  beforeEach(() => {
     TestBed.configureTestingModule({
+      imports: [PaymentList],
       providers: [
-        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(of(mockResponse)), ...overrides } },
+        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(of(mockResponse)), generateUpiQr: vi.fn().mockReturnValue(of({ success: true, data: 'data:image/png;base64,test' })) } },
       ],
     });
-    return TestBed.runInInjectionContext(() => new PaymentList());
-  }
+    fixture = TestBed.createComponent(PaymentList);
+    component = fixture.componentInstance;
+    // don't call detectChanges here; tests control when ngOnInit runs
+  });
 
   it('should create with initial state', () => {
-    const component = createComponent();
     expect(component).toBeTruthy();
     expect(component.payments).toEqual([]);
+    expect(component.filteredPayments).toEqual([]);
     expect(component.isLoading).toBe(false);
     expect(component.error).toBe('');
+    expect(component.statusFilter).toBe('');
+    expect(component.searchQuery).toBe('');
   });
 
   it('should load payments on init', () => {
-    const component = createComponent();
-    component.ngOnInit();
+    fixture.detectChanges();
     expect(component.payments.length).toBe(1);
+    expect(component.filteredPayments.length).toBe(1);
     expect(component.payments[0].paymentMethod).toBe('UPI');
     expect(component.isLoading).toBe(false);
   });
 
+  it('should compute totalCollected, paidCount, pendingCount', () => {
+    fixture.detectChanges();
+    expect(component.totalCollected).toBe(150000);
+    expect(component.paidCount).toBe(1);
+    expect(component.pendingCount).toBe(0);
+  });
+
   it('should handle load error', () => {
-    const component = createComponent({
-      getHistory: vi.fn().mockReturnValue(throwError(() => ({ message: 'Network error' }))),
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PaymentList],
+      providers: [
+        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(throwError(() => ({ message: 'Network error' }))) } },
+      ],
     });
-    component.ngOnInit();
+    fixture = TestBed.createComponent(PaymentList);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
     expect(component.isLoading).toBe(false);
     expect(component.error).toBe('Network error');
   });
 
   it('should handle load error without message', () => {
-    const component = createComponent({
-      getHistory: vi.fn().mockReturnValue(throwError(() => ({}))),
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PaymentList],
+      providers: [
+        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(throwError(() => ({}))) } },
+      ],
     });
-    component.ngOnInit();
+    fixture = TestBed.createComponent(PaymentList);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
     expect(component.error).toBe('Failed to load payments');
   });
 
   it('should handle null data response', () => {
-    const component = createComponent({
-      getHistory: vi.fn().mockReturnValue(of({ success: true, data: null, message: '', timestamp: '', requestId: '' })),
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [PaymentList],
+      providers: [
+        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(of({ success: true, data: null, message: '', timestamp: '', requestId: '' })) } },
+      ],
     });
-    component.ngOnInit();
+    fixture = TestBed.createComponent(PaymentList);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
     expect(component.payments).toEqual([]);
   });
 
-  it('should format paisa to rupees correctly', () => {
-    const component = createComponent();
-    expect(component.getAmount(150000)).toBe('₹1500.00');
+  it('should format paisa to rupees with Indian locale', () => {
+    expect(component.getAmount(150000)).toBe('₹1,500.00');
     expect(component.getAmount(999)).toBe('₹9.99');
+    expect(component.getAmount(0)).toBe('₹0.00');
+  });
+
+  it('should filter by status', () => {
+    fixture.detectChanges();
+    expect(component.filteredPayments.length).toBe(1);
+    component.statusFilter = 'PENDING';
+    component.applyFilters();
+    expect(component.filteredPayments.length).toBe(0);
+    component.statusFilter = 'PAID';
+    component.applyFilters();
+    expect(component.filteredPayments.length).toBe(1);
+  });
+
+  it('should search by bill ID and payment method', () => {
+    fixture.detectChanges();
+    component.searchQuery = 'b1';
+    component.applyFilters();
+    expect(component.filteredPayments.length).toBe(1);
+    component.searchQuery = 'upi';
+    component.applyFilters();
+    expect(component.filteredPayments.length).toBe(1);
+    component.searchQuery = 'xyz';
+    component.applyFilters();
+    expect(component.filteredPayments.length).toBe(0);
+  });
+
+  it('should open and close detail modal', () => {
+    fixture.detectChanges();
+    component.openDetail(component.payments[0]);
+    expect(component.selectedPayment).toBe(component.payments[0]);
+    component.closeDetail();
+    expect(component.selectedPayment).toBeNull();
+  });
+
+  it('should generate UPI QR and show modal', () => {
+    fixture.detectChanges();
+    component.openUpiQr();
+    expect(component.showQrModal).toBe(true);
+    expect(component.qrBillId).toBe('');
+    component.qrBillId = 'b1';
+    component.generateQr();
+    expect(component.qrCode).toBe('data:image/png;base64,test');
   });
 });

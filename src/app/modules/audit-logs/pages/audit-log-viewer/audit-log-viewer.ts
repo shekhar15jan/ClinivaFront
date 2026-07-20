@@ -1,47 +1,110 @@
-import { Component } from '@angular/core';
-
-import { SharedModule } from '../../../../shared/shared-module';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { AuditLogService } from '../../../../core/services/audit-log.service';
+import { AuditLog } from '../../../../core/models/audit-log.model';
+import { PagedResponse } from '../../../../core/models/common.model';
+import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-audit-log-viewer',
+  templateUrl: './audit-log-viewer.html',
   standalone: true,
-  imports: [SharedModule],
-  template: `
-    <div class="p-6">
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">Audit Logs</h1>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div class="flex flex-wrap gap-4 mb-4">
-          <input
-            type="date"
-            class="px-3 py-2 text-sm border border-gray-300 rounded-lg"
-            placeholder="Start Date"
-          />
-          <input
-            type="date"
-            class="px-3 py-2 text-sm border border-gray-300 rounded-lg"
-            placeholder="End Date"
-          />
-          <select class="px-3 py-2 text-sm border border-gray-300 rounded-lg">
-            <option value="">All Users</option>
-          </select>
-          <select class="px-3 py-2 text-sm border border-gray-300 rounded-lg">
-            <option value="">All Entities</option>
-            <option value="PATIENT">Patient</option>
-            <option value="DOCTOR">Doctor</option>
-            <option value="APPOINTMENT">Appointment</option>
-            <option value="PRESCRIPTION">Prescription</option>
-            <option value="BILL">Bill</option>
-          </select>
-        </div>
-        <app-empty-state
-          icon="📜"
-          title="Audit Logs"
-          description="View a complete trail of all system actions including creates, updates, deletes, and status changes."
-        ></app-empty-state>
-      </div>
-    </div>
-  `,
+  imports: [FormsModule, DatePipe, PaginatorComponent, EmptyStateComponent],
 })
-export class AuditLogViewerComponent {}
+export class AuditLogViewerComponent implements OnInit {
+  private auditLogService = inject(AuditLogService);
+
+  logs: AuditLog[] = [];
+  isLoading = false;
+  error = '';
+  totalElements = 0;
+  currentPage = 0;
+  pageSize = 20;
+
+  filterEntity = '';
+  filterAction = '';
+  filterDateFrom = '';
+  filterDateTo = '';
+
+  selectedLog: AuditLog | null = null;
+
+  ngOnInit(): void {
+    this.loadLogs();
+  }
+
+  loadLogs(): void {
+    this.isLoading = true;
+    this.error = '';
+    this.auditLogService
+      .getAuditLogs({
+        page: this.currentPage,
+        size: this.pageSize,
+        entity: this.filterEntity || undefined,
+        action: this.filterAction || undefined,
+        startDate: this.filterDateFrom || undefined,
+        endDate: this.filterDateTo || undefined,
+      })
+      .subscribe({
+        next: (res: PagedResponse<AuditLog>) => {
+          this.logs = res.content || [];
+          this.totalElements = res.totalElements || 0;
+          this.isLoading = false;
+        },
+        error: (err: any) => {
+          this.error = err?.message || 'Failed to load audit logs';
+          this.isLoading = false;
+        },
+      });
+  }
+
+  applyFilters(): void {
+    this.currentPage = 0;
+    this.loadLogs();
+  }
+
+  clearFilters(): void {
+    this.filterEntity = '';
+    this.filterAction = '';
+    this.filterDateFrom = '';
+    this.filterDateTo = '';
+    this.currentPage = 0;
+    this.loadLogs();
+  }
+
+  onPageChange(event: { page: number; size: number }): void {
+    this.currentPage = event.page;
+    this.pageSize = event.size;
+    this.loadLogs();
+  }
+
+  openDetail(log: AuditLog): void {
+    this.selectedLog = log;
+  }
+
+  closeDetail(): void {
+    this.selectedLog = null;
+  }
+
+  getActionClass(action: string): string {
+    switch (action) {
+      case 'CREATE': return 'bg-green-50 text-status-green';
+      case 'UPDATE': return 'bg-blue-50 text-medical-blue';
+      case 'DELETE': return 'bg-red-50 text-status-red';
+      case 'STATUS_CHANGE': return 'bg-amber-50 text-amber-600';
+      case 'LOGIN': return 'bg-purple-50 text-purple-600';
+      case 'LOGOUT': return 'bg-gray-100 text-outline';
+      default: return 'bg-gray-50 text-outline';
+    }
+  }
+
+  formatJson(value: string | null): string {
+    if (!value) return '—';
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+      return value;
+    }
+  }
+}

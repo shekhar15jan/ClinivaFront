@@ -52,7 +52,7 @@ import { DatePipe } from '@angular/common';
                 @for (bill of bills; track bill.id) {
                   <tr class="border-t border-outline-variant hover:bg-surface-container transition-colors">
                     <td class="px-4 py-3 text-sm font-mono font-medium text-on-surface">INV-{{ bill.id.substring(0, 6) }}</td>
-                    <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ bill.patient?.fullName }}</td>
+                    <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ bill.patient.fullName }}</td>
                     <td class="px-4 py-3 text-sm text-on-surface-variant">{{ bill.createdAt | date: 'mediumDate' }}</td>
                     <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</td>
                     <td class="px-4 py-3 text-sm text-on-surface-variant">₹{{ (bill.paymentStatus === 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
@@ -75,7 +75,7 @@ import { DatePipe } from '@angular/common';
                     <span class="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-primary-container text-primary-on-container">INV-{{ bill.id.substring(0, 6) }}</span>
                     <span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span>
                   </div>
-                  <p class="text-sm font-medium text-on-surface truncate">{{ bill.patient?.fullName }}</p>
+                  <p class="text-sm font-medium text-on-surface truncate">{{ bill.patient.fullName }}</p>
                   <p class="text-xs text-on-surface-variant mt-0.5">{{ bill.createdAt | date: 'mediumDate' }}</p>
                 </div>
                 <div class="flex items-center gap-2 ml-3 shrink-0">

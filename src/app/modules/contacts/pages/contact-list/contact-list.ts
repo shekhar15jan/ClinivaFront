@@ -17,23 +17,35 @@ export class ContactList implements OnInit {
   private contactService = inject(ContactService);
 
   messages: ContactMessageResponse[] = [];
+  filteredMessages: ContactMessageResponse[] = [];
   isLoading = false;
   error = '';
+  statusFilter = '';
+  searchQuery = '';
   selectedMessage: ContactMessageResponse | null = null;
   replyText = '';
   isReplying = false;
 
-  ngOnInit() {
+  get newCount(): number {
+    return this.messages.filter((m) => m.status === 'NEW').length;
+  }
+
+  get repliedCount(): number {
+    return this.messages.filter((m) => m.status === 'REPLIED').length;
+  }
+
+  ngOnInit(): void {
     this.loadMessages();
   }
 
-  loadMessages() {
+  loadMessages(): void {
     this.isLoading = true;
     this.error = '';
     this.contactService.list().subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.messages = res.data;
+          this.applyFilters();
         }
         this.isLoading = false;
       },
@@ -44,16 +56,30 @@ export class ContactList implements OnInit {
     });
   }
 
-  selectMessage(msg: ContactMessageResponse) {
+  applyFilters(): void {
+    let result = [...this.messages];
+    if (this.statusFilter) {
+      result = result.filter((m) => m.status === this.statusFilter);
+    }
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      result = result.filter(
+        (m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || m.subject?.toLowerCase().includes(q),
+      );
+    }
+    this.filteredMessages = result;
+  }
+
+  selectMessage(msg: ContactMessageResponse): void {
     this.selectedMessage = msg;
     this.replyText = '';
   }
 
-  closeDetail() {
+  closeDetail(): void {
     this.selectedMessage = null;
   }
 
-  sendReply() {
+  sendReply(): void {
     if (!this.selectedMessage || !this.replyText.trim()) return;
     this.isReplying = true;
     this.contactService.reply(this.selectedMessage.id, this.replyText).subscribe({

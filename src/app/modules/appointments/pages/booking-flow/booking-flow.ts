@@ -6,10 +6,11 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { DoctorService } from '../../../../core/services/doctor.service';
 import { PatientService } from '../../../../core/services/patient.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { DoctorWithSlotsResponse } from '../../../../core/models/doctor.model';
 import { Patient } from '../../../../core/models/patient.model';
 import { NgClass } from '@angular/common';
@@ -26,10 +27,14 @@ export class BookingFlow implements OnInit {
   private patientService = inject(PatientService);
   private appointmentService = inject(AppointmentService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private toastService = inject(ToastService);
 
   step = 1; // 1: Doctor/Time, 2: Patient, 3: Confirm
   isLoading = false;
   isSubmitting = false;
+  isReschedule = false;
+  rescheduleFromId: string | null = null;
 
   doctors: DoctorWithSlotsResponse[] = [];
   patients: Patient[] = [];
@@ -66,6 +71,21 @@ export class BookingFlow implements OnInit {
   }
 
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['rescheduleFrom']) {
+        this.isReschedule = true;
+        this.rescheduleFromId = params['rescheduleFrom'];
+        this.toastService.info('Rescheduling appointment - please select new date/time');
+        
+        if (params['doctorId']) {
+          this.bookingForm.patchValue({ doctorId: params['doctorId'] });
+        }
+        if (params['patientId']) {
+          this.patientForm.patchValue({ patientId: params['patientId'] });
+        }
+      }
+    });
+    
     this.loadDoctors();
     this.loadPatients();
   }
@@ -153,15 +173,21 @@ export class BookingFlow implements OnInit {
         doctorId: bookingData.doctorId,
         appointmentDate: bookingData.appointmentDate,
         appointmentTime: bookingData.appointmentTime,
-        reason: 'Checkup',
+        reason: this.isReschedule ? 'Rescheduled appointment' : 'Checkup',
       })
       .subscribe({
         next: () => {
           this.isSubmitting = false;
+          if (this.isReschedule) {
+            this.toastService.success('Appointment rescheduled successfully');
+          } else {
+            this.toastService.success('Appointment booked successfully');
+          }
           this.router.navigate(['/appointments']);
         },
         error: () => {
           this.isSubmitting = false;
+          this.toastService.error('Failed to book appointment');
         },
       });
   }

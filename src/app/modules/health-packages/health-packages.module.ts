@@ -6,9 +6,13 @@ import { RouterModule } from '@angular/router';
     RouterModule.forChild([
       {
         path: '',
-        loadComponent: () => import('./pages/package-list/package-list').then(m => m.PackageList)
-      }
-    ])
-  ]
+        loadComponent: () => import('./pages/package-list/package-list').then(m => m.PackageList),
+      },
+      {
+        path: 'bookings',
+        loadComponent: () => import('./pages/booking-list/booking-list').then(m => m.BookingList),
+      },
+    ]),
+  ],
 })
 export class HealthPackagesModule {}

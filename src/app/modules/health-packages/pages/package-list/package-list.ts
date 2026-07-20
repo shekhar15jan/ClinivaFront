@@ -1,16 +1,18 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HealthPackageService } from '../../../../core/services/health-package.service';
 import { HealthPackageResponse, BookHealthPackageRequest } from '../../../../core/models/health-package.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { PackageForm } from '../package-form/package-form';
 
 @Component({
   selector: 'app-package-list',
   templateUrl: './package-list.html',
   styleUrl: './package-list.scss',
   standalone: true,
-  imports: [StatusBadgeComponent, EmptyStateComponent, FormsModule],
+  imports: [StatusBadgeComponent, EmptyStateComponent, PackageForm, FormsModule, RouterLink],
 })
 export class PackageList implements OnInit {
   private packageService = inject(HealthPackageService);
@@ -23,6 +25,9 @@ export class PackageList implements OnInit {
   bookingForm: BookHealthPackageRequest = { patientName: '', email: '', phone: '', bookingDate: '' };
   isBooking = false;
   bookingError = '';
+
+  showForm = false;
+  editingPackage: HealthPackageResponse | undefined;
 
   ngOnInit() {
     this.loadPackages();
@@ -43,6 +48,26 @@ export class PackageList implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  openCreateForm(): void {
+    this.editingPackage = undefined;
+    this.showForm = true;
+  }
+
+  openEditForm(pkg: HealthPackageResponse): void {
+    this.editingPackage = pkg;
+    this.showForm = true;
+  }
+
+  closeForm(): void {
+    this.showForm = false;
+    this.editingPackage = undefined;
+  }
+
+  onSaved(): void {
+    this.closeForm();
+    this.loadPackages();
   }
 
   toggleActive(pkg: HealthPackageResponse) {

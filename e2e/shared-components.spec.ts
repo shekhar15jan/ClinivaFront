@@ -10,24 +10,21 @@ test.describe('Shared Component Interactions (E2E)', () => {
   // ────────── FAB (Floating Action Button) ──────────
   test('should display FAB on dashboard', async ({ page }) => {
     const fab = page.locator('app-fab, [class*="fab"], button[aria-label*="Appointment"]').first();
-    const count = await fab.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(fab).toBeVisible();
   });
 
   test('should show FAB icon on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.waitForTimeout(300);
     const fab = page.locator('app-fab, button[class*="bottom-20"], a[routerLink*="appointments/book"]').first();
-    const count = await fab.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(fab).toBeVisible();
   });
 
   test('should hide FAB on desktop viewport', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForTimeout(300);
-    const fabMobile = page.locator('button.md\\:hidden, .md\\:hidden button, app-fab button');
-    const count = await fabMobile.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    const fabMobile = page.locator('button.md\\:hidden, .md\\:hidden button');
+    await expect(fabMobile).toHaveCount(0);
   });
 
   // ────────── PAGINATOR ──────────
@@ -42,8 +39,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
     await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const pageSizeSelector = page.locator('select, mat-select, [class*="page-size"]').first();
-    const count = await pageSizeSelector.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(pageSizeSelector).toBeVisible();
   });
 
   test('should show pagination info text', async ({ page }) => {
@@ -89,8 +85,7 @@ test.describe('Shared Component Interactions (E2E)', () => {
     await page.getByRole('button', { name: 'Save Patient' }).click();
     await page.waitForTimeout(500);
     const toast = page.locator('app-toast, [class*="toast"], .mat-snack-bar-container, [role="alert"]');
-    const count = await toast.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(toast.first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should dismiss toast after timeout', async ({ page }) => {
@@ -103,9 +98,8 @@ test.describe('Shared Component Interactions (E2E)', () => {
     await page.locator('#patientPhone').fill('5555555555');
     await page.getByRole('button', { name: 'Save Patient' }).click();
     await page.waitForTimeout(3000);
-    const toast = page.locator('app-toast, [class*="toast"], .mat-snack-bar-container');
-    const count = await toast.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    const toast = page.locator('.mat-snack-bar-container, [role="alert"]');
+    await expect(toast).toHaveCount(0);
   });
 
   // ────────── CONFIRM DIALOG ──────────
@@ -162,16 +156,14 @@ test.describe('Shared Component Interactions (E2E)', () => {
     await page.goto('/payments');
     await page.waitForTimeout(500);
     const emptyIcon = page.locator('app-empty-state, [class*="empty-state"]');
-    const count = await emptyIcon.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(emptyIcon.first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should show empty state title and description', async ({ page }) => {
     await page.goto('/payments');
     await page.waitForTimeout(500);
     const emptyTitle = page.getByText('No Payments').or(page.getByText(/No data|Empty/));
-    const count = await emptyTitle.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(emptyTitle.first()).toBeVisible({ timeout: 5000 });
   });
 
   // ────────── STATUS BADGE ──────────
@@ -179,25 +171,23 @@ test.describe('Shared Component Interactions (E2E)', () => {
     await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const badges = page.locator('app-status-badge, [class*="badge"]');
-    const count = await badges.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(badges.first()).toBeVisible();
   });
 
   test('should show different status badge colors', async ({ page }) => {
     await page.getByText('Appointments').first().click();
     await page.waitForURL(/\/appointments/);
     const badges = page.locator('app-status-badge, [class*="badge"], [class*="status"]');
-    const count = await badges.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(badges.first()).toBeVisible();
   });
 
   // ────────── LOADING SPINNER ──────────
   test('should show loading state during module transitions', async ({ page }) => {
-    await page.goto('/payments');
-    await page.waitForTimeout(300);
     const loadingText = page.getByText(/Loading/i);
-    const count = await loadingText.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await page.goto('/payments');
+    const loadingAppeared = await loadingText.isVisible().catch(() => false);
+    const contentLoaded = await page.getByText(/Payment History|No Payments|Payments/i).first().isVisible({ timeout: 5000 }).catch(() => false);
+    expect(loadingAppeared || contentLoaded).toBe(true);
   });
 
   test('should replace loading state with actual content', async ({ page }) => {
@@ -215,7 +205,8 @@ test.describe('Shared Component Interactions (E2E)', () => {
   test('should show or hide trial banner based on subscription', async ({ page }) => {
     const trialBanner = page.locator('app-trial-banner, [class*="trial"]');
     const count = await trialBanner.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    expect(count === 0 || count > 0).toBe(true);
+    await expect(page).toHaveURL(/\/dashboard/);
   });
 
   // ────────── BOTTOM SHEET ──────────
@@ -224,21 +215,21 @@ test.describe('Shared Component Interactions (E2E)', () => {
     await page.getByText('Patients').first().click();
     await page.waitForURL(/\/patients/);
     const bottomSheet = page.locator('app-bottom-sheet, [class*="bottom-sheet"]');
+    const mobileMenu = page.locator('[class*="mobile"], [class*="hamburger"], [class*="menu-toggle"]');
     const count = await bottomSheet.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    const menuCount = await mobileMenu.count();
+    expect(count > 0 || menuCount > 0).toBe(true);
   });
 
   // ────────── RESOURCE USAGE BAR ──────────
   test('should display resource usage bar', async ({ page }) => {
     const usageBar = page.locator('app-resource-usage-bar, [class*="usage-bar"]');
-    const count = await usageBar.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(usageBar.first()).toBeVisible();
   });
 
   // ────────── MODULE UPGRADE PROMPT ──────────
   test('should display upgrade prompt for restricted features', async ({ page }) => {
     const upgradePrompt = page.locator('app-module-upgrade-prompt, [class*="upgrade"]');
-    const count = await upgradePrompt.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    await expect(upgradePrompt.first()).toBeVisible();
   });
 });

@@ -1,0 +1,49 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="onBackdropClick()" role="dialog" aria-modal="true">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-on-surface">{{ isEdit ? 'Edit' : 'Create' }} Health Package</h3>
+      <button (click)="close.emit()" class="text-outline hover:text-on-surface">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">Package Name *</label>
+        <input type="text" [(ngModel)]="form.packageName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="e.g. Basic Health Checkup" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">Description</label>
+        <textarea [(ngModel)]="form.description" rows="3" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Package description..."></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">Tests Included</label>
+        <input type="text" [(ngModel)]="form.testsIncluded" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="e.g. CBC, Lipid Profile, X-Ray Chest" />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-on-surface mb-1">Actual Price (₹) *</label>
+          <input type="number" [(ngModel)]="form.actualPriceInPaisa" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="0" min="0" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-on-surface mb-1">Offer Price (₹) *</label>
+          <input type="number" [(ngModel)]="form.offerPriceInPaisa" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="0" min="0" />
+        </div>
+      </div>
+    </div>
+
+    @if (error) {
+      <p class="text-sm text-status-red mt-4">{{ error }}</p>
+    }
+
+    <div class="flex justify-end gap-3 mt-6">
+      <button (click)="close.emit()" class="px-4 py-2 text-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high">Cancel</button>
+      <button (click)="submit()" [disabled]="isSubmitting" class="px-5 py-2 text-sm font-medium text-white bg-medical-blue rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-2">
+        @if (isSubmitting) {
+          <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+        }
+        {{ isEdit ? 'Update' : 'Create' }} Package
+      </button>
+    </div>
+  </div>
+</div>

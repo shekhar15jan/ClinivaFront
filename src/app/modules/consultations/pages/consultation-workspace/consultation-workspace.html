@@ -1,190 +1,339 @@
-<div class="h-[calc(100vh-8rem)] flex flex-col sm:flex-row gap-6" [formGroup]="consultationForm">
-  <!-- Left Side: Clinical Notes -->
-  <div
-    class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden"
-    formGroupName="notes"
-  >
-    <div
-      class="p-4 border-b border-gray-100 flex items-center justify-between bg-surface-container-low"
-    >
-      <h3 class="text-lg font-semibold text-on-surface">Clinical Notes</h3>
-      <button class="text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
-        Use Template
-      </button>
-    </div>
-
-    <div class="flex-1 p-6 overflow-y-auto space-y-6">
-      <div>
-        <label for="chiefComplaint" class="block text-sm font-medium text-on-surface mb-2">Chief Complaint (CC)</label>
-        <textarea
-          id="chiefComplaint"
-          formControlName="chiefComplaint"
-          rows="2"
-          class="w-full border border-outline-variant rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
-          placeholder="e.g. Fever for 3 days..."
-        ></textarea>
+<div class="h-[calc(100vh-8rem)] flex flex-col gap-4">
+  <!-- Appointment Context Bar -->
+  @if (selectedAppointment) {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-outline text-2xl">person</span>
+          <div>
+            <p class="text-sm font-semibold text-on-surface">{{ selectedAppointment.patient.fullName }}</p>
+            <p class="text-xs text-outline">Token #{{ selectedAppointment.tokenNumber }}</p>
+          </div>
+        </div>
+        <div class="w-px h-8 bg-gray-200"></div>
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-outline text-xl">stethoscope</span>
+          <div>
+            <p class="text-sm font-medium text-on-surface">{{ selectedAppointment.doctor.fullName }}</p>
+            @if (selectedAppointment.doctor.specialization) {
+              <p class="text-xs text-outline">{{ selectedAppointment.doctor.specialization }}</p>
+            }
+          </div>
+        </div>
+        <div class="w-px h-8 bg-gray-200"></div>
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-outline text-xl">calendar_today</span>
+          <div>
+            <p class="text-sm text-on-surface">{{ selectedAppointment.appointmentDate | date:'mediumDate' }}</p>
+            <p class="text-xs text-outline">{{ selectedAppointment.appointmentTime }}</p>
+          </div>
+        </div>
       </div>
+      <div class="flex items-center gap-2">
+        @if (existingConsultationId) {
+          <span class="flex items-center gap-1 text-xs bg-blue-50 text-medical-blue px-2.5 py-1 rounded-full font-medium">
+            <span class="material-symbols-outlined text-[14px]">edit_note</span>
+            Editing
+          </span>
+        }
+        <button (click)="clearAppointment()"
+          class="text-xs text-outline hover:text-on-surface flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined text-[16px]">close</span>
+          Change
+        </button>
+      </div>
+    </div>
+  }
 
-      <div formGroupName="vitals">
-        <p class="block text-sm font-medium text-on-surface mb-2">Vitals</p>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <span class="text-xs text-outline">BP (mmHg)</span>
-            <input
-              formControlName="bp"
-              type="text"
-              placeholder="120/80"
-              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
-            />
+  <!-- Appointment Queue / Search -->
+  @if (showQueue) {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h3 class="text-base font-semibold text-on-surface mb-4">Select Appointment for Consultation</h3>
+      <div class="relative">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-outline">search</span>
+          <input
+            type="text"
+            [ngModel]="appointmentSearchTerm"
+            (ngModelChange)="searchAppointments($event)"
+            placeholder="Search by patient name, doctor name, or token number..."
+            class="flex-1 border-b border-outline-variant bg-transparent p-2 text-sm focus:outline-none focus:border-medical-blue transition-colors"
+          />
+        </div>
+        @if (searchingAppointments) {
+          <div class="mt-2 text-sm text-outline">Searching...</div>
+        }
+        @if (appointmentSuggestions.length > 0) {
+          <div class="mt-2 border border-outline-variant rounded-lg shadow-sm max-h-60 overflow-y-auto">
+            @for (appt of appointmentSuggestions; track appt.id) {
+              <button
+                (click)="selectAppointment(appt)"
+                class="w-full text-left px-4 py-3 hover:bg-surface-container-high transition-colors border-b border-outline-variant/30 last:border-b-0 flex items-center gap-4"
+              >
+                <div class="w-9 h-9 rounded-full bg-medical-blue/10 flex items-center justify-center shrink-0">
+                  <span class="text-sm font-semibold text-medical-blue">{{ appt.tokenNumber }}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-on-surface truncate">{{ appt.patient.fullName }}</p>
+                  <p class="text-xs text-outline truncate">{{ appt.doctor.fullName }} · {{ appt.appointmentDate | date:'shortDate' }} {{ appt.appointmentTime }}</p>
+                </div>
+                <span class="text-xs bg-green-50 text-status-green px-2 py-0.5 rounded-full font-medium shrink-0">{{ appt.status }}</span>
+              </button>
+            }
           </div>
-          <div>
-            <span class="text-xs text-outline">Temp (°F)</span>
-            <input
-              formControlName="temp"
-              type="text"
-              placeholder="98.6"
-              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
-            />
+        } @else if (appointmentSearchTerm.length >= 2 && !searchingAppointments) {
+          <div class="mt-3 text-sm text-on-surface-variant">No appointments found matching "{{ appointmentSearchTerm }}"</div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Two-Panel Consultation Workspace -->
+  @if (selectedAppointment) {
+    <div class="flex-1 flex flex-col sm:flex-row gap-6 min-h-0" [formGroup]="consultationForm">
+      <!-- Left Side: Clinical Notes -->
+      <div
+        class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden"
+        formGroupName="notes"
+      >
+        <div
+          class="p-4 border-b border-gray-100 flex items-center justify-between bg-surface-container-low"
+        >
+          <h3 class="text-lg font-semibold text-on-surface">Clinical Notes</h3>
+          <div class="relative">
+            <button
+              (click)="loadTemplates()"
+              class="text-sm text-medical-blue hover:text-medical-blue-dark font-medium flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">description</span>
+              Use Template
+            </button>
+            @if (showTemplateDropdown) {
+              <div class="absolute right-0 top-full mt-2 w-72 bg-white border border-outline-variant rounded-lg shadow-lg z-20 max-h-64 overflow-y-auto">
+                <div class="p-2 border-b border-outline-variant flex items-center justify-between">
+                  <span class="text-xs font-semibold text-outline uppercase">Prescription Templates</span>
+                  <button (click)="closeTemplateDropdown()" class="text-outline hover:text-on-surface">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                </div>
+                @if (prescriptionTemplates.length === 0) {
+                  <div class="p-4 text-center text-sm text-on-surface-variant">
+                    No templates saved yet
+                  </div>
+                } @else {
+                  @for (template of prescriptionTemplates; track template.id) {
+                    <button
+                      (click)="applyTemplate(template)"
+                      class="w-full text-left px-3 py-2 hover:bg-surface-container-high transition-colors border-b border-outline-variant/30 last:border-b-0"
+                    >
+                      <div class="text-sm font-medium text-on-surface">{{ template.templateName }}</div>
+                      @if (template.diagnosis) {
+                        <div class="text-xs text-outline mt-0.5 truncate">{{ template.diagnosis }}</div>
+                      }
+                      <div class="text-xs text-medical-blue mt-0.5">{{ template.medicines.length }} medicines</div>
+                    </button>
+                  }
+                }
+              </div>
+            }
           </div>
+        </div>
+
+        <div class="flex-1 p-6 overflow-y-auto space-y-6">
           <div>
-            <span class="text-xs text-outline">Pulse (bpm)</span>
-            <input
-              formControlName="pulse"
-              type="text"
-              placeholder="72"
-              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
-            />
+            <label for="chiefComplaint" class="block text-sm font-medium text-on-surface mb-2">Chief Complaint (CC)</label>
+            <textarea
+              id="chiefComplaint"
+              formControlName="chiefComplaint"
+              rows="2"
+              class="w-full border border-outline-variant rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
+              placeholder="e.g. Fever for 3 days..."
+            ></textarea>
           </div>
+
+          <div formGroupName="vitals">
+            <p class="block text-sm font-medium text-on-surface mb-2">Vitals</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <span class="text-xs text-outline">BP (mmHg)</span>
+                <input
+                  formControlName="bp"
+                  type="text"
+                  placeholder="120/80"
+                  class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <span class="text-xs text-outline">Temp (°F)</span>
+                <input
+                  formControlName="temp"
+                  type="text"
+                  placeholder="98.6"
+                  class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <span class="text-xs text-outline">Pulse (bpm)</span>
+                <input
+                  formControlName="pulse"
+                  type="text"
+                  placeholder="72"
+                  class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+              <div>
+                <span class="text-xs text-outline">Weight (kg)</span>
+                <input
+                  formControlName="weight"
+                  type="text"
+                  placeholder="70"
+                  class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
-            <span class="text-xs text-outline">Weight (kg)</span>
+            <label for="diagnosis" class="block text-sm font-medium text-on-surface mb-2">Diagnosis</label>
             <input
-              formControlName="weight"
+              id="diagnosis"
+              formControlName="diagnosis"
               type="text"
-              placeholder="70"
-              class="mt-1 w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+              class="w-full border border-outline-variant rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
+              placeholder="Search ICD-10 or type..."
             />
           </div>
         </div>
       </div>
 
-      <div>
-        <label for="diagnosis" class="block text-sm font-medium text-on-surface mb-2">Diagnosis</label>
-        <input
-          id="diagnosis"
-          formControlName="diagnosis"
-          type="text"
-          class="w-full border border-outline-variant rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue text-sm"
-          placeholder="Search ICD-10 or type..."
-        />
-      </div>
-    </div>
-  </div>
-
-  <!-- Right Side: E-Prescription -->
-  <div
-    class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden"
-  >
-    <div
-      class="p-4 border-b border-gray-100 flex items-center justify-between bg-surface-container-low"
-    >
-      <h3 class="text-lg font-semibold text-on-surface">E-Prescription</h3>
-      <button
-        (click)="addMedicine()"
-        type="button"
-        class="flex items-center gap-2 text-sm text-medical-blue hover:text-medical-blue-dark font-medium"
+      <!-- Right Side: E-Prescription -->
+      <div
+        class="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden"
       >
-        <span class="material-symbols-outlined text-[18px]">add</span>
-        Add Medicine
-      </button>
-    </div>
-
-    <div class="flex-1 p-6 overflow-y-auto" formArrayName="medicines">
-      <div class="space-y-4">
-        <!-- Medicine Card -->
-        @for (med of medicines.controls; track med; let i = $index) {
-          <div
-            [formGroupName]="i"
-            class="border border-outline-variant rounded-lg p-4 bg-surface-container-low/50"
+        <div
+          class="p-4 border-b border-gray-100 flex items-center justify-between bg-surface-container-low"
+        >
+          <h3 class="text-lg font-semibold text-on-surface">E-Prescription</h3>
+          <button
+            (click)="addMedicine()"
+            type="button"
+            class="flex items-center gap-2 text-sm text-medical-blue hover:text-medical-blue-dark font-medium"
           >
-            <div class="flex justify-between items-start mb-3">
-              <div class="flex-1 mr-4 space-y-2">
-                <input
-                  formControlName="name"
-                  type="text"
-                  placeholder="Medicine Name (e.g. Paracetamol 500mg)"
-                  class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 font-semibold text-on-surface focus:outline-none transition-colors"
-                />
-                <input
-                  formControlName="instructions"
-                  type="text"
-                  placeholder="Instructions (e.g. Take after food)"
-                  class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 text-xs text-outline focus:outline-none transition-colors"
-                />
-              </div>
-              <button
-                (click)="removeMedicine(i)"
-                type="button"
-                class="text-outline hover:text-status-red transition-colors mt-1"
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Add Medicine
+          </button>
+        </div>
+
+        <div class="flex-1 p-6 overflow-y-auto" formArrayName="medicines">
+          <div class="space-y-4">
+            @for (med of medicines.controls; track med; let i = $index) {
+              <div
+                [formGroupName]="i"
+                class="border border-outline-variant rounded-lg p-4 bg-surface-container-low/50"
               >
-                <span class="material-symbols-outlined text-[20px]">delete</span>
-              </button>
-            </div>
-            <div class="grid grid-cols-3 gap-3">
-              <div>
-                <label for="frequency_{{$index}}" class="block text-xs text-outline mb-1">Frequency</label>
-                <select
-                  id="frequency_{{$index}}"
-                  formControlName="frequency"
-                  class="w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white"
-                >
-                  <option value="1-0-1">1-0-1</option>
-                  <option value="1-1-1">1-1-1</option>
-                  <option value="0-0-1">0-0-1</option>
-                  <option value="SOS">SOS</option>
-                </select>
-              </div>
-              <div>
-                <label for="duration_{{$index}}" class="block text-xs text-outline mb-1">Duration</label>
-                <div class="flex items-center gap-2">
-                  <input
-                    formControlName="duration"
-                    type="number"
-                    min="1"
-                    class="w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20"
-                  />
-                  <span class="text-xs text-on-surface-variant">Days</span>
+                <div class="flex justify-between items-start mb-3">
+                  <div class="flex-1 mr-4 space-y-2">
+                    <div class="relative">
+                      <input
+                        formControlName="name"
+                        type="text"
+                        placeholder="Medicine Name (search catalog...)"
+                        (input)="searchMedicine(i, $any($event.target).value)"
+                        (focus)="searchMedicine(i, $any($event.target).value)"
+                        (blur)="hideSuggestions(i)"
+                        class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 font-semibold text-on-surface focus:outline-none transition-colors"
+                      />
+                      @if (getSuggestions(i).length > 0) {
+                        <div class="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-outline-variant rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                          @for (med of getSuggestions(i); track med.id) {
+                            <button
+                              type="button"
+                              (mousedown)="selectMedicine(i, med)"
+                              class="w-full text-left px-3 py-2 text-sm hover:bg-surface-container-high transition-colors border-b border-outline-variant/30 last:border-b-0"
+                            >
+                              <span class="font-medium text-on-surface">{{ med.medicineName }}</span>
+                              @if (med.manufacturer) {
+                                <span class="text-xs text-outline ml-2">{{ med.manufacturer }}</span>
+                              }
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <input
+                      formControlName="instructions"
+                      type="text"
+                      placeholder="Instructions (e.g. Take after food)"
+                      class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 text-xs text-outline focus:outline-none transition-colors"
+                    />
+                  </div>
+                  <button
+                    (click)="removeMedicine(i)"
+                    type="button"
+                    class="text-outline hover:text-status-red transition-colors mt-1"
+                  >
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label for="frequency_{{$index}}" class="block text-xs text-outline mb-1">Frequency</label>
+                    <select
+                      id="frequency_{{$index}}"
+                      formControlName="frequency"
+                      class="w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white"
+                    >
+                      <option value="1-0-1">1-0-1</option>
+                      <option value="1-1-1">1-1-1</option>
+                      <option value="0-0-1">0-0-1</option>
+                      <option value="SOS">SOS</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="duration_{{$index}}" class="block text-xs text-outline mb-1">Duration</label>
+                    <div class="flex items-center gap-2">
+                      <input
+                        formControlName="duration"
+                        type="number"
+                        min="1"
+                        class="w-full border border-outline-variant rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20"
+                      />
+                      <span class="text-xs text-on-surface-variant">Days</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="total_{{$index}}" class="block text-xs text-outline mb-1">Total</label>
+                    <input
+                      id="total_{{$index}}"
+                      type="text"
+                      [value]="calculateTotal(med.get('frequency')?.value, med.get('duration')?.value)"
+                      readonly
+                      class="w-full border border-transparent bg-surface-container-high rounded-lg p-2 text-sm text-on-surface-variant focus:outline-none cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               </div>
-              <div>
-                <label for="total_{{$index}}" class="block text-xs text-outline mb-1">Total</label>
-                <input
-                  id="total_{{$index}}"
-                  type="text"
-                  [value]="calculateTotal(med.get('frequency')?.value, med.get('duration')?.value)"
-                  readonly
-                  class="w-full border border-transparent bg-surface-container-high rounded-lg p-2 text-sm text-on-surface-variant focus:outline-none cursor-not-allowed"
-                />
-              </div>
-            </div>
+            }
           </div>
-        }
+        </div>
+
+        <div class="p-4 border-t border-gray-100 bg-surface-container-low flex justify-end gap-4">
+          @if (error) {
+            <span class="text-sm text-status-red flex items-center">{{ error }}</span>
+          }
+          <button
+            (click)="finishAndPrint()"
+            [disabled]="isSubmitting"
+            type="button"
+            class="px-6 py-2 bg-status-green hover:bg-status-green/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md flex items-center gap-2"
+          >
+            @if (isSubmitting) {
+              <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+            }
+            <span class="material-symbols-outlined text-[18px]">print</span>
+            {{ existingConsultationId ? 'Update & Print' : 'Finish & Print' }}
+          </button>
+        </div>
       </div>
     </div>
-
-    <div class="p-4 border-t border-gray-100 bg-surface-container-low flex justify-end gap-4">
-      <button
-        type="button"
-        class="px-4 py-2 border border-outline-variant bg-white text-on-surface-variant text-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors"
-      >
-        Save Draft
-      </button>
-      <button
-        (click)="finishAndPrint()"
-        type="button"
-        class="px-4 py-2 bg-status-green hover:bg-status-green/90 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
-      >
-        Finish & Print
-      </button>
-    </div>
-  </div>
+  }
 </div>

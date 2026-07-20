@@ -1,0 +1,224 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-on-surface">Reports &amp; Analytics</h1>
+    <div class="flex items-center gap-2">
+      @if (store.loading()) {
+        <span class="text-sm text-outline flex items-center gap-1">
+          <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+          Loading...
+        </span>
+      }
+      <button (click)="refresh()" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  @if (store.error()) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+      <p class="text-sm text-status-red">{{ store.error() }}</p>
+      <button (click)="refresh()" class="text-xs text-medical-blue hover:underline">Retry</button>
+        </div>
+      } @else {
+        <div class="h-48 flex items-center justify-center text-sm text-outline">No data available</div>
+      }
+
+  <!-- Stat Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold text-outline uppercase">Total Revenue</p>
+        <span class="material-symbols-outlined text-medical-blue">payments</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface">{{ formatPaisa(store.dashboardStats()?.totalRevenueInPaisa) }}</p>
+      <p class="text-xs text-outline mt-1">{{ store.dashboardStats()?.pendingBills ?? 0 }} pending bills</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold text-outline uppercase">Appointments Today</p>
+        <span class="material-symbols-outlined text-medical-blue">calendar_today</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface">{{ store.dashboardStats()?.todayAppointments ?? 0 }}</p>
+      <p class="text-xs text-outline mt-1">{{ store.dashboardStats()?.totalPatients ?? 0 }} total patients</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold text-outline uppercase">Active Doctors</p>
+        <span class="material-symbols-outlined text-medical-blue">stethoscope</span>
+      </div>
+      <p class="text-2xl font-bold text-on-surface">{{ store.dashboardStats()?.activeDoctors ?? 0 }}</p>
+      <p class="text-xs text-outline mt-1">Currently available</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-semibold text-outline uppercase">Outstanding Dues</p>
+        <span class="material-symbols-outlined text-status-red">account_balance</span>
+      </div>
+      @if (store.revenueReport(); as rev) {
+        <p class="text-2xl font-bold text-on-surface">{{ formatPaisa(rev.outstandingInPaisa) }}</p>
+        <p class="text-xs text-outline mt-1">{{ rev.totalBilledInPaisa > 0 ? ((rev.outstandingInPaisa / rev.totalBilledInPaisa) * 100).toFixed(1) + '% unpaid' : '—' }}</p>
+      } @else {
+        <p class="text-2xl font-bold text-on-surface">—</p>
+      }
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <!-- Appointment Trends Bar Chart -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <h3 class="text-sm font-semibold text-on-surface mb-4">Monthly Appointment Trends</h3>
+      @if (!store.appointmentTrends().length) {
+        <div class="h-48 flex items-center justify-center text-sm text-outline">No data available</div>
+      } @else {
+        <div class="h-48 flex items-end gap-2">
+          @for (trend of store.appointmentTrends(); track trend.month) {
+            <div class="flex-1 flex flex-col items-center gap-1" [title]="trend.month">
+              <span class="text-xs font-medium text-on-surface-variant">{{ trend.count }}</span>
+              <div
+                class="w-full rounded-t transition-all duration-300"
+                [style.height.px]="(trend.count / maxAppointmentCount()) * 140 || 4"
+                [style.background]="'linear-gradient(to top, #1D4ED8, #3B82F6)'"
+              ></div>
+              <span class="text-xs text-outline">{{ trend.month.substring(0, 3) }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Revenue Bar Chart -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <h3 class="text-sm font-semibold text-on-surface mb-4">Revenue Breakdown (Monthly)</h3>
+      @if (store.revenueReport()?.monthlyBreakdown?.length) {
+        @if (store.revenueReport(); as rev) {
+        <div class="h-48 flex items-end gap-3">
+          @for (m of rev.monthlyBreakdown; track m.month) {
+            <div class="flex-1 flex flex-col items-center gap-0.5">
+              <span class="text-[10px] font-medium text-on-surface-variant">₹{{ (m.collected / 1000).toFixed(0) }}k</span>
+              <div class="flex w-full gap-0.5 items-end">
+                <div
+                  class="flex-1 rounded-t bg-medical-blue"
+                  [style.height.px]="maxRevenueHeight() > 0 ? (m.billed / maxRevenueHeight()) * 130 : 4"
+                  [attr.title]="'Billed: ₹' + m.billed"
+                ></div>
+                <div
+                  class="flex-1 rounded-t bg-status-green"
+                  [style.height.px]="maxRevenueHeight() > 0 ? (m.collected / maxRevenueHeight()) * 130 : 4"
+                  [attr.title]="'Collected: ₹' + m.collected"
+                ></div>
+              </div>
+              <span class="text-xs text-outline mt-1">{{ m.month.substring(0, 3) }}</span>
+            </div>
+          }
+        </div>
+        }
+        <div class="flex items-center justify-center gap-6 mt-3">
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded bg-medical-blue"></div>
+            <span class="text-xs text-outline">Billed</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 rounded bg-status-green"></div>
+            <span class="text-xs text-outline">Collected</span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Second Row: Bills Status + Doctor Performance -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Bills Status Donut -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5">
+      <h3 class="text-sm font-semibold text-on-surface mb-4">Bills Status</h3>
+      @if (store.billsStatus(); as bs) {
+        <div class="flex items-center gap-4">
+          <svg viewBox="0 0 120 120" class="w-28 h-28 shrink-0">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#E2E8F0" stroke-width="14" />
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#059669" stroke-width="14"
+              stroke-linecap="butt" transform="rotate(-90 60 60)"
+              [attr.stroke-dasharray]="donutDash(bs.paidCount, bs.totalBills)"
+              [attr.stroke-dashoffset]="donutOffset(bs.paidCount, bs.totalBills, bs.unpaidCount + bs.partiallyPaidCount)" />
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#EF4444" stroke-width="14"
+              stroke-linecap="butt" transform="rotate(-90 60 60)"
+              [attr.stroke-dasharray]="donutDash(bs.unpaidCount, bs.totalBills)"
+              [attr.stroke-dashoffset]="donutOffset(bs.unpaidCount, bs.totalBills, bs.voidedCount)" />
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#94A3B8" stroke-width="14"
+              stroke-linecap="butt" transform="rotate(-90 60 60)"
+              [attr.stroke-dasharray]="donutDash(bs.voidedCount, bs.totalBills)"
+              [attr.stroke-dashoffset]="donutOffset(bs.voidedCount, bs.totalBills, 0)" />
+            <text x="60" y="56" text-anchor="middle" class="text-lg font-bold fill-on-surface">{{ bs.totalBills }}</text>
+            <text x="60" y="72" text-anchor="middle" class="text-xs fill-outline">Total</text>
+          </svg>
+          <div class="flex-1 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-status-green"></div><span class="text-xs text-on-surface-variant">Paid</span></div>
+              <span class="text-sm font-semibold text-on-surface">{{ bs.paidCount }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-amber-400"></div><span class="text-xs text-on-surface-variant">Partial</span></div>
+              <span class="text-sm font-semibold text-on-surface">{{ bs.partiallyPaidCount }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-status-red"></div><span class="text-xs text-on-surface-variant">Unpaid</span></div>
+              <span class="text-sm font-semibold text-on-surface">{{ bs.unpaidCount }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-outline"></div><span class="text-xs text-on-surface-variant">Voided</span></div>
+              <span class="text-sm font-semibold text-on-surface">{{ bs.voidedCount }}</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="h-56 flex items-center justify-center text-sm text-outline">No data available</div>
+      }
+    </div>
+
+    <!-- Doctor Performance -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5 lg:col-span-2">
+      <h3 class="text-sm font-semibold text-on-surface mb-4">Doctor Performance</h3>
+      @if (!store.doctorPerformance().length) {
+        <div class="h-48 flex items-center justify-center text-sm text-outline">No data available</div>
+      } @else {
+        <div class="space-y-3 max-h-80 overflow-y-auto">
+          @for (doc of store.doctorPerformance(); track doc.doctorId) {
+            <div class="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container-low/50">
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-medical-blue/10 flex items-center justify-center text-medical-blue text-sm font-bold shrink-0">
+                  {{ doc.doctorName.charAt(0) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-on-surface truncate">{{ doc.doctorName }}</p>
+                  <p class="text-xs text-outline">{{ doc.consultationCount }} consultations</p>
+                </div>
+              </div>
+              <div class="text-right shrink-0 ml-4">
+                <span class="text-sm font-semibold text-on-surface">{{ formatPaisa(doc.revenueInPaisa) }}</span>
+                @if (maxDoctorRevenue() > 0) {
+                  <div class="w-20 h-1.5 rounded-full bg-surface-container-high mt-1">
+                    <div class="h-full rounded-full bg-status-green" [style.width.%]="(doc.revenueInPaisa / maxDoctorRevenue()) * 100"></div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Export -->
+  <div class="bg-white rounded-xl border border-gray-200 p-5">
+    <h3 class="text-sm font-semibold text-on-surface mb-4">Export Reports</h3>
+    <div class="flex gap-3 flex-wrap">
+      <button (click)="exportAsCsv()" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-high">
+        <span class="material-symbols-outlined text-lg">download</span> Export as CSV
+      </button>
+      <button (click)="exportAsPdf()" class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-high">
+        <span class="material-symbols-outlined text-lg">picture_as_pdf</span> Export as PDF
+      </button>
+    </div>
+  </div>
+</div>

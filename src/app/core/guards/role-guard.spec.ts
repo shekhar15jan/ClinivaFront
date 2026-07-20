@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ActivatedRouteSnapshot } from '@angular/router';
 import { RoleGuard } from './role-guard';
 import { AuthService } from '../services/auth.service';
+import { User } from '../models/auth.model';
 import { vi } from 'vitest';
 
 describe('RoleGuard', () => {
@@ -61,7 +62,7 @@ describe('RoleGuard', () => {
   });
 
   it('should allow activation when user has one of the required roles', () => {
-    (authService as any).currentUserValue = { id: '1', email: 'admin@test.com', role: 'ADMIN' };
+    (authService as unknown as { currentUserValue: User | null }).currentUserValue = { id: '1', email: 'admin@test.com', role: 'ADMIN' };
     const route = { data: { roles: ['ADMIN'] }, params: {} } as unknown as ActivatedRouteSnapshot;
 
     const result = guard.canActivate(route);
@@ -70,7 +71,7 @@ describe('RoleGuard', () => {
   });
 
   it('should allow activation when user has multiple matching roles', () => {
-    (authService as any).currentUserValue = { id: '1', email: 'user@test.com', role: 'SUPER_ADMIN' };
+    (authService as unknown as { currentUserValue: User | null }).currentUserValue = { id: '1', email: 'user@test.com', role: 'SUPER_ADMIN' };
     const route = { data: { roles: ['ADMIN', 'SUPER_ADMIN'] }, params: {} } as unknown as ActivatedRouteSnapshot;
 
     const result = guard.canActivate(route);
@@ -79,7 +80,7 @@ describe('RoleGuard', () => {
   });
 
   it('should block and redirect when user lacks required roles', () => {
-    (authService as any).currentUserValue = { id: '1', email: 'doctor@test.com', role: 'DOCTOR' };
+    (authService as unknown as { currentUserValue: User | null }).currentUserValue = { id: '1', email: 'doctor@test.com', role: 'DOCTOR' };
     const route = {
       data: { roles: ['ADMIN'] },
       params: { hospitalCode: 'hosp1' },
@@ -92,7 +93,7 @@ describe('RoleGuard', () => {
   });
 
   it('should use parent params hospitalCode when not on current route', () => {
-    (authService as any).currentUserValue = { id: '1', email: 'nurse@test.com', role: 'NURSE' };
+    (authService as unknown as { currentUserValue: User | null }).currentUserValue = { id: '1', email: 'nurse@test.com', role: 'NURSE' };
     const route = {
       data: { roles: ['ADMIN'] },
       params: {},

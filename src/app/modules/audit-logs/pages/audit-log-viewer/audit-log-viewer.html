@@ -1,0 +1,164 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-on-surface">Audit Logs</h1>
+    <button (click)="loadLogs()" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+      <span class="material-symbols-outlined text-[18px]">refresh</span>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs font-medium text-outline mb-1">Entity</label>
+        <select [(ngModel)]="filterEntity" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white">
+          <option value="">All Entities</option>
+          <option value="Patient">Patient</option>
+          <option value="Doctor">Doctor</option>
+          <option value="Appointment">Appointment</option>
+          <option value="Consultation">Consultation</option>
+          <option value="Prescription">Prescription</option>
+          <option value="Bill">Bill</option>
+          <option value="Payment">Payment</option>
+          <option value="User">User</option>
+          <option value="Settings">Settings</option>
+          <option value="Tenant">Tenant</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-outline mb-1">Action</label>
+        <select [(ngModel)]="filterAction" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white">
+          <option value="">All Actions</option>
+          <option value="CREATE">Create</option>
+          <option value="UPDATE">Update</option>
+          <option value="DELETE">Delete</option>
+          <option value="STATUS_CHANGE">Status Change</option>
+          <option value="LOGIN">Login</option>
+          <option value="LOGOUT">Logout</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-outline mb-1">From</label>
+        <input type="date" [(ngModel)]="filterDateFrom" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-outline mb-1">To</label>
+        <input type="date" [(ngModel)]="filterDateTo" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20" />
+      </div>
+      <button (click)="clearFilters()" class="px-3 py-2 text-sm text-on-surface-variant hover:text-on-surface border border-outline-variant rounded-lg hover:bg-surface-container-high">
+        Clear
+      </button>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+      <p class="text-sm text-status-red">{{ error }}</p>
+      <button (click)="loadLogs()" class="text-xs text-medical-blue hover:underline">Retry</button>
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="text-center py-12 text-sm text-outline">Loading audit logs...</div>
+  } @else if (logs.length === 0) {
+    <app-empty-state icon="📜" title="No Audit Logs" description="No audit log entries match the current filters.">
+      @if (filterEntity || filterAction || filterDateFrom || filterDateTo) {
+        <button (click)="clearFilters()" class="mt-3 text-sm text-medical-blue hover:underline">Clear filters</button>
+      }
+    </app-empty-state>
+  } @else {
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-surface-container-low text-left">
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">User</th>
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Action</th>
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Entity</th>
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Entity ID</th>
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">IP</th>
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (log of logs; track log.id) {
+              <tr class="border-t border-gray-100 hover:bg-surface-container-low/50 cursor-pointer" (click)="openDetail(log)">
+                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.userName || log.userId.substring(0, 8) || '—' }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getActionClass(log.action)">{{ log.action }}</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant">{{ log.entity }}</td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.entityId.substring(0, 8) || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant font-mono text-xs">{{ log.ipAddress || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-on-surface-variant whitespace-nowrap">{{ log.timestamp | date:'medium' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paginator -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden mt-4">
+      <app-paginator
+        [totalElements]="totalElements"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage"
+        (pageChange)="onPageChange($event)"
+      />
+    </div>
+  }
+</div>
+
+<!-- Detail Modal -->
+@if (selectedLog) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="text-base font-bold text-on-surface">Audit Log Detail</h3>
+        <button (click)="closeDetail()" class="text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">User</span>
+          <span class="text-sm font-medium text-on-surface">{{ selectedLog.userName || selectedLog.userId || '—' }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Action</span>
+          <span class="px-2 py-0.5 rounded-full text-xs font-medium" [class]="getActionClass(selectedLog.action)">{{ selectedLog.action }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Entity</span>
+          <span class="text-sm font-medium text-on-surface">{{ selectedLog.entity }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Entity ID</span>
+          <span class="text-sm font-mono text-on-surface-variant">{{ selectedLog.entityId }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">IP Address</span>
+          <span class="text-sm font-mono text-on-surface-variant">{{ selectedLog.ipAddress || '—' }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Timestamp</span>
+          <span class="text-sm text-on-surface-variant">{{ selectedLog.timestamp | date:'medium' }}</span>
+        </div>
+        @if (selectedLog.oldValue) {
+          <div>
+            <span class="text-sm text-outline block mb-1">Old Value</span>
+            <pre class="text-xs text-on-surface-variant bg-surface-container-low rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono">{{ formatJson(selectedLog.oldValue) }}</pre>
+          </div>
+        }
+        @if (selectedLog.newValue) {
+          <div>
+            <span class="text-sm text-outline block mb-1">New Value</span>
+            <pre class="text-xs text-on-surface-variant bg-surface-container-low rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono">{{ formatJson(selectedLog.newValue) }}</pre>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

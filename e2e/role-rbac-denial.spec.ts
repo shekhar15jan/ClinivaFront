@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAs, UserRole } from './helpers/login-as';
 
-const HOSPITAL_CODE = 'DEMO';
+const HOSPITAL_CODE = 'CLINIVA';
 
 type RoleTestCase = {
   role: UserRole;

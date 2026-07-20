@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { login } from './helpers/login';
 
-const HOSPITAL_CODE = 'DEMO';
+const HOSPITAL_CODE = 'CLINIVA';
 
 test.describe('Onboarding Flow (E2E)', () => {
   test('should redirect to dashboard when accessing onboarding while already set up', async ({ page }) => {

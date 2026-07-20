@@ -38,3 +38,21 @@ export interface UpdatePrescriptionRequest {
   notes?: string;
   medicines?: PrescriptionMedicine[];
 }
+
+export interface PrescriptionTemplate {
+  id: string;
+  doctorId: string;
+  templateName: string;
+  diagnosis?: string;
+  notes?: string;
+  medicines: PrescriptionMedicine[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreatePrescriptionTemplateRequest {
+  templateName: string;
+  diagnosis?: string;
+  notes?: string;
+  medicines: PrescriptionMedicine[];
+}

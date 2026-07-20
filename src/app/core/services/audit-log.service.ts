@@ -25,8 +25,8 @@ export class AuditLogService {
     const queryParams = new URLSearchParams();
     if (params.page !== undefined) queryParams.set('page', String(params.page));
     if (params.size !== undefined) queryParams.set('size', String(params.size));
-    if (params.startDate) queryParams.set('startDate', params.startDate);
-    if (params.endDate) queryParams.set('endDate', params.endDate);
+    if (params.startDate) queryParams.set('dateFrom', params.startDate);
+    if (params.endDate) queryParams.set('dateTo', params.endDate);
     if (params.userId) queryParams.set('userId', params.userId);
     if (params.entity) queryParams.set('entity', params.entity);
     if (params.action) queryParams.set('action', params.action);

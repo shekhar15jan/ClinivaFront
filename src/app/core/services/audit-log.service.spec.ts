@@ -49,7 +49,7 @@ describe('AuditLogService', () => {
         expect(result.content[0].action).toBe('LOGIN');
       });
 
-      const expectedUrl = `${apiUrl}?page=0&size=20&startDate=2024-01-01&endDate=2024-01-31&userId=u1&entity=USER&action=LOGIN`;
+      const expectedUrl = `${apiUrl}?page=0&size=20&dateFrom=2024-01-01&dateTo=2024-01-31&userId=u1&entity=USER&action=LOGIN`;
       const req = httpMock.expectOne(expectedUrl);
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);

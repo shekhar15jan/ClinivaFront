@@ -1,47 +1,74 @@
 @if (isLoading) {
-  <div class="p-6 text-center text-sm text-[#64748B]">Loading health packages...</div>
+  <div class="p-6 text-center text-sm text-outline">Loading health packages...</div>
 } @else if (error) {
   <div class="p-6 text-center">
-    <p class="text-sm text-red-500 mb-2">{{ error }}</p>
-    <button (click)="loadPackages()" class="text-sm text-[#0052CC] hover:underline">Retry</button>
+    <p class="text-sm text-status-red mb-2">{{ error }}</p>
+    <button (click)="loadPackages()" class="text-sm text-medical-blue hover:underline">Retry</button>
   </div>
 } @else if (packages.length === 0) {
-  <app-empty-state icon="🏥" title="No Health Packages" description="No health packages configured yet."></app-empty-state>
+  <app-empty-state icon="🏥" title="No Health Packages" description="No health packages configured yet.">
+    <button (click)="openCreateForm()" class="mt-3 px-4 py-2 bg-medical-blue text-white text-sm font-medium rounded-lg hover:bg-medical-blue-dark">
+      Create Package
+    </button>
+  </app-empty-state>
 } @else {
   <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-[#1E293B]">Health Packages</h1>
+    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <h1 class="text-2xl font-bold text-on-surface">Health Packages</h1>
+      <div class="flex items-center gap-3">
+        <a routerLink="bookings" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+          <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+          View Bookings
+        </a>
+        <button (click)="openCreateForm()" class="flex items-center gap-1 px-4 py-2 bg-medical-blue text-white text-sm font-medium rounded-lg hover:bg-medical-blue-dark shadow-sm">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          Create Package
+        </button>
+      </div>
     </div>
+
+    @if (error) {
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-status-red">{{ error }}</div>
+    }
+
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead>
-          <tr class="bg-[#F8FAFC] text-left">
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Name</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actual Price</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Offer Price</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Status</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actions</th>
+          <tr class="bg-surface-container-low text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Name</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Actual Price</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Offer Price</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Status</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (pkg of packages; track pkg.id) {
-            <tr class="border-t border-gray-100 hover:bg-[#F8FAFC]">
-              <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ pkg.packageName }}</td>
-              <td class="px-4 py-3 text-sm text-[#64748B]">{{ getPrice(pkg.actualPriceInPaisa) }}</td>
-              <td class="px-4 py-3 text-sm font-medium text-[#059669]">{{ getPrice(pkg.offerPriceInPaisa) }}</td>
+            <tr class="border-t border-gray-100 hover:bg-surface-container-low/50">
+              <td class="px-4 py-3">
+                <p class="text-sm font-medium text-on-surface">{{ pkg.packageName }}</p>
+                @if (pkg.description) {
+                  <p class="text-xs text-outline mt-0.5 truncate max-w-[200px]">{{ pkg.description }}</p>
+                }
+              </td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant line-through">{{ getPrice(pkg.actualPriceInPaisa) }}</td>
+              <td class="px-4 py-3 text-sm font-medium text-status-green">{{ getPrice(pkg.offerPriceInPaisa) }}</td>
               <td class="px-4 py-3">
                 <app-status-badge [status]="pkg.isActive ? 'ACTIVE' : 'INACTIVE'"></app-status-badge>
               </td>
-              <td class="px-4 py-3 flex items-center gap-2">
-                <button (click)="openBooking(pkg)" class="text-sm text-blue-600 hover:underline">Book</button>
-                <button
-                  (click)="toggleActive(pkg)"
-                  [class]="pkg.isActive ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'"
-                  class="text-sm font-medium"
-                >
-                  {{ pkg.isActive ? 'Deactivate' : 'Activate' }}
-                </button>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2">
+                  <button (click)="openBooking(pkg)" class="text-xs text-medical-blue hover:underline font-medium">Book</button>
+                  <button (click)="openEditForm(pkg)" class="text-xs text-on-surface-variant hover:text-on-surface font-medium">Edit</button>
+                  <button
+                    (click)="toggleActive(pkg)"
+                    [class]="pkg.isActive ? 'text-status-red hover:text-red-700' : 'text-status-green hover:text-green-700'"
+                    class="text-xs font-medium"
+                  >
+                    {{ pkg.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </div>
               </td>
             </tr>
           }
@@ -56,6 +83,9 @@
               <span class="text-title-md font-semibold text-on-surface">{{ pkg.packageName }}</span>
               <app-status-badge [status]="pkg.isActive ? 'ACTIVE' : 'INACTIVE'"></app-status-badge>
             </div>
+            @if (pkg.description) {
+              <p class="text-xs text-outline">{{ pkg.description }}</p>
+            }
             <div class="flex items-center gap-4">
               <div class="flex flex-col">
                 <span class="text-label-sm text-on-surface-variant">Actual Price</span>
@@ -66,13 +96,16 @@
                 <span class="text-title-md font-semibold text-status-green">{{ getPrice(pkg.offerPriceInPaisa) }}</span>
               </div>
             </div>
-            <div class="pt-1 flex gap-2">
-              <button (click)="openBooking(pkg)" class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-blue-600 border border-blue-300 rounded-lg">
+            <div class="pt-1 flex gap-2 flex-wrap">
+              <button (click)="openBooking(pkg)" class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-medical-blue border border-medical-blue/30 rounded-lg">
                 <span class="material-symbols-outlined text-sm">calendar_month</span> Book
+              </button>
+              <button (click)="openEditForm(pkg)" class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg">
+                <span class="material-symbols-outlined text-sm">edit</span> Edit
               </button>
               <button
                 (click)="toggleActive(pkg)"
-                [class]="pkg.isActive ? 'text-error border-error' : 'text-status-green border-status-green'"
+                [class]="pkg.isActive ? 'text-status-red border-status-red/30' : 'text-status-green border-status-green/30'"
                 class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium border rounded-lg"
               >
                 <span class="material-symbols-outlined text-sm">{{ pkg.isActive ? 'block' : 'check_circle' }}</span>
@@ -86,46 +119,59 @@
   </div>
 }
 
+<!-- Package Form Modal -->
+@if (showForm) {
+  <app-package-form
+    [package]="editingPackage"
+    (close)="closeForm()"
+    (saved)="onSaved()"
+  />
+}
+
+<!-- Booking Modal -->
 @if (selectedPackage) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="closeBooking()" (keydown.escape)="closeBooking()" tabindex="0" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="closeBooking()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" (click)="$event.stopPropagation()">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-900">Book {{ selectedPackage.packageName }}</h3>
-        <button (click)="closeBooking()" class="text-gray-400 hover:text-gray-600">
+        <h3 class="text-lg font-bold text-on-surface">Book {{ selectedPackage.packageName }}</h3>
+        <button (click)="closeBooking()" class="text-outline hover:text-on-surface">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
-      <div class="mb-4 p-3 bg-gray-50 rounded-lg">
-        <p class="text-sm text-gray-600">Price: <span class="font-bold text-green-600">{{ getPrice(selectedPackage.offerPriceInPaisa) }}</span></p>
+      <div class="mb-4 p-3 bg-surface-container-low rounded-lg">
+        <p class="text-sm text-on-surface-variant">Price: <span class="font-bold text-status-green">{{ getPrice(selectedPackage.offerPriceInPaisa) }}</span></p>
         @if (selectedPackage.testsIncluded) {
-          <p class="text-xs text-gray-500 mt-1">Tests: {{ selectedPackage.testsIncluded }}</p>
+          <p class="text-xs text-outline mt-1">Tests: {{ selectedPackage.testsIncluded }}</p>
         }
       </div>
       <div class="space-y-3 mb-4">
         <div>
-          <label for="bookingName" class="block text-sm font-medium text-gray-700 mb-1">Patient Name *</label>
-          <input id="bookingName" type="text" [(ngModel)]="bookingForm.patientName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Full name" />
+          <label class="block text-sm font-medium text-on-surface mb-1">Patient Name *</label>
+          <input type="text" [(ngModel)]="bookingForm.patientName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Full name" />
         </div>
         <div>
-          <label for="bookingEmail" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-          <input id="bookingEmail" type="email" [(ngModel)]="bookingForm.email" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="email@example.com" />
+          <label class="block text-sm font-medium text-on-surface mb-1">Email *</label>
+          <input type="email" [(ngModel)]="bookingForm.email" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="email@example.com" />
         </div>
         <div>
-          <label for="bookingPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-          <input id="bookingPhone" type="tel" [(ngModel)]="bookingForm.phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Phone number" />
+          <label class="block text-sm font-medium text-on-surface mb-1">Phone</label>
+          <input type="tel" [(ngModel)]="bookingForm.phone" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Phone number" />
         </div>
         <div>
-          <label for="bookingDate" class="block text-sm font-medium text-gray-700 mb-1">Booking Date</label>
-          <input id="bookingDate" type="date" [(ngModel)]="bookingForm.bookingDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
+          <label class="block text-sm font-medium text-on-surface mb-1">Preferred Date</label>
+          <input type="date" [(ngModel)]="bookingForm.bookingDate" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
         </div>
       </div>
       @if (bookingError) {
-        <p class="text-sm text-red-600 mb-3">{{ bookingError }}</p>
+        <p class="text-sm text-status-red mb-3">{{ bookingError }}</p>
       }
       <div class="flex justify-end gap-3">
-        <button (click)="closeBooking()" class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50">Cancel</button>
-        <button (click)="submitBooking()" [disabled]="isBooking || !bookingForm.patientName || !bookingForm.email" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-          {{ isBooking ? 'Booking...' : 'Confirm Booking' }}
+        <button (click)="closeBooking()" class="px-4 py-2 text-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high">Cancel</button>
+        <button (click)="submitBooking()" [disabled]="isBooking || !bookingForm.patientName || !bookingForm.email" class="px-5 py-2 text-sm font-medium text-white bg-medical-blue rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-2">
+          @if (isBooking) {
+            <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+          }
+          Confirm Booking
         </button>
       </div>
     </div>

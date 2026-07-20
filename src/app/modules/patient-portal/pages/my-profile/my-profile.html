@@ -1,0 +1,146 @@
+<div class="p-4 sm:p-6 max-w-2xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl sm:text-2xl font-bold text-on-surface">My Profile</h2>
+    @if (patient && !editing) {
+      <button (click)="startEditing()" class="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors">
+        <span class="material-symbols-outlined text-[18px]">edit</span>
+        Edit
+      </button>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-12">
+      <div class="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+    </div>
+  } @else if (!patient) {
+    <div class="bg-surface-container-low rounded-xl border border-outline-variant p-8 text-center">
+      <span class="material-symbols-outlined text-5xl text-outline">person_off</span>
+      <p class="mt-3 text-on-surface-variant">No patient profile found</p>
+      <p class="text-sm text-outline mt-1">Contact your clinic reception to register</p>
+    </div>
+  } @else {
+    <!-- View Mode -->
+    @if (!editing) {
+      <div class="bg-surface rounded-xl border border-outline-variant overflow-hidden">
+        <div class="bg-primary/5 px-6 py-5 flex items-center gap-4">
+          <div class="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-2xl uppercase flex-shrink-0">
+            {{ patient.fullName.charAt(0) || '?' }}
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-on-surface">{{ patient.fullName }}</h3>
+            <p class="text-sm text-on-surface-variant">Patient ID: {{ patient.patientId }}</p>
+          </div>
+        </div>
+
+        <div class="px-6 py-5 space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Email</p>
+              <p class="text-sm text-on-surface">{{ patient.email || '—' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Phone</p>
+              <p class="text-sm text-on-surface">{{ patient.phone || '—' }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Date of Birth</p>
+              <p class="text-sm text-on-surface">{{ patient.dateOfBirth || '—' }}
+                @if (patient.age) { <span class="text-outline">({{ patient.age }} yrs)</span> }
+              </p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Blood Group</p>
+              <p class="text-sm text-on-surface">{{ patient.bloodGroup ? formatBloodGroup(patient.bloodGroup) : '—' }}</p>
+            </div>
+            <div class="sm:col-span-2">
+              <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Address</p>
+              <p class="text-sm text-on-surface">{{ patient.address || '—' }}</p>
+            </div>
+          </div>
+
+          <div class="border-t border-outline-variant pt-4">
+            <h4 class="text-sm font-semibold text-on-surface mb-3">Emergency Contact</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Name</p>
+                <p class="text-sm text-on-surface">{{ patient.emergencyContactName || '—' }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-outline uppercase tracking-wider mb-1">Phone</p>
+                <p class="text-sm text-on-surface">{{ patient.emergencyContactPhone || '—' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Edit Mode -->
+    @if (editing) {
+      <div class="bg-surface rounded-xl border border-outline-variant p-6">
+        <div class="space-y-4">
+          <div>
+            <label for="fullName" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Full Name</label>
+            <input id="fullName" type="text" [(ngModel)]="editForm.fullName" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="phone" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Phone</label>
+              <input id="phone" type="tel" [(ngModel)]="editForm.phone" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            </div>
+            <div>
+              <label for="email" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Email</label>
+              <input id="email" type="email" [(ngModel)]="editForm.email" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="dob" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Date of Birth</label>
+              <input id="dob" type="date" [(ngModel)]="editForm.dateOfBirth" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            </div>
+            <div>
+              <label for="bloodGroup" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Blood Group</label>
+              <select id="bloodGroup" [(ngModel)]="editForm.bloodGroup" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface">
+                <option value="">Select</option>
+                @for (bg of bloodGroups; track bg) {
+                  <option [value]="bg">{{ formatBloodGroup(bg) }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="address" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Address</label>
+            <textarea id="address" [(ngModel)]="editForm.address" rows="2" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"></textarea>
+          </div>
+
+          <div class="border-t border-outline-variant pt-4">
+            <h4 class="text-sm font-semibold text-on-surface mb-3">Emergency Contact</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="ecName" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Name</label>
+                <input id="ecName" type="text" [(ngModel)]="editForm.emergencyContactName" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+              <div>
+                <label for="ecPhone" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Phone</label>
+                <input id="ecPhone" type="tel" [(ngModel)]="editForm.emergencyContactPhone" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 pt-4 border-t border-outline-variant">
+            <button (click)="saveProfile()" [disabled]="isSaving" class="px-5 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors">
+              {{ isSaving ? 'Saving...' : 'Save Changes' }}
+            </button>
+            <button (click)="cancelEditing()" [disabled]="isSaving" class="px-5 py-2 text-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high disabled:opacity-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

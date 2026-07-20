@@ -30,22 +30,60 @@ describe('TenantInterceptor', () => {
     expect(tenantInterceptor).toBeTruthy();
   });
 
-  it('should pass through requests without modification', () => {
+  it('should add X-Tenant-Code header when hospitalCode is in URL', () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/test-hospital/dashboard' },
+      writable: true,
+    });
+
     http.get('/api/test').subscribe();
 
     const req = httpMock.expectOne('/api/test');
-    expect(req.request.headers.keys().length).toBe(0);
+    expect(req.request.headers.get('X-Tenant-Code')).toBe('test-hospital');
     expect(req.request.method).toBe('GET');
-    expect(req.request.url).toBe('/api/test');
 
     req.flush({ data: 'ok' });
   });
 
-  it('should pass through POST requests', () => {
+  it('should not add header for auth routes like login', () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/login' },
+      writable: true,
+    });
+
+    http.get('/api/auth/login').subscribe();
+
+    const req = httpMock.expectOne('/api/auth/login');
+    expect(req.request.headers.has('X-Tenant-Code')).toBe(false);
+
+    req.flush({ success: true });
+  });
+
+  it('should skip header when no hospitalCode in path', () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/' },
+      writable: true,
+    });
+
+    http.get('/api/test').subscribe();
+
+    const req = httpMock.expectOne('/api/test');
+    expect(req.request.headers.has('X-Tenant-Code')).toBe(false);
+
+    req.flush({ data: 'ok' });
+  });
+
+  it('should pass through POST requests with header', () => {
+    Object.defineProperty(window, 'location', {
+      value: { pathname: '/my-hospital/patients' },
+      writable: true,
+    });
+
     http.post('/api/data', { foo: 'bar' }).subscribe();
 
     const req = httpMock.expectOne('/api/data');
     expect(req.request.body).toEqual({ foo: 'bar' });
+    expect(req.request.headers.get('X-Tenant-Code')).toBe('my-hospital');
     expect(req.request.method).toBe('POST');
 
     req.flush({ success: true });

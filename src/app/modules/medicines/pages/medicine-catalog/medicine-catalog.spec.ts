@@ -18,7 +18,7 @@ describe('MedicineCatalog', () => {
     TestBed.configureTestingModule({
       providers: [
         FormBuilder,
-        { provide: MedicineService, useValue: { getMedicines: vi.fn().mockReturnValue(of(mockPaged)), searchMedicines: vi.fn().mockReturnValue(of(mockSearchResponse)), createMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'created', timestamp: '', requestId: 'r1' })), ...overrides } },
+        { provide: MedicineService, useValue: { getMedicines: vi.fn().mockReturnValue(of(mockPaged)), searchMedicines: vi.fn().mockReturnValue(of(mockSearchResponse)), createMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'created', timestamp: '', requestId: 'r1' })), updateMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'updated', timestamp: '', requestId: 'r1' })), deactivate: vi.fn().mockReturnValue(of({ success: true })), uploadMedicines: vi.fn(), ...overrides } },
       ],
     });
     return TestBed.runInInjectionContext(() => new MedicineCatalog());
@@ -32,8 +32,9 @@ describe('MedicineCatalog', () => {
     expect(component.isLoading).toBe(false);
     expect(component.searchQuery).toBe('');
     expect(component.selectedCategory).toBe('');
-    expect(component.showAddModal).toBe(false);
+    expect(component.showFormModal).toBe(false);
     expect(component.isSubmitting).toBe(false);
+    expect(component.editingMedicine).toBeNull();
   });
 
   it('should load medicines on init', () => {
@@ -42,6 +43,7 @@ describe('MedicineCatalog', () => {
     expect(component.medicines.length).toBe(2);
     expect(component.filteredMedicines.length).toBe(2);
     expect(component.isLoading).toBe(false);
+    expect(component.totalElements).toBe(2);
   });
 
   it('should handle load error', () => {
@@ -74,34 +76,58 @@ describe('MedicineCatalog', () => {
     expect(component.filteredMedicines[0].medicineName).toBe('Amoxicillin');
   });
 
-  it('should toggle add modal and reset form', () => {
+  it('should open add modal and reset form', () => {
     const component = createComponent();
-    expect(component.showAddModal).toBe(false);
-    component.toggleAddModal();
-    expect(component.showAddModal).toBe(true);
-    component.toggleAddModal();
-    expect(component.showAddModal).toBe(false);
+    expect(component.showFormModal).toBe(false);
+    component.openAddModal();
+    expect(component.showFormModal).toBe(true);
+    expect(component.editingMedicine).toBeNull();
+    component.closeFormModal();
+    expect(component.showFormModal).toBe(false);
   });
 
-  it('should not submit invalid add form', () => {
+  it('should open edit modal with prepopulated form', () => {
     const component = createComponent();
-    component.onSubmitAdd();
+    component.openEditModal(mockMedicine);
+    expect(component.showFormModal).toBe(true);
+    expect(component.editingMedicine).toBe(mockMedicine);
+    expect(component.medicineForm.get('medicineName')?.value).toBe('Paracetamol');
+  });
+
+  it('should not submit invalid form', () => {
+    const component = createComponent();
+    component.submitForm();
     expect(component.isSubmitting).toBe(false);
+    expect(component.formError).toBe('Please fill all required fields');
   });
 
   it('should submit and create medicine', () => {
     const component = createComponent();
-    component.showAddModal = true;
-    component.addForm.patchValue({ medicineName: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
-    component.onSubmitAdd();
+    component.medicineForm.patchValue({ medicineName: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
+    component.submitForm();
     expect(component.isSubmitting).toBe(false);
-    expect(component.showAddModal).toBe(false);
   });
 
   it('should handle create medicine error', () => {
     const component = createComponent({ createMedicine: vi.fn().mockReturnValue(throwError(() => new Error('fail'))) });
-    component.addForm.patchValue({ medicineName: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
-    component.onSubmitAdd();
+    component.medicineForm.patchValue({ medicineName: 'Test Med', genericName: 'Test Gen', category: 'Analgesic', manufacturer: 'Test', unit: 'tablet', price: 10 });
+    component.submitForm();
     expect(component.isSubmitting).toBe(false);
+  });
+
+  it('should open delete confirmation', () => {
+    const component = createComponent();
+    component.openDeleteConfirm(mockMedicine);
+    expect(component.showDeleteConfirm).toBe(true);
+    expect(component.deletingMedicine).toBe(mockMedicine);
+    component.closeDeleteConfirm();
+    expect(component.showDeleteConfirm).toBe(false);
+  });
+
+  it('should format price correctly', () => {
+    const component = createComponent();
+    expect(component.getPriceInRupees(1000)).toBe('10.00');
+    expect(component.getPriceInRupees(undefined)).toBe('0.00');
+    expect(component.getPriceInRupees(0)).toBe('0.00');
   });
 });

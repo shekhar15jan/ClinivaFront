@@ -1,42 +1,83 @@
-@if (isLoading) {
-  <div class="p-6 text-center text-sm text-[#64748B]">Loading contact messages...</div>
-} @else if (error) {
-  <div class="p-6 text-center">
-    <p class="text-sm text-red-500 mb-2">{{ error }}</p>
-    <button (click)="loadMessages()" class="text-sm text-[#0052CC] hover:underline">Retry</button>
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-on-surface">Contact Messages</h1>
+    <button (click)="loadMessages()" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+      <span class="material-symbols-outlined text-[18px]">refresh</span>
+      Refresh
+    </button>
   </div>
-} @else if (messages.length === 0) {
-  <app-empty-state icon="📧" title="No Messages" description="No contact messages received yet."></app-empty-state>
-} @else {
-  <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-[#1E293B]">Contact Messages</h1>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-outline uppercase mb-1">New Messages</p>
+      <p class="text-xl font-bold text-medical-blue">{{ newCount }}</p>
     </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-outline uppercase mb-1">Replied</p>
+      <p class="text-xl font-bold text-status-green">{{ repliedCount }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-outline uppercase mb-1">Total</p>
+      <p class="text-xl font-bold text-on-surface">{{ messages.length }}</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex items-center gap-3 mb-4 flex-wrap">
+    <div class="relative flex-1 min-w-[200px]">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+      <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()" placeholder="Search by name, email, or subject..." class="w-full pl-10 pr-4 py-2 bg-white border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+    </div>
+    <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="px-3 py-2 bg-white border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20">
+      <option value="">All Statuses</option>
+      <option value="NEW">New</option>
+      <option value="REPLIED">Replied</option>
+    </select>
+  </div>
+
+  @if (error) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+      <p class="text-sm text-status-red">{{ error }}</p>
+      <button (click)="loadMessages()" class="text-xs text-medical-blue hover:underline">Retry</button>
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="text-center py-12 text-sm text-outline">Loading messages...</div>
+  } @else if (filteredMessages.length === 0) {
+    <app-empty-state icon="📧" title="No Messages" [description]="messages.length === 0 ? 'No contact messages received yet.' : 'No messages match the current filters.'">
+      @if (statusFilter || searchQuery) {
+        <button (click)="statusFilter = ''; searchQuery = ''; applyFilters()" class="mt-3 text-sm text-medical-blue hover:underline">Clear filters</button>
+      }
+    </app-empty-state>
+  } @else {
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <!-- Desktop -->
       <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead>
-          <tr class="bg-[#F8FAFC] text-left">
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Name</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Email</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Subject</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Status</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Date</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actions</th>
+          <tr class="bg-surface-container-low text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Name</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Email</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Subject</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Status</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Date</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Actions</th>
           </tr>
         </thead>
         <tbody>
-          @for (msg of messages; track msg.id) {
-            <tr class="border-t border-gray-100 hover:bg-[#F8FAFC]">
-              <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ msg.name }}</td>
-              <td class="px-4 py-3 text-sm text-[#64748B]">{{ msg.email }}</td>
-              <td class="px-4 py-3 text-sm text-[#64748B]">{{ msg.subject || '-' }}</td>
+          @for (msg of filteredMessages; track msg.id) {
+            <tr class="border-t border-gray-100 hover:bg-surface-container-low/50 cursor-pointer" (click)="selectMessage(msg)">
+              <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ msg.name }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">{{ msg.email }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant max-w-xs truncate">{{ msg.subject || '—' }}</td>
               <td class="px-4 py-3">
                 <app-status-badge [status]="msg.status"></app-status-badge>
               </td>
-              <td class="px-4 py-3 text-sm text-[#64748B]">{{ msg.createdAt | date:'mediumDate' }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">{{ msg.createdAt | date:'mediumDate' }}</td>
               <td class="px-4 py-3">
-                <button (click)="selectMessage(msg)" class="text-sm text-[#0052CC] hover:underline">Reply</button>
+                <button (click)="selectMessage(msg); $event.stopPropagation()" class="text-sm text-medical-blue hover:underline font-medium">Reply</button>
               </td>
             </tr>
           }
@@ -44,58 +85,95 @@
       </table>
       </div>
 
+      <!-- Mobile -->
       <div class="md:hidden divide-y divide-outline-variant">
-        @for (msg of messages; track msg.id) {
-          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface">
+        @for (msg of filteredMessages; track msg.id) {
+          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface cursor-pointer" (click)="selectMessage(msg)">
             <div class="flex items-center justify-between">
-              <span class="text-title-md font-semibold text-on-surface">{{ msg.name }}</span>
+              <span class="text-sm font-semibold text-on-surface">{{ msg.name }}</span>
               <app-status-badge [status]="msg.status"></app-status-badge>
             </div>
             <div class="flex flex-col gap-1">
-              <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
-                <span class="material-symbols-outlined text-base">mail</span>
+              <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm">mail</span>
                 <span>{{ msg.email }}</span>
               </div>
-              <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
-                <span class="material-symbols-outlined text-base">subject</span>
-                <span>{{ msg.subject || '-' }}</span>
+              <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm">subject</span>
+                <span>{{ msg.subject || '—' }}</span>
               </div>
-              <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
-                <span class="material-symbols-outlined text-base">calendar_today</span>
+              <div class="flex items-center gap-2 text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm">calendar_today</span>
                 <span>{{ msg.createdAt | date:'mediumDate' }}</span>
               </div>
             </div>
-            <button (click)="selectMessage(msg)" class="text-sm text-[#0052CC] hover:underline">Reply</button>
+            <button (click)="selectMessage(msg); $event.stopPropagation()" class="text-sm text-medical-blue font-medium self-start">View & Reply</button>
           </div>
         }
       </div>
     </div>
-  </div>
-}
+  }
+</div>
 
+<!-- Detail + Reply Modal -->
 @if (selectedMessage) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="closeDetail()" (keydown.escape)="closeDetail()" tabindex="0" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-900">Reply to {{ selectedMessage.name }}</h3>
-        <button (click)="closeDetail()" class="text-gray-400 hover:text-gray-600">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="text-base font-bold text-on-surface">Message from {{ selectedMessage.name }}</h3>
+        <button (click)="closeDetail()" class="text-outline hover:text-on-surface">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
-      <div class="mb-4 p-3 bg-gray-50 rounded-lg">
-        <p class="text-xs text-gray-500">{{ selectedMessage.email }}</p>
-        <p class="text-sm font-medium mt-1">{{ selectedMessage.subject || 'No Subject' }}</p>
-        <p class="text-sm text-gray-700 mt-2">{{ selectedMessage.message }}</p>
+      <div class="p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Email</span>
+          <span class="text-sm text-on-surface-variant">{{ selectedMessage.email }}</span>
+        </div>
+        @if (selectedMessage.phone) {
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-outline">Phone</span>
+            <span class="text-sm text-on-surface-variant">{{ selectedMessage.phone }}</span>
+          </div>
+        }
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Subject</span>
+          <span class="text-sm font-medium text-on-surface">{{ selectedMessage.subject || '—' }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Status</span>
+          <app-status-badge [status]="selectedMessage.status"></app-status-badge>
+        </div>
+        <div>
+          <span class="text-sm text-outline block mb-1">Message</span>
+          <p class="text-sm text-on-surface bg-surface-container-low rounded-lg p-3 whitespace-pre-wrap">{{ selectedMessage.message }}</p>
+        </div>
+        @if (selectedMessage.adminReply) {
+          <div>
+            <span class="text-sm text-outline block mb-1">Your Reply</span>
+            <p class="text-sm text-status-green bg-green-50 rounded-lg p-3 whitespace-pre-wrap">{{ selectedMessage.adminReply }}</p>
+          </div>
+        }
+        @if (selectedMessage.status !== 'REPLIED') {
+          <div>
+            <label class="text-sm font-medium text-on-surface block mb-1">Send Reply</label>
+            <textarea [(ngModel)]="replyText" rows="4" class="w-full border border-outline-variant rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Type your reply..."></textarea>
+          </div>
+        }
+        <div class="flex items-center justify-between text-xs text-outline">
+          <span>Received {{ selectedMessage.createdAt | date:'medium' }}</span>
+        </div>
       </div>
-      <div class="mb-4">
-        <label for="replyText" class="block text-sm font-medium text-gray-700 mb-1">Your Reply</label>
-        <textarea id="replyText" [(ngModel)]="replyText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500" placeholder="Type your reply..."></textarea>
-      </div>
-      <div class="flex justify-end gap-3">
-        <button (click)="closeDetail()" class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50">Cancel</button>
-        <button (click)="sendReply()" [disabled]="isReplying || !replyText.trim()" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-          {{ isReplying ? 'Sending...' : 'Send Reply' }}
-        </button>
+      <div class="px-6 py-4 border-t border-outline-variant flex justify-end gap-3">
+        <button (click)="closeDetail()" class="px-4 py-2 text-sm font-medium border border-outline-variant text-on-surface-variant rounded-lg hover:bg-surface-container-high">Close</button>
+        @if (selectedMessage.status !== 'REPLIED') {
+          <button (click)="sendReply()" [disabled]="isReplying || !replyText.trim()" class="px-5 py-2 text-sm font-medium text-white bg-medical-blue rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-2">
+            @if (isReplying) {
+              <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+            }
+            Send Reply
+          </button>
+        }
       </div>
     </div>
   </div>

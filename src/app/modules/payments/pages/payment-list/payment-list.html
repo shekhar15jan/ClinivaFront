@@ -1,72 +1,219 @@
-@if (isLoading) {
-  <div class="p-6 text-center text-sm text-[#64748B]">Loading payments...</div>
-} @else if (error) {
-  <div class="p-6 text-center">
-    <p class="text-sm text-red-500 mb-2">{{ error }}</p>
-    <button (click)="loadPayments()" class="text-sm text-[#0052CC] hover:underline">Retry</button>
-  </div>
-} @else if (payments.length === 0) {
-  <app-empty-state icon="💳" title="No Payments" description="No payment records found."></app-empty-state>
-} @else {
-  <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-[#1E293B]">Payment History</h1>
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-on-surface">Payment History</h1>
+    <div class="flex items-center gap-2">
+      <button (click)="openUpiQr()" class="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-medical-blue rounded-lg hover:bg-medical-blue-dark shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">qr_code</span>
+        Generate UPI QR
+      </button>
+      <button (click)="loadPayments()" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+        <span class="material-symbols-outlined text-[18px]">refresh</span>
+        Refresh
+      </button>
     </div>
+  </div>
 
-    <!-- Desktop: Table -->
-    <div class="overflow-x-auto hidden md:block">
-      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table class="w-full">
-          <thead>
-            <tr class="bg-[#F8FAFC] text-left">
-              <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Bill ID</th>
-              <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Amount</th>
-              <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Method</th>
-              <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Status</th>
-              <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of payments; track p.id) {
-              <tr class="border-t border-gray-100 hover:bg-[#F8FAFC]">
-                <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ p.billId }}</td>
-                <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ getAmount(p.amountInPaisa) }}</td>
-                <td class="px-4 py-3 text-sm text-[#64748B] capitalize">{{ p.paymentMethod }}</td>
-                <td class="px-4 py-3">
-                  <app-status-badge [status]="p.paymentStatus"></app-status-badge>
-                </td>
-                <td class="px-4 py-3 text-sm text-[#64748B]">{{ p.paidAt || p.createdAt | date:'mediumDate' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+  <!-- Stats Cards -->
+  @if (payments.length > 0) {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <p class="text-xs font-semibold text-outline uppercase mb-1">Total Collected</p>
+        <p class="text-xl font-bold text-status-green">{{ getAmount(totalCollected) }}</p>
+        <p class="text-xs text-outline mt-0.5">{{ paidCount }} successful payments</p>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <p class="text-xs font-semibold text-outline uppercase mb-1">Total Payments</p>
+        <p class="text-xl font-bold text-on-surface">{{ payments.length }}</p>
+        <p class="text-xs text-outline mt-0.5">All time records</p>
+      </div>
+      <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <p class="text-xs font-semibold text-outline uppercase mb-1">Pending / Failed</p>
+        <p class="text-xl font-bold text-status-red">{{ pendingCount }}</p>
+        <p class="text-xs text-outline mt-0.5">Requires attention</p>
       </div>
     </div>
+  }
 
-    <!-- Mobile: Card list -->
+  <!-- Filters -->
+  <div class="flex items-center gap-3 mb-4 flex-wrap">
+    <div class="relative flex-1 min-w-[200px]">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="onFilterChange()"
+        placeholder="Search by bill ID or payment method..."
+        class="w-full pl-10 pr-4 py-2 bg-white border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
+      />
+    </div>
+    <select
+      [(ngModel)]="statusFilter"
+      (change)="onFilterChange()"
+      class="px-3 py-2 bg-white border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20"
+    >
+      <option value="">All Statuses</option>
+      <option value="PAID">Paid</option>
+      <option value="PENDING">Pending</option>
+      <option value="FAILED">Failed</option>
+    </select>
+  </div>
+
+  <!-- Error -->
+  @if (error) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+      <p class="text-sm text-status-red">{{ error }}</p>
+      <button (click)="loadPayments()" class="text-xs text-medical-blue hover:underline">Retry</button>
+    </div>
+  }
+
+  <!-- Loading / Empty / Table -->
+  @if (isLoading) {
+    <div class="text-center py-12 text-sm text-outline">Loading payments...</div>
+  } @else if (filteredPayments.length === 0) {
+    <app-empty-state icon="💳" title="No Payments" [description]="payments.length === 0 ? 'No payment records found.' : 'No payments match the current filters.'">
+      @if (statusFilter || searchQuery) {
+        <button (click)="statusFilter = ''; searchQuery = ''; onFilterChange()" class="mt-3 text-sm text-medical-blue hover:underline">Clear filters</button>
+      }
+    </app-empty-state>
+  } @else {
+    <!-- Desktop Table -->
+    <div class="hidden md:block bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-surface-container-low text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Bill ID</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Amount</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Method</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Mode</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Status</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of filteredPayments; track p.id) {
+            <tr class="border-t border-gray-100 hover:bg-surface-container-low/50 cursor-pointer" (click)="openDetail(p)">
+              <td class="px-4 py-3 text-sm font-mono text-xs text-on-surface-variant">{{ p.billId.substring(0, 8) }}...</td>
+              <td class="px-4 py-3 text-sm font-semibold text-on-surface">{{ getAmount(p.amountInPaisa) }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant capitalize">{{ p.paymentMethod }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant capitalize">{{ p.paymentMode || '—' }}</td>
+              <td class="px-4 py-3">
+                <app-status-badge [status]="p.paymentStatus"></app-status-badge>
+              </td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">{{ p.paidAt || p.createdAt | date:'mediumDate' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards -->
     <div class="md:hidden space-y-3">
-      @for (p of payments; track p.id) {
-        <div class="bg-white rounded-xl border border-gray-200 p-4">
+      @for (p of filteredPayments; track p.id) {
+        <div class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-sm" (click)="openDetail(p)">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-medium text-[#1E293B]">{{ p.billId }}</span>
+            <span class="text-sm font-mono text-on-surface-variant">{{ p.billId.substring(0, 8) }}...</span>
             <app-status-badge [status]="p.paymentStatus"></app-status-badge>
           </div>
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-xs text-[#94A3B8] mb-0.5">Amount</p>
-              <p class="text-sm font-medium text-[#1E293B]">{{ getAmount(p.amountInPaisa) }}</p>
+              <p class="text-xs text-outline mb-0.5">Amount</p>
+              <p class="text-sm font-semibold text-on-surface">{{ getAmount(p.amountInPaisa) }}</p>
+            </div>
+            <div class="text-center">
+              <p class="text-xs text-outline mb-0.5">Method</p>
+              <p class="text-sm text-on-surface-variant capitalize">{{ p.paymentMethod }}</p>
             </div>
             <div class="text-right">
-              <p class="text-xs text-[#94A3B8] mb-0.5">Method</p>
-              <p class="text-sm text-[#64748B] capitalize">{{ p.paymentMethod }}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs text-[#94A3B8] mb-0.5">Date</p>
-              <p class="text-sm text-[#64748B]">{{ p.paidAt || p.createdAt | date:'mediumDate' }}</p>
+              <p class="text-xs text-outline mb-0.5">Date</p>
+              <p class="text-sm text-on-surface-variant">{{ p.paidAt || p.createdAt | date:'shortDate' }}</p>
             </div>
           </div>
         </div>
       }
+    </div>
+  }
+</div>
+
+<!-- Payment Detail Modal -->
+@if (selectedPayment) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="text-base font-bold text-on-surface">Payment Details</h3>
+        <button (click)="closeDetail()" class="text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Status</span>
+          <app-status-badge [status]="selectedPayment.paymentStatus"></app-status-badge>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Bill ID</span>
+          <span class="text-sm font-mono text-on-surface font-medium">{{ selectedPayment.billId }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Amount</span>
+          <span class="text-sm font-semibold text-on-surface">{{ getAmount(selectedPayment.amountInPaisa) }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Method</span>
+          <span class="text-sm text-on-surface-variant capitalize">{{ selectedPayment.paymentMethod }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Mode</span>
+          <span class="text-sm text-on-surface-variant capitalize">{{ selectedPayment.paymentMode || '—' }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Payment Date</span>
+          <span class="text-sm text-on-surface-variant">{{ selectedPayment.paidAt ? (selectedPayment.paidAt | date:'medium') : selectedPayment.createdAt | date:'medium' }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Created</span>
+          <span class="text-sm text-on-surface-variant">{{ selectedPayment.createdAt | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-outline-variant flex justify-end">
+        <button (click)="closeDetail()" class="px-4 py-2 text-sm font-medium bg-surface-container-high text-on-surface rounded-lg hover:bg-surface-container-high/80">Close</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- UPI QR Modal -->
+@if (showQrModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeQrModal()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="text-base font-bold text-on-surface">Generate UPI QR Code</h3>
+        <button (click)="closeQrModal()" class="text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-on-surface mb-1">Bill ID</label>
+          <div class="flex gap-2">
+            <input type="text" [(ngModel)]="qrBillId" placeholder="Enter bill ID..." class="flex-1 border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <button (click)="generateQr()" [disabled]="qrLoading" class="px-4 py-2 bg-medical-blue text-white text-sm font-medium rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-1">
+              @if (qrLoading) {
+                <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+              }
+              Generate
+            </button>
+          </div>
+        </div>
+        @if (qrError) {
+          <p class="text-sm text-status-red mb-3">{{ qrError }}</p>
+        }
+        @if (qrCode) {
+          <div class="flex flex-col items-center">
+            <img [src]="qrCode" alt="UPI QR Code" class="w-48 h-48 object-contain border border-outline-variant rounded-lg mb-3" />
+            <p class="text-xs text-outline text-center">Scan this QR code with any UPI app to pay</p>
+          </div>
+        }
+      </div>
     </div>
   </div>
 }

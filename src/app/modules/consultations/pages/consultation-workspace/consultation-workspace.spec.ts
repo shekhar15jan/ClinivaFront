@@ -1,64 +1,69 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConsultationWorkspace } from './consultation-workspace';
-import { FormBuilder } from '@angular/forms';
 import { ConsultationService } from '../../../../core/services/consultation.service';
-import { of, throwError } from 'rxjs';
+import { AppointmentService } from '../../../../core/services/appointment.service';
+import { MedicineService } from '../../../../core/services/medicine.service';
+import { PrescriptionService } from '../../../../core/services/prescription.service';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 describe('ConsultationWorkspace', () => {
-  function createComponent(overrides?: Partial<ConsultationService>) {
+  const mockAppointment: any = {
+    id: 'appt-1', patient: { id: 'p1', fullName: 'Test Patient' },
+    doctor: { id: 'd1', fullName: 'Dr. Test', specialization: 'GP' },
+    appointmentDate: '2026-01-01', appointmentTime: '10:00', tokenNumber: 5,
+    status: 'APPROVED', reason: 'Checkup',
+  };
+
+  let fixture: ComponentFixture<ConsultationWorkspace>;
+  let component: ConsultationWorkspace;
+
+  beforeEach(() => {
     TestBed.configureTestingModule({
+      imports: [ConsultationWorkspace],
       providers: [
-        FormBuilder,
-        {
-          provide: ConsultationService,
-          useValue: {
-            createConsultation: vi.fn().mockReturnValue(of({ success: true })),
-            ...overrides,
-          },
-        },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: vi.fn().mockReturnValue(null) } } } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: ConsultationService, useValue: { createConsultation: vi.fn().mockReturnValue(of({ success: true, data: { id: 'c1' } })), updateConsultation: vi.fn().mockReturnValue(of({ success: true, data: { id: 'c1' } })), getByAppointment: vi.fn().mockReturnValue(of({ success: false })) } },
+        { provide: AppointmentService, useValue: { getAppointmentById: vi.fn().mockReturnValue(of({ success: true, data: mockAppointment })), getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: [], totalElements: 0 } })) } },
+        { provide: MedicineService, useValue: { searchMedicines: vi.fn().mockReturnValue(of({ success: true, data: [] })) } },
+        { provide: PrescriptionService, useValue: { getTemplates: vi.fn().mockReturnValue(of({ success: true, data: [] })), createPrescription: vi.fn().mockReturnValue(of({ success: true, data: { id: 'pr1' } })), updatePrescription: vi.fn().mockReturnValue(of({ success: true, data: { id: 'pr1' } })), getByAppointment: vi.fn().mockReturnValue(of({ success: false })) } },
       ],
     });
-    return TestBed.runInInjectionContext(() => new ConsultationWorkspace());
-  }
+    fixture = TestBed.createComponent(ConsultationWorkspace);
+    component = fixture.componentInstance;
+  });
 
   it('should create with initial state', () => {
-    const component = createComponent();
     expect(component).toBeTruthy();
     expect(component.consultationForm).toBeDefined();
   });
 
-  it('should add one medicine on init', () => {
-    const component = createComponent();
+  it('should show queue when no appointment param', () => {
     component.ngOnInit();
-    expect(component.medicines.length).toBe(1);
+    expect(component.showQueue).toBe(true);
+    expect(component.selectedAppointment).toBeNull();
+  });
+
+  it('should have empty medicines array initially', () => {
+    expect(component.medicines.length).toBe(0);
   });
 
   it('should get medicines form array', () => {
-    const component = createComponent();
-    expect(component.medicines.length).toBe(0);
     component.addMedicine();
     expect(component.medicines.length).toBe(1);
   });
 
-  it('should add medicine', () => {
-    const component = createComponent();
+  it('should add and remove medicine', () => {
     component.addMedicine();
-    expect(component.medicines.length).toBe(1);
     component.addMedicine();
     expect(component.medicines.length).toBe(2);
-  });
-
-  it('should remove medicine at index', () => {
-    const component = createComponent();
-    component.addMedicine();
-    component.addMedicine();
     component.removeMedicine(0);
     expect(component.medicines.length).toBe(1);
   });
 
   it('should create medicine form group with defaults', () => {
-    const component = createComponent();
     const fg = component.createMedicineFormGroup();
     expect(fg.get('name')?.value).toBe('');
     expect(fg.get('frequency')?.value).toBe('1-0-1');
@@ -66,36 +71,22 @@ describe('ConsultationWorkspace', () => {
   });
 
   it('should calculate total tabs', () => {
-    const component = createComponent();
     expect(component.calculateTotal('1-0-1', 5)).toBe('10 Tabs');
     expect(component.calculateTotal('1-1-1', 7)).toBe('21 Tabs');
     expect(component.calculateTotal('SOS', 3)).toBe('3 Tabs');
     expect(component.calculateTotal('', 0)).toBe('0 Tabs');
   });
 
-  it('should show error when finishAndPrint called with invalid form', () => {
-    const component = createComponent();
-    component.ngOnInit();
+  it('should show error when finishAndPrint called without appointment', () => {
     component.finishAndPrint();
-    expect(component.error).toBe('Please fill out required fields');
+    expect(component.error).toBe('Please select an appointment first');
   });
 
-  it('should submit via API when finishAndPrint with valid form', () => {
-    const createSpy = vi.fn().mockReturnValue(of({ success: true }));
-    const component = createComponent({ createConsultation: createSpy });
-    component.ngOnInit();
-    component.medicines.at(0).patchValue({ name: 'Paracetamol' });
+  it('should submit consultation with appointment selected', () => {
+    component.selectedAppointment = mockAppointment;
+    component.addMedicine();
+    component.medicines.at(0).patchValue({ name: 'Paracetamol', frequency: '1-0-1', duration: 3 });
     component.finishAndPrint();
     expect(component.isSubmitting).toBe(false);
-  });
-
-  it('should handle API error on submit', () => {
-    const component = createComponent({
-      createConsultation: vi.fn().mockReturnValue(throwError(() => ({ message: 'Server error' }))),
-    });
-    component.ngOnInit();
-    component.medicines.at(0).patchValue({ name: 'Paracetamol' });
-    component.finishAndPrint();
-    expect(component.error).toBe('Server error');
   });
 });

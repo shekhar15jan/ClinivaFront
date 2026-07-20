@@ -3,7 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { ConsultationWorkspace } from './pages/consultation-workspace/consultation-workspace';
 
 const routes: Routes = [
-  { path: '', component: ConsultationWorkspace }
+  { path: '', component: ConsultationWorkspace },
+  { path: ':appointmentId', component: ConsultationWorkspace }
 ];
 
 @NgModule({

@@ -1,89 +1,187 @@
-@if (isLoading) {
-  <div class="p-6 text-center text-sm text-[#64748B]">Loading reviews...</div>
-} @else if (error) {
-  <div class="p-6 text-center">
-    <p class="text-sm text-red-500 mb-2">{{ error }}</p>
-    <button (click)="loadReviews()" class="text-sm text-[#0052CC] hover:underline">Retry</button>
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-on-surface">Reviews</h1>
+    <button (click)="loadAll()" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
+      <span class="material-symbols-outlined text-[18px]">refresh</span>
+      Refresh
+    </button>
   </div>
-} @else if (reviews.length === 0) {
-  <app-empty-state icon="⭐" title="No Pending Reviews" description="All reviews have been processed."></app-empty-state>
-} @else {
-  <div class="p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-[#1E293B]">Pending Reviews</h1>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-outline uppercase mb-1">Pending</p>
+      <p class="text-xl font-bold text-amber-500">{{ pendingReviews.length }}</p>
     </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-outline uppercase mb-1">Approved</p>
+      <p class="text-xl font-bold text-status-green">{{ approvedReviews.length }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <p class="text-xs font-semibold text-outline uppercase mb-1">Total</p>
+      <p class="text-xl font-bold text-on-surface">{{ pendingReviews.length + approvedReviews.length }}</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 mb-4 bg-surface-container-low p-1 rounded-lg w-fit">
+    <button (click)="switchTab('pending')" [class.bg-white]="activeTab === 'pending'" [class.shadow-sm]="activeTab === 'pending'" [class.text-on-surface]="activeTab === 'pending'" [class.text-outline]="activeTab !== 'pending'" class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+      Pending ({{ pendingReviews.length }})
+    </button>
+    <button (click)="switchTab('approved')" [class.bg-white]="activeTab === 'approved'" [class.shadow-sm]="activeTab === 'approved'" [class.text-on-surface]="activeTab === 'approved'" [class.text-outline]="activeTab !== 'approved'" class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+      Approved ({{ approvedReviews.length }})
+    </button>
+  </div>
+
+  @if (error) {
+    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+      <p class="text-sm text-status-red">{{ error }}</p>
+      <button (click)="loadAll()" class="text-xs text-medical-blue hover:underline">Retry</button>
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="text-center py-12 text-sm text-outline">Loading reviews...</div>
+  } @else if (reviews.length === 0) {
+    <app-empty-state [icon]="activeTab === 'pending' ? '⭐' : '✅'" [title]="activeTab === 'pending' ? 'No Pending Reviews' : 'No Approved Reviews'" [description]="activeTab === 'pending' ? 'All reviews have been processed.' : 'No reviews have been approved yet.'"></app-empty-state>
+  } @else {
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <!-- Desktop -->
       <div class="hidden md:block overflow-x-auto">
       <table class="w-full">
         <thead>
-          <tr class="bg-[#F8FAFC] text-left">
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Patient</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Rating</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Review</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Date</th>
-            <th class="px-4 py-3 text-xs font-semibold text-[#64748B] uppercase">Actions</th>
+          <tr class="bg-surface-container-low text-left">
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Patient</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Doctor</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Rating</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Review</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Date</th>
+            @if (activeTab === 'pending') {
+              <th class="px-4 py-3 text-xs font-semibold text-outline uppercase w-40">Actions</th>
+            }
           </tr>
         </thead>
         <tbody>
           @for (r of reviews; track r.id) {
-            <tr class="border-t border-gray-100 hover:bg-[#F8FAFC]">
-              <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">{{ r.patientName }}</td>
+            <tr class="border-t border-gray-100 hover:bg-surface-container-low/50 cursor-pointer" (click)="openDetail(r)">
+              <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ r.patientName }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">{{ r.doctorName || '—' }}</td>
               <td class="px-4 py-3">
-                <span class="text-sm font-medium text-amber-500">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5 - r.rating) }}</span>
-              </td>
-              <td class="px-4 py-3 text-sm text-[#64748B] max-w-xs truncate">{{ r.reviewText || '-' }}</td>
-              <td class="px-4 py-3 text-sm text-[#64748B]">{{ r.createdAt | date:'mediumDate' }}</td>
-              <td class="px-4 py-3">
-                <div class="flex gap-2">
-                  <button
-                    (click)="approve(r)"
-                    class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    (click)="reject(r)"
-                    class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                  >
-                    Reject
-                  </button>
+                <div class="flex items-center gap-0.5">
+                  @for (star of starArray(r.rating); track $index) {
+                    <span class="material-symbols-outlined text-sm" [class.text-amber-500]="star" [class.text-outline-variant]="!star">{{ star ? 'star' : 'star' }}</span>
+                  }
                 </div>
               </td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant max-w-xs truncate">{{ r.reviewText || '—' }}</td>
+              <td class="px-4 py-3 text-sm text-on-surface-variant">{{ r.createdAt | date:'mediumDate' }}</td>
+              @if (activeTab === 'pending') {
+                <td class="px-4 py-3">
+                  <div class="flex gap-2" (click)="$event.stopPropagation()">
+                    <button (click)="approve(r)" class="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-status-green rounded-md hover:bg-green-600">
+                      <span class="material-symbols-outlined text-[14px]">check</span>
+                      Approve
+                    </button>
+                    <button (click)="reject(r)" class="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-status-red rounded-md hover:bg-red-600">
+                      <span class="material-symbols-outlined text-[14px]">close</span>
+                      Reject
+                    </button>
+                  </div>
+                </td>
+              }
             </tr>
           }
         </tbody>
       </table>
       </div>
 
+      <!-- Mobile -->
       <div class="md:hidden divide-y divide-outline-variant">
         @for (r of reviews; track r.id) {
-          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface">
+          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface cursor-pointer" (click)="openDetail(r)">
             <div class="flex items-center justify-between">
-              <span class="text-title-md font-semibold text-on-surface">{{ r.patientName }}</span>
-              <span class="text-body-sm font-medium text-amber-500">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5 - r.rating) }}</span>
+              <span class="text-sm font-semibold text-on-surface">{{ r.patientName }}</span>
+              <div class="flex items-center gap-0.5">
+                @for (star of starArray(r.rating); track $index) {
+                  <span class="material-symbols-outlined text-sm" [class.text-amber-500]="star" [class.text-outline-variant]="!star">{{ star ? 'star' : 'star' }}</span>
+                }
+              </div>
             </div>
-            <p class="text-body-sm text-on-surface-variant">{{ r.reviewText || '-' }}</p>
-            <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
-              <span class="material-symbols-outlined text-base">calendar_today</span>
-              <span>{{ r.createdAt | date:'mediumDate' }}</span>
+            <p class="text-xs text-on-surface-variant">Doctor: {{ r.doctorName || '—' }}</p>
+            <p class="text-sm text-on-surface-variant line-clamp-2">{{ r.reviewText || '—' }}</p>
+            <div class="flex items-center gap-2 text-xs text-outline">
+              <span class="material-symbols-outlined text-sm">calendar_today</span>
+              {{ r.createdAt | date:'mediumDate' }}
             </div>
-            <div class="flex gap-2 pt-1">
-              <button
-                (click)="approve(r)"
-                class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-white bg-status-green rounded-lg"
-              >
-                <span class="material-symbols-outlined text-sm">check</span> Approve
-              </button>
-              <button
-                (click)="reject(r)"
-                class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-white bg-error rounded-lg"
-              >
-                <span class="material-symbols-outlined text-sm">close</span> Reject
-              </button>
-            </div>
+            @if (activeTab === 'pending') {
+              <div class="flex gap-2 pt-1" (click)="$event.stopPropagation()">
+                <button (click)="approve(r)" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-status-green rounded-lg">
+                  <span class="material-symbols-outlined text-sm">check</span> Approve
+                </button>
+                <button (click)="reject(r)" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-status-red rounded-lg">
+                  <span class="material-symbols-outlined text-sm">close</span> Reject
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
+    </div>
+  }
+</div>
+
+<!-- Detail Modal -->
+@if (selectedReview) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
+      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+        <h3 class="text-base font-bold text-on-surface">Review Details</h3>
+        <button (click)="closeDetail()" class="text-outline hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Patient</span>
+          <span class="text-sm font-medium text-on-surface">{{ selectedReview.patientName }}</span>
+        </div>
+        @if (selectedReview.doctorName) {
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-outline">Doctor</span>
+            <span class="text-sm font-medium text-on-surface">{{ selectedReview.doctorName }}</span>
+          </div>
+        }
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Rating</span>
+          <div class="flex items-center gap-1">
+            @for (star of starArray(selectedReview.rating); track $index) {
+              <span class="material-symbols-outlined text-lg" [class.text-amber-500]="star" [class.text-outline-variant]="!star">{{ star ? 'star' : 'star' }}</span>
+            }
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Status</span>
+          <span [class]="selectedReview.isApproved ? 'text-status-green' : 'text-amber-500'" class="text-sm font-medium">
+            {{ selectedReview.isApproved ? 'Approved' : 'Pending' }}
+          </span>
+        </div>
+        @if (selectedReview.reviewText) {
+          <div>
+            <span class="text-sm text-outline block mb-1">Review</span>
+            <p class="text-sm text-on-surface bg-surface-container-low rounded-lg p-3">{{ selectedReview.reviewText }}</p>
+          </div>
+        }
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-outline">Date</span>
+          <span class="text-sm text-on-surface-variant">{{ selectedReview.createdAt | date:'medium' }}</span>
+        </div>
+      </div>
+      @if (activeTab === 'pending' && !selectedReview.isApproved) {
+        <div class="px-6 py-4 border-t border-outline-variant flex justify-end gap-3">
+          <button (click)="reject(selectedReview)" class="px-4 py-2 text-sm font-medium text-status-red border border-status-red/30 rounded-lg hover:bg-red-50">Reject</button>
+          <button (click)="approve(selectedReview)" class="px-4 py-2 text-sm font-medium text-white bg-status-green rounded-lg hover:bg-green-600">Approve</button>
+        </div>
+      }
     </div>
   </div>
 }

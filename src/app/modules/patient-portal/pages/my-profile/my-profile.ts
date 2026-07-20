@@ -1,84 +1,124 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { AuthService } from '../../../../core/services/auth.service';
+import { PatientService } from '../../../../core/services/patient.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { FormsModule } from '@angular/forms';
+import { Patient } from '../../../../core/models/patient.model';
 
 @Component({
   selector: 'app-my-profile',
-  template: `
-    <div class="p-6 max-w-2xl">
-      <h2 class="text-headline-md text-on-surface mb-6">My Profile</h2>
-
-      @if (user) {
-        <div class="bg-white rounded-xl border border-outline-variant p-6 space-y-4">
-          <div class="flex items-center gap-4 mb-4">
-            <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl uppercase">
-              {{ ((user.profile?.['firstName']?.charAt(0) ?? '') + (user.profile?.['lastName']?.charAt(0) ?? '')) || '?' }}
-            </div>
-            <div>
-              <h3 class="text-lg font-bold text-on-surface">@if (user.profile?.['firstName']; as first) { {{ first }}{{ user.profile?.['lastName'] ? ' ' + user.profile?.['lastName'] : '' }} } @else { {{ user.email }} }</h3>
-              <p class="text-sm text-outline">{{ user.role }}</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div><p class="text-xs font-semibold text-outline uppercase mb-1">Email</p><p class="text-sm text-on-surface">{{ user.email }}</p></div>
-            <div><p class="text-xs font-semibold text-outline uppercase mb-1">Role</p><p class="text-sm text-on-surface">{{ user.role }}</p></div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div><label for="firstName" class="block text-xs font-semibold text-outline uppercase mb-1">First Name</label><input id="firstName" type="text" [(ngModel)]="firstName" class="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            <div><label for="lastName" class="block text-xs font-semibold text-outline uppercase mb-1">Last Name</label><input id="lastName" type="text" [(ngModel)]="lastName" class="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div><label for="phone" class="block text-xs font-semibold text-outline uppercase mb-1">Phone</label><input id="phone" type="tel" [(ngModel)]="phone" class="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-          </div>
-
-          @if (saveMessage) {
-            <p class="text-sm" [class.text-green-600]="!saveError" [class.text-red-600]="saveError">{{ saveMessage }}</p>
-          }
-
-          <div class="pt-4 border-t">
-            <button (click)="saveProfile()" [disabled]="isSaving" class="px-5 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark disabled:opacity-50">
-              {{ isSaving ? 'Saving...' : 'Save Changes' }}
-            </button>
-          </div>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './my-profile.html',
+  styleUrl: './my-profile.scss',
   imports: [FormsModule],
 })
-export class MyProfile {
+export class MyProfile implements OnInit {
   private authService = inject(AuthService);
+  private patientService = inject(PatientService);
+  private toastService = inject(ToastService);
 
-  firstName = '';
-  lastName = '';
-  phone = '';
+  patient: Patient | null = null;
+  loading = true;
+  editing = false;
   isSaving = false;
-  saveMessage = '';
-  saveError = false;
+
+  editForm = {
+    fullName: '',
+    phone: '',
+    email: '',
+    address: '',
+    dateOfBirth: '',
+    emergencyContactName: '',
+    emergencyContactPhone: '',
+    bloodGroup: '',
+  };
+
+  bloodGroups = [
+    'A_POSITIVE', 'A_NEGATIVE', 'B_POSITIVE', 'B_NEGATIVE',
+    'AB_POSITIVE', 'AB_NEGATIVE', 'O_POSITIVE', 'O_NEGATIVE'
+  ];
 
   get user() {
     return this.authService.currentUserValue;
   }
 
-  constructor() {
-    const u = this.user;
-    if (u) {
-      this.firstName = u.profile?.['firstName'] || '';
-      this.lastName = u.profile?.['lastName'] || '';
-    }
+  ngOnInit(): void {
+    this.loadPatientProfile();
   }
 
-  saveProfile() {
+  loadPatientProfile(): void {
+    this.loading = true;
+    const email = this.user?.email;
+    if (!email) {
+      this.loading = false;
+      return;
+    }
+    this.patientService.searchPatients(email).subscribe({
+      next: (res) => {
+        const patients = res.data;
+        if (patients && patients.length > 0) {
+          this.patient = patients.find(p => p.email === email) || patients[0];
+          if (this.patient) {
+            this.populateForm(this.patient);
+          }
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  populateForm(patient: Patient): void {
+    this.editForm = {
+      fullName: patient.fullName || '',
+      phone: patient.phone || '',
+      email: patient.email || '',
+      address: patient.address || '',
+      dateOfBirth: patient.dateOfBirth || '',
+      emergencyContactName: patient.emergencyContactName || '',
+      emergencyContactPhone: patient.emergencyContactPhone || '',
+      bloodGroup: patient.bloodGroup || '',
+    };
+  }
+
+  startEditing(): void {
+    this.editing = true;
+    if (this.patient) this.populateForm(this.patient);
+  }
+
+  cancelEditing(): void {
+    this.editing = false;
+    if (this.patient) this.populateForm(this.patient);
+  }
+
+  saveProfile(): void {
+    if (!this.patient) return;
     this.isSaving = true;
-    this.saveMessage = '';
-    // Profile update would go through a user profile service
-    setTimeout(() => {
-      this.isSaving = false;
-      this.saveMessage = 'Profile updated successfully';
-      this.saveError = false;
-    }, 500);
+    this.patientService.updatePatient(this.patient.id, {
+      fullName: this.editForm.fullName,
+      phone: this.editForm.phone,
+      email: this.editForm.email,
+      address: this.editForm.address,
+      dateOfBirth: this.editForm.dateOfBirth || undefined,
+      emergencyContactName: this.editForm.emergencyContactName,
+      emergencyContactPhone: this.editForm.emergencyContactPhone,
+      bloodGroup: this.editForm.bloodGroup || undefined,
+    }).subscribe({
+      next: (res) => {
+        this.patient = res.data;
+        this.editing = false;
+        this.isSaving = false;
+        this.toastService.success('Profile updated successfully');
+      },
+      error: () => {
+        this.isSaving = false;
+        this.toastService.error('Failed to update profile');
+      }
+    });
+  }
+
+  formatBloodGroup(bg: string): string {
+    return bg.replace('_POSITIVE', '+').replace('_NEGATIVE', '-');
   }
 }
