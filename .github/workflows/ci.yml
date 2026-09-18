@@ -24,7 +24,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Security audit
         run: npm audit --audit-level=high
@@ -48,7 +48,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Install Playwright Chromium (vitest browser mode)
         run: npx playwright install --with-deps chromium
@@ -88,7 +88,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: OWASP Dependency Check
         run: |
@@ -147,7 +147,7 @@ jobs:
           path: ../cliniva
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build and run backend
         working-directory: ../cliniva
@@ -207,7 +207,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Production build
         run: npm run build -- --configuration production

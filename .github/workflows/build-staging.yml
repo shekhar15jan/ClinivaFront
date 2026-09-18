@@ -27,7 +27,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Security audit
         run: npm audit --audit-level=high
@@ -51,7 +51,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Install Playwright Chromium (vitest browser mode)
         run: npx playwright install --with-deps chromium
@@ -107,7 +107,7 @@ jobs:
           path: ../cliniva
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build and run backend
         working-directory: ../cliniva
@@ -167,7 +167,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build staging
         run: npm run build:staging
@@ -255,7 +255,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Connect to Tailscale
         uses: tailscale/github-action@v4
