@@ -144,13 +144,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: shekhar15jan/Cliniva
-          path: ../cliniva
+          path: cliniva-backend
+          token: ${{ secrets.CLINIVA_REPO_PAT }}
 
       - name: Install frontend dependencies
         run: npm ci --legacy-peer-deps
 
       - name: Build and run backend
-        working-directory: ../cliniva
+        working-directory: cliniva-backend
         run: |
           chmod +x ./mvnw
           SPRING_PROFILES_ACTIVE=prod \
