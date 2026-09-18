@@ -2,7 +2,7 @@
   <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
     <div class="flex items-center justify-between mb-6">
       <h3 class="text-lg font-bold text-on-surface">{{ isEdit ? 'Edit' : 'Create' }} Health Package</h3>
-      <button (click)="close.emit()" class="text-outline hover:text-on-surface">
+      <button (click)="closed.emit()" class="text-outline hover:text-on-surface">
         <span class="material-symbols-outlined">close</span>
       </button>
     </div>
@@ -37,7 +37,7 @@
     }
 
     <div class="flex justify-end gap-3 mt-6">
-      <button (click)="close.emit()" class="px-4 py-2 text-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high">Cancel</button>
+      <button (click)="closed.emit()" class="px-4 py-2 text-sm font-medium text-on-surface-variant border border-outline-variant rounded-lg hover:bg-surface-container-high">Cancel</button>
       <button (click)="submit()" [disabled]="isSubmitting" class="px-5 py-2 text-sm font-medium text-white bg-medical-blue rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-2">
         @if (isSubmitting) {
           <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
