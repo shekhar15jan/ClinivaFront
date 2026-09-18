@@ -89,7 +89,7 @@ describe('EffectiveLicenseService', () => {
         expect(service.subscriptionStatus()).toBe('ACTIVE');
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`);
+      const req = httpMock.expectOne(`${apiUrl}/hms/license/effective`);
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -101,7 +101,7 @@ describe('EffectiveLicenseService', () => {
         },
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`);
+      const req = httpMock.expectOne(`${apiUrl}/hms/license/effective`);
       req.flush({ success: false }, { status: 500, statusText: 'Server Error' });
     });
   });
@@ -111,7 +111,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const initialResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(initialResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(initialResponse);
 
       const updatedConstraint: ResourceConstraint = { resourceCode: 'DOCTOR', resourceName: 'Doctors', limit: 5, currentUsage: 3, isUnlimited: false };
       const mockResponse: ApiResponse<ResourceConstraint> = { success: true, data: updatedConstraint, message: '', timestamp: '', requestId: '' };
@@ -123,7 +123,7 @@ describe('EffectiveLicenseService', () => {
         expect(usage?.current).toBe(3);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}/hms/internal/license/usage/DOCTOR`);
+      const req = httpMock.expectOne(`${apiUrl}/hms/license/usage/DOCTOR`);
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -133,7 +133,7 @@ describe('EffectiveLicenseService', () => {
       const mockResponse: ApiResponse<ResourceConstraint> = { success: true, data: updatedConstraint, message: '', timestamp: '', requestId: '' };
 
       service.refreshUsage('DOCTOR').subscribe();
-      const req = httpMock.expectOne(`${apiUrl}/hms/internal/license/usage/DOCTOR`);
+      const req = httpMock.expectOne(`${apiUrl}/hms/license/usage/DOCTOR`);
       req.flush(mockResponse);
 
       expect(service.getResourceUsage('DOCTOR')).toBeNull();
@@ -145,7 +145,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.isModuleAccessible('CORE_HMS')).toBe(true);
     });
@@ -154,7 +154,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.isModuleAccessible('PHARMACY')).toBe(true);
       expect(service.isModuleAccessible('LAB')).toBe(true);
@@ -164,7 +164,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.isModuleAccessible('EXPIRED_MOD')).toBe(false);
     });
@@ -179,7 +179,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.isFeatureEnabled('REPORTS')).toBe(true);
       expect(service.isFeatureEnabled('ANALYTICS')).toBe(false);
@@ -199,7 +199,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.canCreateResource('PATIENT')).toBe(true);
     });
@@ -208,7 +208,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.canCreateResource('DOCTOR')).toBe(true);
     });
@@ -220,7 +220,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense({ effectiveConstraints: constraints });
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.canCreateResource('DOCTOR')).toBe(false);
     });
@@ -231,7 +231,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       const usage = service.getResourceUsage('DOCTOR');
       expect(usage).toEqual({ current: 2, limit: 5, isUnlimited: false });
@@ -247,7 +247,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       const mod = service.getModuleInfo('CORE_HMS');
       expect(mod?.moduleName).toBe('Core HMS');
@@ -286,7 +286,7 @@ describe('EffectiveLicenseService', () => {
       const license = createMockLicense();
       const mockResponse: ApiResponse<EffectiveLicense> = { success: true, data: license, message: '', timestamp: '', requestId: '' };
       service.loadLicense().subscribe();
-      httpMock.expectOne(`${apiUrl}/hms/internal/license/effective`).flush(mockResponse);
+      httpMock.expectOne(`${apiUrl}/hms/license/effective`).flush(mockResponse);
 
       expect(service.planName()).toBe('Professional');
 

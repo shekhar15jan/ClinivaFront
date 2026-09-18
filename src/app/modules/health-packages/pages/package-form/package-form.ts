@@ -13,7 +13,7 @@ export class PackageForm implements OnInit {
   private packageService = inject(HealthPackageService);
 
   @Input() package?: HealthPackageResponse;
-  @Output() close = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
 
   form: CreateHealthPackageRequest = {
@@ -70,6 +70,6 @@ export class PackageForm implements OnInit {
   }
 
   onBackdropClick(): void {
-    this.close.emit();
+    this.closed.emit();
   }
 }

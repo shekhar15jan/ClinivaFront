@@ -7,19 +7,19 @@ import { ApiResponse } from '../../../../core/models/common.model';
 import { ReviewResponse } from '../../../../core/models/review.model';
 
 describe('ReviewList', () => {
-  const mockReview: any = {
+  const mockReview: ReviewResponse = {
     id: 'r1', patientId: 'p1', patientName: 'John', doctorId: 'd1', doctorName: 'Dr. Smith',
     rating: 4, reviewText: 'Good service', isApproved: false, createdAt: '2026-01-01T00:00:00Z',
   };
 
-  const mockPendingResponse: ApiResponse<any[]> = {
+  const mockPendingResponse: ApiResponse<ReviewResponse[]> = {
     success: true, data: [mockReview], message: '', timestamp: '', requestId: '',
   };
-  const mockApprovedResponse: ApiResponse<any[]> = {
+  const mockApprovedResponse: ApiResponse<ReviewResponse[]> = {
     success: true, data: [{ ...mockReview, id: 'r2', isApproved: true }], message: '', timestamp: '', requestId: '',
   };
 
-  function createComponent(overrides?: Partial<any>) {
+  function createComponent(overrides?: Partial<ReviewService>) {
     TestBed.configureTestingModule({
       providers: [
         {

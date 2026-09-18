@@ -1,5 +1,5 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="onBackdropClick()" role="dialog" aria-modal="true">
-  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" (click)="$event.stopPropagation()">
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="onBackdropClick()" (keydown.escape)="onBackdropClick()" role="dialog" aria-modal="true">
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
     <div class="flex items-center justify-between mb-6">
       <h3 class="text-lg font-bold text-on-surface">{{ isEdit ? 'Edit' : 'Create' }} Health Package</h3>
       <button (click)="close.emit()" class="text-outline hover:text-on-surface">
@@ -9,25 +9,25 @@
 
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-on-surface mb-1">Package Name *</label>
-        <input type="text" [(ngModel)]="form.packageName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="e.g. Basic Health Checkup" />
+        <label for="pkg-form-name" class="block text-sm font-medium text-on-surface mb-1">Package Name *</label>
+        <input id="pkg-form-name" type="text" [(ngModel)]="form.packageName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="e.g. Basic Health Checkup" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-on-surface mb-1">Description</label>
-        <textarea [(ngModel)]="form.description" rows="3" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Package description..."></textarea>
+        <label for="pkg-form-description" class="block text-sm font-medium text-on-surface mb-1">Description</label>
+        <textarea id="pkg-form-description" [(ngModel)]="form.description" rows="3" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Package description..."></textarea>
       </div>
       <div>
-        <label class="block text-sm font-medium text-on-surface mb-1">Tests Included</label>
-        <input type="text" [(ngModel)]="form.testsIncluded" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="e.g. CBC, Lipid Profile, X-Ray Chest" />
+        <label for="pkg-form-tests" class="block text-sm font-medium text-on-surface mb-1">Tests Included</label>
+        <input id="pkg-form-tests" type="text" [(ngModel)]="form.testsIncluded" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="e.g. CBC, Lipid Profile, X-Ray Chest" />
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1">Actual Price (₹) *</label>
-          <input type="number" [(ngModel)]="form.actualPriceInPaisa" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="0" min="0" />
+          <label for="pkg-form-actual-price" class="block text-sm font-medium text-on-surface mb-1">Actual Price (₹) *</label>
+          <input id="pkg-form-actual-price" type="number" [(ngModel)]="form.actualPriceInPaisa" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="0" min="0" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1">Offer Price (₹) *</label>
-          <input type="number" [(ngModel)]="form.offerPriceInPaisa" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="0" min="0" />
+          <label for="pkg-form-offer-price" class="block text-sm font-medium text-on-surface mb-1">Offer Price (₹) *</label>
+          <input id="pkg-form-offer-price" type="number" [(ngModel)]="form.offerPriceInPaisa" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="0" min="0" />
         </div>
       </div>
     </div>

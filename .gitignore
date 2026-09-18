@@ -49,3 +49,6 @@ Thumbs.db
 # Playwright
 /playwright-report/
 /test-results/
+
+# Vitest browser-mode failure screenshots
+/.vitest-attachments/

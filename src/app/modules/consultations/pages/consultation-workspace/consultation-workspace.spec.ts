@@ -1,6 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConsultationWorkspace } from './consultation-workspace';
+import { Appointment } from '../../../../core/models/appointment.model';
 import { ConsultationService } from '../../../../core/services/consultation.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { MedicineService } from '../../../../core/services/medicine.service';
@@ -9,19 +11,17 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 describe('ConsultationWorkspace', () => {
-  const mockAppointment: any = {
+  const mockAppointment: Appointment = {
     id: 'appt-1', patient: { id: 'p1', fullName: 'Test Patient' },
     doctor: { id: 'd1', fullName: 'Dr. Test', specialization: 'GP' },
     appointmentDate: '2026-01-01', appointmentTime: '10:00', tokenNumber: 5,
     status: 'APPROVED', reason: 'Checkup',
   };
 
-  let fixture: ComponentFixture<ConsultationWorkspace>;
   let component: ConsultationWorkspace;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [ConsultationWorkspace],
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: vi.fn().mockReturnValue(null) } } } },
         { provide: Router, useValue: { navigate: vi.fn() } },
@@ -29,10 +29,10 @@ describe('ConsultationWorkspace', () => {
         { provide: AppointmentService, useValue: { getAppointmentById: vi.fn().mockReturnValue(of({ success: true, data: mockAppointment })), getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: [], totalElements: 0 } })) } },
         { provide: MedicineService, useValue: { searchMedicines: vi.fn().mockReturnValue(of({ success: true, data: [] })) } },
         { provide: PrescriptionService, useValue: { getTemplates: vi.fn().mockReturnValue(of({ success: true, data: [] })), createPrescription: vi.fn().mockReturnValue(of({ success: true, data: { id: 'pr1' } })), updatePrescription: vi.fn().mockReturnValue(of({ success: true, data: { id: 'pr1' } })), getByAppointment: vi.fn().mockReturnValue(of({ success: false })) } },
+        { provide: ChangeDetectorRef, useValue: { markForCheck: vi.fn(), detach: vi.fn(), detectChanges: vi.fn(), checkNoChanges: vi.fn(), reattach: vi.fn() } },
       ],
     });
-    fixture = TestBed.createComponent(ConsultationWorkspace);
-    component = fixture.componentInstance;
+    component = TestBed.runInInjectionContext(() => new ConsultationWorkspace());
   });
 
   it('should create with initial state', () => {

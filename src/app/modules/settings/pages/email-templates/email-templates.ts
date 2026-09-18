@@ -81,8 +81,8 @@ import { ToastService } from '../../../../shared/components/toast/toast.service'
             </div>
             <div class="p-6 space-y-4">
               <div>
-                <label class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Template Type</label>
-                <select [(ngModel)]="form.type" [disabled]="!!editingTemplate" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface">
+                <label for="email-tmpl-type" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Template Type</label>
+                <select id="email-tmpl-type" [(ngModel)]="form.type" [disabled]="!!editingTemplate" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-surface">
                   <option value="">Select type</option>
                   @for (t of templateTypes; track t.value) {
                     <option [value]="t.value">{{ t.label }}</option>
@@ -90,16 +90,16 @@ import { ToastService } from '../../../../shared/components/toast/toast.service'
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Subject</label>
-                <input type="text" [(ngModel)]="form.subject" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Email subject line" />
+                <label for="email-tmpl-subject" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Subject</label>
+                <input id="email-tmpl-subject" type="text" [(ngModel)]="form.subject" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="Email subject line" />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">From Email (optional)</label>
-                <input type="email" [(ngModel)]="form.fromEmail" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="noreply@cliniva.com" />
+                <label for="email-tmpl-from" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">From Email (optional)</label>
+                <input id="email-tmpl-from" type="email" [(ngModel)]="form.fromEmail" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" placeholder="noreply@cliniva.com" />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Body</label>
-                <textarea [(ngModel)]="form.body" rows="6" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y font-mono" placeholder="Email body. Use %s for dynamic values."></textarea>
+                <label for="email-tmpl-body" class="block text-xs font-semibold text-outline uppercase tracking-wider mb-1">Body</label>
+                <textarea id="email-tmpl-body" [(ngModel)]="form.body" rows="6" class="w-full px-3 py-2 border border-outline-variant rounded-lg text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y font-mono" placeholder="Email body. Use %s for dynamic values."></textarea>
                 <p class="text-xs text-outline mt-1">Use <code class="bg-surface-container-high px-1 rounded">%s</code> as placeholder for dynamic values (OTP, names, dates, amounts)</p>
               </div>
             </div>

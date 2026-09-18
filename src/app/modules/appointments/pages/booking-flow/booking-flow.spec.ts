@@ -4,7 +4,7 @@ import { DoctorService } from '../../../../core/services/doctor.service';
 import { PatientService } from '../../../../core/services/patient.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { FormBuilder } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse } from '../../../../core/models/common.model';
@@ -26,6 +26,7 @@ describe('BookingFlow', () => {
         { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPatientPaged)), ...(overrides?.['patientService'] as object || {}) } },
         { provide: AppointmentService, useValue: { createAppointment: vi.fn().mockReturnValue(of({ success: true, data: {}, message: 'ok', timestamp: '', requestId: 'r1' })), ...(overrides?.['appointmentService'] as object || {}) } },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: vi.fn().mockReturnValue(null) }, queryParamMap: { get: vi.fn().mockReturnValue(null) } }, paramMap: of({ get: () => null }), queryParams: of({}), params: of({}) } },
       ],
     });
     return TestBed.runInInjectionContext(() => new BookingFlow());

@@ -123,15 +123,15 @@
 @if (showForm) {
   <app-package-form
     [package]="editingPackage"
-    (close)="closeForm()"
+    (closed)="closeForm()"
     (saved)="onSaved()"
   />
 }
 
 <!-- Booking Modal -->
 @if (selectedPackage) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="closeBooking()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="closeBooking()" (keydown.escape)="closeBooking()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-on-surface">Book {{ selectedPackage.packageName }}</h3>
         <button (click)="closeBooking()" class="text-outline hover:text-on-surface">
@@ -146,20 +146,20 @@
       </div>
       <div class="space-y-3 mb-4">
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1">Patient Name *</label>
-          <input type="text" [(ngModel)]="bookingForm.patientName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Full name" />
+          <label for="pkg-booking-name" class="block text-sm font-medium text-on-surface mb-1">Patient Name *</label>
+          <input id="pkg-booking-name" type="text" [(ngModel)]="bookingForm.patientName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Full name" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1">Email *</label>
-          <input type="email" [(ngModel)]="bookingForm.email" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="email@example.com" />
+          <label for="pkg-booking-email" class="block text-sm font-medium text-on-surface mb-1">Email *</label>
+          <input id="pkg-booking-email" type="email" [(ngModel)]="bookingForm.email" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="email@example.com" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1">Phone</label>
-          <input type="tel" [(ngModel)]="bookingForm.phone" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Phone number" />
+          <label for="pkg-booking-phone" class="block text-sm font-medium text-on-surface mb-1">Phone</label>
+          <input id="pkg-booking-phone" type="tel" [(ngModel)]="bookingForm.phone" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Phone number" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-on-surface mb-1">Preferred Date</label>
-          <input type="date" [(ngModel)]="bookingForm.bookingDate" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+          <label for="pkg-booking-date" class="block text-sm font-medium text-on-surface mb-1">Preferred Date</label>
+          <input id="pkg-booking-date" type="date" [(ngModel)]="bookingForm.bookingDate" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
         </div>
       </div>
       @if (bookingError) {

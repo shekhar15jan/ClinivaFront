@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ClinicSettings } from '../../../../core/models/setting.model';
 import { FormsModule } from '@angular/forms';
@@ -157,10 +157,8 @@ import { FormsModule } from '@angular/forms';
   imports: [FormsModule],
 })
 export class ClinicSettingsPage {
-  constructor(
-    public router: Router,
-    public activatedRoute: ActivatedRoute,
-  ) {}
+  public router = inject(Router);
+  public activatedRoute = inject(ActivatedRoute);
   settings: ClinicSettings = {
     clinicName: 'Cliniva Hospital',
     address: '123 Healthcare Avenue, Medical District',

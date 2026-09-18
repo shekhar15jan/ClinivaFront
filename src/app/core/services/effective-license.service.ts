@@ -92,7 +92,7 @@ export class EffectiveLicenseService {
 
   loadLicense(): Observable<EffectiveLicense> {
     return this.http
-      .get<ApiResponse<EffectiveLicense>>(`${this.apiUrl}/hms/internal/license/effective`)
+      .get<ApiResponse<EffectiveLicense>>(`${this.apiUrl}/hms/license/effective`)
       .pipe(
         map((res) => res.data),
         tap((license) => this.license.set(license)),
@@ -102,7 +102,7 @@ export class EffectiveLicenseService {
   refreshUsage(resourceCode: string): Observable<ResourceConstraint> {
     return this.http
       .get<ApiResponse<ResourceConstraint>>(
-        `${this.apiUrl}/hms/internal/license/usage/${resourceCode}`,
+        `${this.apiUrl}/hms/license/usage/${resourceCode}`,
       )
       .pipe(
         map((res) => res.data),

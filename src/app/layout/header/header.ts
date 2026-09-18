@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject, OnInit, OnDestroy, ElementRef, HostListener } from '@angular/core';
+import { Component, EventEmitter, Output, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { NotificationService } from '../../core/services/notification.service';
 import { Notification } from '../../core/models/notification.model';
 import { Subject, interval, takeUntil, startWith, switchMap } from 'rxjs';
@@ -25,7 +25,7 @@ export class Header implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe({
       next: (res) => this.unreadCount = res.data?.count ?? 0,
-      error: () => {}
+      error: (err) => console.error('Failed to load unread notification count', err)
     });
   }
 
@@ -54,7 +54,7 @@ export class Header implements OnInit, OnDestroy {
   loadNotifications(): void {
     this.notificationService.getNotifications().subscribe({
       next: (res) => this.notifications = res.data ?? [],
-      error: () => {}
+      error: (err) => console.error('Failed to load notifications', err)
     });
   }
 

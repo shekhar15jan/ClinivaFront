@@ -109,7 +109,7 @@
     <!-- Mobile Cards -->
     <div class="md:hidden space-y-3">
       @for (p of filteredPayments; track p.id) {
-        <div class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-sm" (click)="openDetail(p)">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-sm" (click)="openDetail(p)" (keydown.enter)="openDetail(p)" role="button" tabindex="0">
           <div class="flex items-center justify-between mb-3">
             <span class="text-sm font-mono text-on-surface-variant">{{ p.billId.substring(0, 8) }}...</span>
             <app-status-badge [status]="p.paymentStatus"></app-status-badge>
@@ -136,8 +136,8 @@
 
 <!-- Payment Detail Modal -->
 @if (selectedPayment) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" (keydown.escape)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
         <h3 class="text-base font-bold text-on-surface">Payment Details</h3>
         <button (click)="closeDetail()" class="text-outline hover:text-on-surface">
@@ -183,8 +183,8 @@
 
 <!-- UPI QR Modal -->
 @if (showQrModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeQrModal()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeQrModal()" (keydown.escape)="closeQrModal()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
         <h3 class="text-base font-bold text-on-surface">Generate UPI QR Code</h3>
         <button (click)="closeQrModal()" class="text-outline hover:text-on-surface">
@@ -193,9 +193,9 @@
       </div>
       <div class="p-6">
         <div class="mb-4">
-          <label class="block text-sm font-medium text-on-surface mb-1">Bill ID</label>
+          <label for="payment-qr-bill-id" class="block text-sm font-medium text-on-surface mb-1">Bill ID</label>
           <div class="flex gap-2">
-            <input type="text" [(ngModel)]="qrBillId" placeholder="Enter bill ID..." class="flex-1 border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <input id="payment-qr-bill-id" type="text" [(ngModel)]="qrBillId" placeholder="Enter bill ID..." class="flex-1 border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
             <button (click)="generateQr()" [disabled]="qrLoading" class="px-4 py-2 bg-medical-blue text-white text-sm font-medium rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-1">
               @if (qrLoading) {
                 <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>

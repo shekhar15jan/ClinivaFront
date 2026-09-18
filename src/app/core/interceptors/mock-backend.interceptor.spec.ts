@@ -78,12 +78,12 @@ describe('MockBackendInterceptor', () => {
 
     it('should return doctors with available slots', async () => {
       const res = await firstValueFrom(
-        http.get<{ success: boolean; data: { availableSlots: string[] }[] }>(
+        http.get<{ success: boolean; data: { availability: unknown[] }[] }>(
           '/api/v1/hms/doctors/with-slots'
         )
       );
       expect(res.success).toBe(true);
-      expect(res.data[0].availableSlots).toBeDefined();
+      expect(res.data[0].availability).toBeDefined();
     });
   });
 

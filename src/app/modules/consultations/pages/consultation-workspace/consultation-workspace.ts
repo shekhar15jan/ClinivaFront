@@ -9,7 +9,8 @@ import { MedicineService } from '../../../../core/services/medicine.service';
 import { PrescriptionService } from '../../../../core/services/prescription.service';
 import { Medicine } from '../../../../core/models/medicine.model';
 import { Appointment } from '../../../../core/models/appointment.model';
-import { PrescriptionTemplate } from '../../../../core/models/prescription.model';
+import { PrescriptionTemplate, Prescription, PrescriptionMedicine } from '../../../../core/models/prescription.model';
+import { Consultation } from '../../../../core/models/consultation.model';
 import { ConsultationStore } from '../../store/consultation.store';
 import { DatePipe } from '@angular/common';
 
@@ -40,8 +41,8 @@ export class ConsultationWorkspace implements OnInit {
   existingPrescriptionId: string | null = null;
   loadingContext = false;
 
-  medicineSuggestions: Map<number, Medicine[]> = new Map();
-  medicineSearchTerms: Map<number, string> = new Map();
+  medicineSuggestions = new Map<number, Medicine[]>();
+  medicineSearchTerms = new Map<number, string>();
 
   prescriptionTemplates: PrescriptionTemplate[] = [];
   showTemplateDropdown = false;
@@ -89,6 +90,7 @@ export class ConsultationWorkspace implements OnInit {
         this.cdr.markForCheck();
       },
       error: (err) => {
+        console.error('Failed to load appointment', err);
         this.error = 'Failed to load appointment';
         this.loadingContext = false;
         this.cdr.markForCheck();
@@ -129,7 +131,7 @@ export class ConsultationWorkspace implements OnInit {
     });
   }
 
-  private populateForm(consultation: any): void {
+  private populateForm(consultation: Consultation): void {
     const notesGroup = this.consultationForm.get('notes') as FormGroup;
     notesGroup.patchValue({
       chiefComplaint: consultation.chiefComplaints || '',
@@ -145,14 +147,14 @@ export class ConsultationWorkspace implements OnInit {
     }
   }
 
-  private populatePrescription(prescription: any): void {
+  private populatePrescription(prescription: Prescription): void {
     while (this.medicines.length) {
       this.medicines.removeAt(0);
     }
     this.medicineSuggestions.clear();
     this.medicineSearchTerms.clear();
     if (prescription.medicines && prescription.medicines.length > 0) {
-      prescription.medicines.forEach((med: any) => {
+      prescription.medicines.forEach((med: PrescriptionMedicine) => {
         const group = this.fb.group({
           name: [med.medicineName, Validators.required],
           instructions: [med.instructions || ''],
@@ -390,8 +392,8 @@ export class ConsultationWorkspace implements OnInit {
     });
   }
 
-  private savePrescription(consultationId: string, formVal: any): void {
-    const medicines = (formVal.medicines || []).map((m: any) => ({
+  private savePrescription(consultationId: string, formVal: ConsultationWorkspace['consultationForm']['value']): void {
+    const medicines = (formVal.medicines || []).map((m: { name: string; frequency: string; duration: number; instructions?: string }) => ({
       medicineName: m.name,
       frequency: m.frequency,
       duration: m.duration,

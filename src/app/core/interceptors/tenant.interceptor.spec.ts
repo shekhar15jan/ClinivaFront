@@ -7,6 +7,10 @@ describe('TenantInterceptor', () => {
   let httpMock: HttpTestingController;
   let http: HttpClient;
 
+  function setPath(pathname: string): void {
+    window.history.pushState({}, '', pathname);
+  }
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
@@ -20,6 +24,7 @@ describe('TenantInterceptor', () => {
 
   afterEach(() => {
     httpMock.verify();
+    setPath('/');
   });
 
   it('should be provided as interceptor', () => {
@@ -31,10 +36,7 @@ describe('TenantInterceptor', () => {
   });
 
   it('should add X-Tenant-Code header when hospitalCode is in URL', () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/test-hospital/dashboard' },
-      writable: true,
-    });
+    setPath('/test-hospital/dashboard');
 
     http.get('/api/test').subscribe();
 
@@ -46,10 +48,7 @@ describe('TenantInterceptor', () => {
   });
 
   it('should not add header for auth routes like login', () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/login' },
-      writable: true,
-    });
+    setPath('/login');
 
     http.get('/api/auth/login').subscribe();
 
@@ -60,10 +59,7 @@ describe('TenantInterceptor', () => {
   });
 
   it('should skip header when no hospitalCode in path', () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/' },
-      writable: true,
-    });
+    setPath('/');
 
     http.get('/api/test').subscribe();
 
@@ -74,10 +70,7 @@ describe('TenantInterceptor', () => {
   });
 
   it('should pass through POST requests with header', () => {
-    Object.defineProperty(window, 'location', {
-      value: { pathname: '/my-hospital/patients' },
-      writable: true,
-    });
+    setPath('/my-hospital/patients');
 
     http.post('/api/data', { foo: 'bar' }).subscribe();
 

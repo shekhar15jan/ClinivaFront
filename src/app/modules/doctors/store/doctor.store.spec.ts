@@ -19,9 +19,16 @@ describe('DoctorStore', () => {
     isActive: true,
   };
 
-  const mockApiResponse: ApiResponse<Doctor[]> = {
+  const mockPagedResponse: ApiResponse<{
+    content: Doctor[];
+    pageNumber: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    last: boolean;
+  }> = {
     success: true,
-    data: [mockDoctor],
+    data: { content: [mockDoctor], pageNumber: 0, pageSize: 20, totalElements: 1, totalPages: 1, last: true },
     message: 'ok',
     timestamp: '',
     requestId: 'r1',
@@ -29,7 +36,7 @@ describe('DoctorStore', () => {
 
   beforeEach(() => {
     mockDoctorService = {
-      getDoctors: vi.fn().mockReturnValue(of(mockApiResponse)),
+      getDoctors: vi.fn().mockReturnValue(of(mockPagedResponse)),
       getDoctorById: vi.fn().mockReturnValue(of({ success: true, data: mockDoctor, message: 'ok', timestamp: '', requestId: 'r1' })),
       createDoctor: vi.fn().mockReturnValue(of({ success: true, data: mockDoctor, message: 'created', timestamp: '', requestId: 'r1' })),
       updateDoctor: vi.fn().mockReturnValue(of({ success: true, data: mockDoctor, message: 'updated', timestamp: '', requestId: 'r1' })),
@@ -135,7 +142,7 @@ describe('DoctorStore', () => {
 
   it('should compute activeDoctors filtering inactive', fakeAsync(() => {
     const inactiveDoctor: Doctor = { ...mockDoctor, id: 'd2', isActive: false };
-    mockDoctorService.getDoctors = vi.fn().mockReturnValue(of({ ...mockApiResponse, data: [mockDoctor, inactiveDoctor] }));
+    mockDoctorService.getDoctors = vi.fn().mockReturnValue(of({ ...mockPagedResponse, data: { content: [mockDoctor, inactiveDoctor], pageNumber: 0, pageSize: 20, totalElements: 2, totalPages: 1, last: true } }));
     store.loadDoctors();
     tick();
     expect(store.activeDoctors()).toEqual([mockDoctor]);

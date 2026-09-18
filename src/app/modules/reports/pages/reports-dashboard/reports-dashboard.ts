@@ -66,7 +66,6 @@ export class ReportsDashboard implements OnInit {
     const rows: string[][] = [];
     const s = this.store;
     const dash = s.dashboardStats();
-    const rev = s.revenueReport();
     const bills = s.billsStatus();
 
     if (dash) {

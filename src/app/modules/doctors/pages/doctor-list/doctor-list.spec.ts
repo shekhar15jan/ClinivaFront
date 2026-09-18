@@ -12,8 +12,19 @@ describe('DoctorList', () => {
     qualification: 'MD', consultationFeeInPaisa: 50000, isActive: true, email: 'anita@test.com',
   };
 
-  const mockResponse: ApiResponse<Doctor[]> = {
-    success: true, data: [mockDoctor], message: 'ok', timestamp: '', requestId: 'r1',
+  const mockResponse: ApiResponse<{
+    content: Doctor[];
+    pageNumber: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    last: boolean;
+  }> = {
+    success: true,
+    data: { content: [mockDoctor], pageNumber: 0, pageSize: 20, totalElements: 1, totalPages: 1, last: true },
+    message: 'ok',
+    timestamp: '',
+    requestId: 'r1',
   };
 
   function createComponent(overrides?: Partial<DoctorService>) {

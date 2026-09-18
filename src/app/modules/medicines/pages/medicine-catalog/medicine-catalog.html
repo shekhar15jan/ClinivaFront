@@ -152,8 +152,8 @@
 
 <!-- Add/Edit Modal -->
 @if (showFormModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeFormModal()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-outline-variant" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeFormModal()" (keydown.escape)="closeFormModal()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-outline-variant" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
         <h3 class="text-base font-bold text-on-surface">{{ editingMedicine ? 'Edit' : 'Add New' }} Medicine</h3>
         <button (click)="closeFormModal()" class="text-on-surface-variant hover:text-on-surface">
@@ -163,34 +163,34 @@
       <form [formGroup]="medicineForm" (ngSubmit)="submitForm()" class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1">Medicine Name *</label>
-            <input type="text" formControlName="medicineName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <label for="med-form-name" class="block text-sm font-medium text-on-surface mb-1">Medicine Name *</label>
+            <input id="med-form-name" type="text" formControlName="medicineName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1">Generic Name *</label>
-            <input type="text" formControlName="genericName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <label for="med-form-generic-name" class="block text-sm font-medium text-on-surface mb-1">Generic Name *</label>
+            <input id="med-form-generic-name" type="text" formControlName="genericName" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1">Category *</label>
-            <select formControlName="category" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue bg-white">
+            <label for="med-form-category" class="block text-sm font-medium text-on-surface mb-1">Category *</label>
+            <select id="med-form-category" formControlName="category" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue bg-white">
               <option>Analgesic</option><option>Antibiotic</option><option>Antihistamine</option><option>Antacid</option><option>Vitamin</option><option>Antipyretic</option><option>Antidiabetic</option><option>Antihypertensive</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1">Manufacturer *</label>
-            <input type="text" formControlName="manufacturer" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <label for="med-form-manufacturer" class="block text-sm font-medium text-on-surface mb-1">Manufacturer *</label>
+            <input id="med-form-manufacturer" type="text" formControlName="manufacturer" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1">Unit *</label>
-            <input type="text" formControlName="unit" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <label for="med-form-unit" class="block text-sm font-medium text-on-surface mb-1">Unit *</label>
+            <input id="med-form-unit" type="text" formControlName="unit" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-on-surface mb-1">Price (₹) *</label>
-            <input type="number" formControlName="price" step="0.01" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
+            <label for="med-form-price" class="block text-sm font-medium text-on-surface mb-1">Price (₹) *</label>
+            <input id="med-form-price" type="number" formControlName="price" step="0.01" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
         </div>
         @if (formError) {

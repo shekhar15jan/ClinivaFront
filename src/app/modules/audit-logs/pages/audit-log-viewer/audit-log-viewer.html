@@ -11,8 +11,8 @@
   <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4">
     <div class="flex flex-wrap gap-3 items-end">
       <div>
-        <label class="block text-xs font-medium text-outline mb-1">Entity</label>
-        <select [(ngModel)]="filterEntity" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white">
+        <label for="audit-filter-entity" class="block text-xs font-medium text-outline mb-1">Entity</label>
+        <select id="audit-filter-entity" [(ngModel)]="filterEntity" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white">
           <option value="">All Entities</option>
           <option value="Patient">Patient</option>
           <option value="Doctor">Doctor</option>
@@ -27,8 +27,8 @@
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-outline mb-1">Action</label>
-        <select [(ngModel)]="filterAction" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white">
+        <label for="audit-filter-action" class="block text-xs font-medium text-outline mb-1">Action</label>
+        <select id="audit-filter-action" [(ngModel)]="filterAction" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 bg-white">
           <option value="">All Actions</option>
           <option value="CREATE">Create</option>
           <option value="UPDATE">Update</option>
@@ -39,12 +39,12 @@
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-outline mb-1">From</label>
-        <input type="date" [(ngModel)]="filterDateFrom" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20" />
+        <label for="audit-filter-date-from" class="block text-xs font-medium text-outline mb-1">From</label>
+        <input id="audit-filter-date-from" type="date" [(ngModel)]="filterDateFrom" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20" />
       </div>
       <div>
-        <label class="block text-xs font-medium text-outline mb-1">To</label>
-        <input type="date" [(ngModel)]="filterDateTo" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20" />
+        <label for="audit-filter-date-to" class="block text-xs font-medium text-outline mb-1">To</label>
+        <input id="audit-filter-date-to" type="date" [(ngModel)]="filterDateTo" (change)="applyFilters()" class="px-3 py-2 border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20" />
       </div>
       <button (click)="clearFilters()" class="px-3 py-2 text-sm text-on-surface-variant hover:text-on-surface border border-outline-variant rounded-lg hover:bg-surface-container-high">
         Clear
@@ -113,8 +113,8 @@
 
 <!-- Detail Modal -->
 @if (selectedLog) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" (keydown.escape)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
         <h3 class="text-base font-bold text-on-surface">Audit Log Detail</h3>
         <button (click)="closeDetail()" class="text-outline hover:text-on-surface">

@@ -52,7 +52,7 @@ export class AuditLogViewerComponent implements OnInit {
           this.totalElements = res.totalElements || 0;
           this.isLoading = false;
         },
-        error: (err: any) => {
+        error: (err) => {
           this.error = err?.message || 'Failed to load audit logs';
           this.isLoading = false;
         },

@@ -823,7 +823,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
     }
 
     // ─── Internal License ───────────────────────────────────────────
-    if (url.includes('/hms/internal/license/effective') && method === 'GET') {
+    if (url.includes('/hms/license/effective') && method === 'GET') {
       return of(new HttpResponse({ status: 200, body: { success: true, data: {
         tenantId: 't1',
         planName: 'Clinic Standard',
@@ -859,7 +859,7 @@ export class MockBackendInterceptor implements HttpInterceptor {
       } } })).pipe(delay(200));
     }
 
-    // GET /hms/internal/license/usage/{resourceCode}
+    // GET /hms/license/usage/{resourceCode}
     if (url.match(/\/hms\/internal\/license\/usage\/\w+/) && method === 'GET') {
       const resourceCode = url.split('/').pop();
       const usageMap: Record<string, { resourceName: string; limit: number; currentUsage: number; isUnlimited: boolean }> = {

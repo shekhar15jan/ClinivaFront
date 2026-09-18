@@ -185,7 +185,7 @@ export class MedicineCatalog implements OnInit {
     if (!this.deletingMedicine) return;
     this.medicineService.deactivate(this.deletingMedicine.id).subscribe({
       next: () => this.loadMedicines(),
-      error: () => {},
+      error: (err) => console.error('Failed to deactivate medicine', err),
     });
   }
 

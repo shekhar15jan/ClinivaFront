@@ -88,7 +88,7 @@
       <!-- Mobile -->
       <div class="md:hidden divide-y divide-outline-variant">
         @for (msg of filteredMessages; track msg.id) {
-          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface cursor-pointer" (click)="selectMessage(msg)">
+          <div class="px-4 py-3.5 flex flex-col gap-3 bg-surface cursor-pointer" (click)="selectMessage(msg)" (keydown.enter)="selectMessage(msg)" role="button" tabindex="0">
             <div class="flex items-center justify-between">
               <span class="text-sm font-semibold text-on-surface">{{ msg.name }}</span>
               <app-status-badge [status]="msg.status"></app-status-badge>
@@ -117,8 +117,8 @@
 
 <!-- Detail + Reply Modal -->
 @if (selectedMessage) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeDetail()" (keydown.escape)="closeDetail()" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
         <h3 class="text-base font-bold text-on-surface">Message from {{ selectedMessage.name }}</h3>
         <button (click)="closeDetail()" class="text-outline hover:text-on-surface">
@@ -156,8 +156,8 @@
         }
         @if (selectedMessage.status !== 'REPLIED') {
           <div>
-            <label class="text-sm font-medium text-on-surface block mb-1">Send Reply</label>
-            <textarea [(ngModel)]="replyText" rows="4" class="w-full border border-outline-variant rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Type your reply..."></textarea>
+            <label for="contact-reply-text" class="text-sm font-medium text-on-surface block mb-1">Send Reply</label>
+            <textarea id="contact-reply-text" [(ngModel)]="replyText" rows="4" class="w-full border border-outline-variant rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" placeholder="Type your reply..."></textarea>
           </div>
         }
         <div class="flex items-center justify-between text-xs text-outline">

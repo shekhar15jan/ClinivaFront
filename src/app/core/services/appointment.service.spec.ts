@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AppointmentService } from './appointment.service';
 import { Appointment, CreateAppointmentRequest, UpdateAppointmentRequest } from '../models/appointment.model';
-import { ApiResponse, PagedResponse } from '../models/common.model';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
 describe('AppointmentService', () => {
@@ -29,21 +29,24 @@ describe('AppointmentService', () => {
 
   describe('getAppointments', () => {
     it('should GET with default pagination', () => {
-      const mockResponse: ApiResponse<PagedResponse<Appointment>> = {
+      const mockResponse: ApiResponse<RawPagedResponse<Appointment>> = {
         success: true,
-        data: { content: [], pageNumber: 0, pageSize: 50, totalElements: 0, totalPages: 0, last: true },
+        data: { content: [], pageNumber: 0, size: 50, totalElements: 0, totalPages: 0, last: true },
         message: '',
         timestamp: '',
         requestId: '',
       };
 
+      let captured: ApiResponse<PagedResponse<Appointment>> | undefined;
       service.getAppointments().subscribe((res) => {
-        expect(res.data.pageSize).toBe(50);
+        captured = res;
       });
 
       const req = httpMock.expectOne(`${apiUrl}?page=0&size=50`);
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
+
+      expect(captured?.data.pageSize).toBe(50);
     });
 
     it('should include status and doctorId filters', () => {

@@ -11,7 +11,7 @@ export class LoadingInterceptor implements HttpInterceptor {
   private activeRequests = 0;
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    if (req.url.includes('/internal/license') || req.url.includes('/auth/')) {
+    if (req.url.includes('/hms/license') || req.url.includes('/auth/')) {
       return next.handle(req);
     }
 

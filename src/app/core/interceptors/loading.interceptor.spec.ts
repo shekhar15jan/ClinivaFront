@@ -43,9 +43,9 @@ describe('LoadingInterceptor', () => {
   });
 
   it('should not show loading for /internal/license requests', () => {
-    http.get('/api/v1/hms/internal/license').subscribe();
+    http.get('/api/v1/hms/license').subscribe();
 
-    const req = httpMock.expectOne('/api/v1/hms/internal/license');
+    const req = httpMock.expectOne('/api/v1/hms/license');
     expect(layoutStore.setLoading).not.toHaveBeenCalled();
 
     req.flush({});
