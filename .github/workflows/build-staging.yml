@@ -193,6 +193,9 @@ jobs:
           done
           echo "::warning::Staging not ready after wait"
 
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Run Playwright against staging
         env:
           BASE_URL: https://code-at-cloud.tailef5a29.ts.net/cliniva
