@@ -197,7 +197,7 @@ jobs:
         env:
           BASE_URL: https://code-at-cloud.tailef5a29.ts.net/cliniva
           SKIP_WEBSERVER: true
-        run: npx playwright test
+        run: npx playwright test --config=playwright.smoke.config.ts
 
       - name: Upload staging E2E report
         if: always()
