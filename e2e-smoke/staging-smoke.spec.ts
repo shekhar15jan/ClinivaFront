@@ -13,14 +13,14 @@ test.describe('Staging smoke', () => {
       if (m.type() === 'error' && /Content Security Policy|Refused to/.test(m.text())) problems.push(m.text());
     });
 
-    await page.goto('/login');
+    await page.goto('login');
     await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 20000 });
     await expect(page.locator('button[type="submit"]').first()).toBeVisible();
     expect(problems).toEqual([]);
   });
 
   test('a clinic address that does not exist ends on a sign-in screen, not a blank page', async ({ page }) => {
-    await page.goto('/no-such-clinic-zz/dashboard');
+    await page.goto('no-such-clinic-zz/dashboard');
     await expect(page.locator('input[type="email"], button:has-text("Send OTP")').first()).toBeVisible({ timeout: 20000 });
   });
 });
