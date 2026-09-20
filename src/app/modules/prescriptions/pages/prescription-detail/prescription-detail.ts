@@ -9,7 +9,7 @@ import { DatePipe } from '@angular/common';
   template: `
     <div class="p-6">
       <div class="flex items-center gap-2 mb-6 text-sm">
-        <a routerLink="/prescriptions" class="text-[#64748B] hover:text-[#0052CC]">Prescriptions</a>
+        <a routerLink=".." class="text-[#64748B] hover:text-[#0052CC]">Prescriptions</a>
         <span class="material-symbols-outlined text-sm text-[#94A3B8]">chevron_right</span>
         <span class="text-[#1E293B] font-medium">Rx #{{ id?.substring(0, 8) }}</span>
       </div>

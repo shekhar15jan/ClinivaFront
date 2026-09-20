@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ViewChildren, QueryList, ElementRef } from '@angular/core';
+import { Component, OnInit, inject, ViewChildren, QueryList, ElementRef, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
@@ -17,10 +17,26 @@ export class LoginOtp implements OnInit {
   @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
   digits: string[] = ['', '', '', '', '', ''];
-  isLoading = false;
-  errorMessage = '';
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _isLoading = signal<boolean>(false);
+  get isLoading(): boolean { return this._isLoading(); }
+  set isLoading(value: boolean) { this._isLoading.set(value); }
+
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _errorMessage = signal<string>('');
+  get errorMessage(): string { return this._errorMessage(); }
+  set errorMessage(value: string) { this._errorMessage.set(value); }
+
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _passwordChangeRequired = signal<boolean>(false);
+  get passwordChangeRequired(): boolean { return this._passwordChangeRequired(); }
+  set passwordChangeRequired(value: boolean) { this._passwordChangeRequired.set(value); }
   email = '';
   hospitalCode = '';
+
+  goToChangePassword(): void {
+    this.router.navigate([`/${this.hospitalCode}/change-password`]);
+  }
 
   ngOnInit(): void {
     this.email = this.authService.pendingEmail || '';
@@ -73,6 +89,7 @@ export class LoginOtp implements OnInit {
         },
         error: (err) => {
           this.errorMessage = err.error?.message || 'Invalid OTP. Please try again.';
+          this.passwordChangeRequired = /password change required/i.test(this.errorMessage);
           this.isLoading = false;
         },
       });

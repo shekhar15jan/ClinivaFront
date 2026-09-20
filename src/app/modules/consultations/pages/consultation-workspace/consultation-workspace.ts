@@ -12,6 +12,7 @@ import { Appointment } from '../../../../core/models/appointment.model';
 import { PrescriptionTemplate, Prescription, PrescriptionMedicine } from '../../../../core/models/prescription.model';
 import { Consultation } from '../../../../core/models/consultation.model';
 import { ConsultationStore } from '../../store/consultation.store';
+import { hospitalCodeFrom } from '../../../../core/utils/route.util';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -228,7 +229,7 @@ export class ConsultationWorkspace implements OnInit {
     }
     this.medicineSuggestions.clear();
     this.medicineSearchTerms.clear();
-    this.router.navigate(['/consultations'], { relativeTo: this.route.root });
+    this.router.navigate(['/', hospitalCodeFrom(this.route), 'consultations']);
   }
 
   get medicines(): FormArray {

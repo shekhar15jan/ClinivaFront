@@ -1,7 +1,7 @@
 <div class="max-w-4xl mx-auto space-y-6 relative">
   <div class="flex items-center gap-4">
     <button
-      routerLink="/appointments"
+      routerLink=".."
       class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors"
     >
       <span class="material-symbols-outlined">arrow_back</span>
@@ -168,7 +168,7 @@
                     }"
                     class="rounded-md py-2 text-center text-sm font-medium cursor-pointer transition-colors"
                   >
-                    {{ slot }}
+                    {{ hm(slot) }}
                   </div>
                 }
                 @if (selectedDoctorSlots.length === 0) {
@@ -271,22 +271,16 @@
               <p class="text-xs text-gray-500 uppercase font-medium">Date & Time</p>
               <p class="font-medium text-gray-900">
                 {{ bookingForm.get('appointmentDate')?.value }} at
-                {{ bookingForm.get('appointmentTime')?.value }}
+                {{ hm(bookingForm.get('appointmentTime')?.value) }}
               </p>
             </div>
             <div class="border-t border-gray-200 pt-4">
               <p class="text-xs text-gray-500 uppercase font-medium">Doctor</p>
-              <p class="font-medium text-gray-900">ID: {{ bookingForm.get('doctorId')?.value }}</p>
+              <p id="confirm-doctor" class="font-medium text-gray-900">{{ selectedDoctorLabel }}</p>
             </div>
             <div class="border-t border-gray-200 pt-4">
               <p class="text-xs text-gray-500 uppercase font-medium">Patient</p>
-              <p class="font-medium text-gray-900">
-                {{
-                  patientForm.get('patientMode')?.value === 'existing'
-                    ? 'Existing Patient ID: ' + patientForm.get('patientId')?.value
-                    : 'New Patient: ' + patientForm.get('fullName')?.value
-                }}
-              </p>
+              <p id="confirm-patient" class="font-medium text-gray-900">{{ selectedPatientLabel }}</p>
             </div>
           </div>
         </div>
@@ -309,7 +303,7 @@
 
       <div class="flex gap-4">
         <button
-          routerLink="/appointments"
+          routerLink=".."
           class="px-6 py-2.5 border border-transparent bg-transparent text-gray-600 text-sm font-medium rounded-md hover:text-gray-900 hover:bg-gray-200 transition-colors"
         >
           Cancel

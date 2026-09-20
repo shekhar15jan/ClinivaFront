@@ -4,9 +4,20 @@
     <p class="text-body-md text-secondary">Enter your professional email to receive a secure access code.</p>
   </header>
 
+  @if (passwordChanged) {
+    <div id="password-changed" class="bg-primary-container text-primary-on-container px-md py-sm rounded-lg mb-4 text-body-sm" role="status">
+      Password changed. Enter your email to receive a sign-in code.
+    </div>
+  }
+
   @if (errorMessage) {
-    <div class="bg-error-container text-error px-md py-sm rounded-lg mb-4 text-body-sm">
+    <div class="bg-error-container text-error px-md py-sm rounded-lg mb-4 text-body-sm" role="alert">
       {{ errorMessage }}
+      @if (passwordChangeRequired) {
+        <button id="set-new-password" type="button" (click)="goToChangePassword()" class="block mt-xs font-semibold underline">
+          Set a new password
+        </button>
+      }
     </div>
   }
 

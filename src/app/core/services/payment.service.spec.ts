@@ -92,16 +92,41 @@ describe('PaymentService', () => {
   });
 
   describe('getHistory', () => {
-    it('should GET history', () => {
-      const apiResp: ApiResponse<PaymentResponse[]> = { success: true, data: [mockPayment], message: '', timestamp: '', requestId: '' };
+    const page = (data: unknown) => ({ success: true, data, message: '', timestamp: '', requestId: '' });
 
-      service.getHistory().subscribe((res) => {
-        expect(res.data?.length).toBe(1);
-      });
+    it('unwraps the page the backend returns into the list of payments', () => {
+      let rows: PaymentResponse[] | undefined;
+      service.getHistory().subscribe((res) => (rows = res.data));
 
-      const req = httpMock.expectOne(`${baseUrl}/history`);
+      // The real shape: Spring nests the paging totals under "page".
+      const req = httpMock.expectOne((r) => r.url === `${baseUrl}/history`);
       expect(req.request.method).toBe('GET');
-      req.flush(apiResp);
+      expect(req.request.params.get('size')).toBe('200');
+      expect(req.request.params.get('sort')).toBe('createdAt,desc');
+      req.flush(page({ content: [mockPayment], page: { size: 200, number: 0, totalElements: 1, totalPages: 1 } }));
+
+      expect(Array.isArray(rows)).toBe(true);
+      expect(rows).toEqual([mockPayment]);
+    });
+
+    it('treats an empty page as no payments, not an error', () => {
+      let rows: PaymentResponse[] | undefined;
+      service.getHistory(50).subscribe((res) => (rows = res.data));
+
+      const req = httpMock.expectOne((r) => r.url === `${baseUrl}/history`);
+      expect(req.request.params.get('size')).toBe('50');
+      req.flush(page({ content: [] }));
+
+      expect(rows).toEqual([]);
+    });
+
+    it('survives a response with no data at all', () => {
+      let rows: PaymentResponse[] | undefined;
+      service.getHistory().subscribe((res) => (rows = res.data));
+
+      httpMock.expectOne((r) => r.url === `${baseUrl}/history`).flush(page(null));
+
+      expect(rows).toEqual([]);
     });
   });
 });

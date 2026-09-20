@@ -3,7 +3,7 @@ import { LoginEmail } from './login-email';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantContextService } from '../../../core/services/tenant-context.service';
 import { Router, ActivatedRoute } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 function createLoginEmail() {
@@ -121,5 +121,33 @@ describe('LoginEmail', () => {
     component.email = 'admin@cliniva.com';
     component.sendOtp();
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/test-hospital/otp']);
+  });
+
+  describe('forced password change', () => {
+    it('offers to set a new password when the server requires one', () => {
+      const { component, authSpy } = createLoginEmail();
+      authSpy.sendOtp.mockReturnValue(throwError(() => ({
+        error: { message: 'Password change required. Please reset your password before signing in.' },
+      })));
+      component.email = 'sai@clinic.test';
+      component.sendOtp();
+      expect(component.passwordChangeRequired).toBe(true);
+    });
+
+    it('does not offer it for other failures', () => {
+      const { component, authSpy } = createLoginEmail();
+      authSpy.sendOtp.mockReturnValue(throwError(() => ({ error: { message: 'Tenant is suspended. Access denied.' } })));
+      component.email = 'sai@clinic.test';
+      component.sendOtp();
+      expect(component.passwordChangeRequired).toBe(false);
+    });
+
+    it('carries the typed email to the change-password page', () => {
+      const { component, authSpy, routerSpy } = createLoginEmail();
+      component.email = 'sai@clinic.test';
+      component.goToChangePassword();
+      expect(authSpy.pendingEmail).toBe('sai@clinic.test');
+      expect(routerSpy.navigate).toHaveBeenCalledWith(['/test-hospital/change-password']);
+    });
   });
 });

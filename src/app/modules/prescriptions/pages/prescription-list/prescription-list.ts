@@ -53,7 +53,7 @@ import { DatePipe } from '@angular/common';
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-1">
                     <button
-                      [routerLink]="['/prescriptions', rx.id]"
+                      [routerLink]="[rx.id]"
                       class="text-[#64748B] hover:text-[#0052CC] p-1 rounded"
                       title="View"
                     >
@@ -96,7 +96,7 @@ import { DatePipe } from '@angular/common';
               </div>
               <div class="flex items-center gap-2 pt-1">
                 <button
-                  [routerLink]="['/prescriptions', rx.id]"
+                  [routerLink]="[rx.id]"
                   class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-white bg-primary rounded-lg"
                 >
                   <span class="material-symbols-outlined text-sm">visibility</span> View

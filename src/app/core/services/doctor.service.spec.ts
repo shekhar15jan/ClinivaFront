@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { DoctorService } from './doctor.service';
-import { Doctor, DoctorWithSlotsResponse, DoctorAvailability, UpdateAvailabilityRequest } from '../models/doctor.model';
+import { Doctor, DoctorWithSlotsResponse, AvailabilityDto, UpdateAvailabilityRequest } from '../models/doctor.model';
 import { ApiResponse, PagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -120,9 +120,9 @@ describe('DoctorService', () => {
 
   describe('getAvailability', () => {
     it('should GET availability for doctor', () => {
-      const mockResponse: ApiResponse<DoctorAvailability[]> = {
+      const mockResponse: ApiResponse<AvailabilityDto[]> = {
         success: true,
-        data: [{ id: 'da1', doctorId: 'd1', dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00', isActive: true }],
+        data: [{ dayOfWeek: 'MONDAY', startTime: '09:00:00', endTime: '17:00:00' }],
         message: '',
         timestamp: '',
         requestId: '',
@@ -140,14 +140,17 @@ describe('DoctorService', () => {
 
   describe('setAvailability', () => {
     it('should PUT availability for doctor', () => {
+      // The backend reads { availability: [...] }. This used to send { slots: [...] }, which it ignored,
+      // so no doctor's hours were ever saved.
       const availability: UpdateAvailabilityRequest = {
-        slots: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00', isActive: true }],
+        availability: [{ dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00' }],
       };
 
       service.setAvailability('d1', availability).subscribe();
 
       const req = httpMock.expectOne(`${apiUrl}/d1/availability`);
       expect(req.request.method).toBe('PUT');
+      expect(Object.keys(req.request.body)).toEqual(['availability']);
       expect(req.request.body).toEqual(availability);
       req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);
     });

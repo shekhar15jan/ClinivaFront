@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TenantContextService } from '../../../core/services/tenant-context.service';
@@ -17,8 +17,25 @@ export class LoginEmail implements OnInit {
   private route = inject(ActivatedRoute);
 
   email = '';
-  isLoading = false;
-  errorMessage = '';
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _isLoading = signal<boolean>(false);
+  get isLoading(): boolean { return this._isLoading(); }
+  set isLoading(value: boolean) { this._isLoading.set(value); }
+
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _errorMessage = signal<string>('');
+  get errorMessage(): string { return this._errorMessage(); }
+  set errorMessage(value: string) { this._errorMessage.set(value); }
+
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _passwordChangeRequired = signal<boolean>(false);
+  get passwordChangeRequired(): boolean { return this._passwordChangeRequired(); }
+  set passwordChangeRequired(value: boolean) { this._passwordChangeRequired.set(value); }
+
+  // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  private readonly _passwordChanged = signal<boolean>(false);
+  get passwordChanged(): boolean { return this._passwordChanged(); }
+  set passwordChanged(value: boolean) { this._passwordChanged.set(value); }
   hospitalCode = '';
 
   ngOnInit(): void {
@@ -35,6 +52,12 @@ export class LoginEmail implements OnInit {
     if (this.authService.pendingEmail) {
       this.email = this.authService.pendingEmail;
     }
+    this.passwordChanged = this.route.snapshot?.queryParams?.['passwordChanged'] === '1';
+  }
+
+  goToChangePassword(): void {
+    this.authService.pendingEmail = this.email || this.authService.pendingEmail;
+    this.router.navigate([`/${this.hospitalCode}/change-password`]);
   }
 
   sendOtp(): void {
@@ -45,6 +68,7 @@ export class LoginEmail implements OnInit {
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.passwordChangeRequired = false;
 
     this.authService
       .sendOtp({ email: this.email })
@@ -58,6 +82,7 @@ export class LoginEmail implements OnInit {
         },
         error: (err) => {
           this.errorMessage = err.error?.message || 'Failed to send OTP. Please try again.';
+          this.passwordChangeRequired = /password change required/i.test(this.errorMessage);
           this.isLoading = false;
         },
       });

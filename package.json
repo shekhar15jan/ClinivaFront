@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 4201",
+    "e2e:live": "playwright test -c playwright.live.config.ts",
     "build": "ng build",
     "ci": "npm ci --legacy-peer-deps",
     "build:prod": "ng build --configuration production",

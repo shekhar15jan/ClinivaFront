@@ -32,11 +32,7 @@ export interface DoctorAvailability {
   isActive: boolean;
 }
 
+/** What PUT /hms/doctors/{id}/availability takes: the doctor's whole weekly schedule, replaced as one. */
 export interface UpdateAvailabilityRequest {
-  slots: {
-    dayOfWeek: string;
-    startTime: string;
-    endTime: string;
-    isActive: boolean;
-  }[];
+  availability: AvailabilityDto[];
 }

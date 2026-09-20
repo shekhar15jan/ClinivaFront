@@ -14,6 +14,31 @@ import { ToastService } from '../../../../shared/components/toast/toast.service'
 import { DoctorWithSlotsResponse } from '../../../../core/models/doctor.model';
 import { Patient } from '../../../../core/models/patient.model';
 import { NgClass } from '@angular/common';
+import { hospitalCodeFrom } from '../../../../core/utils/route.util';
+
+export interface BookingDate {
+  label: string;
+  day: string;
+  dayName: string;
+  fullDate: string;
+}
+
+/** The next `count` days starting today, in the clinic's local calendar (not UTC, which can be a day off). */
+export function buildDates(today: Date = new Date(), count = 7): BookingDate[] {
+  return Array.from({ length: count }, (_v, i) => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return {
+      label: d.toLocaleDateString('en-US', { month: 'short' }),
+      day: pad(d.getDate()),
+      dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      fullDate: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    };
+  });
+}
+
+/** 09:00:00 -> 09:00 */
+export const hm = (time: string) => (time ?? '').slice(0, 5);
 
 @Component({
   selector: 'app-booking-flow',
@@ -43,12 +68,8 @@ export class BookingFlow implements OnInit {
   bookingForm: FormGroup;
   patientForm: FormGroup;
 
-  // Mock dates for UI
-  dates = [
-    { label: 'Oct', day: '24', dayName: 'Tue', fullDate: '2023-10-24' },
-    { label: 'Oct', day: '25', dayName: 'Wed', fullDate: '2023-10-25' },
-    { label: 'Oct', day: '26', dayName: 'Thu', fullDate: '2023-10-26' },
-  ];
+  // The week ahead, starting today. These were three hard-coded dates in October 2023.
+  dates: BookingDate[] = buildDates();
 
   constructor() {
     this.selectedDate = this.dates[0].fullDate;
@@ -108,6 +129,21 @@ export class BookingFlow implements OnInit {
     });
   }
 
+  hm = hm;
+
+  get selectedDoctorLabel(): string {
+    const doc = this.doctors.find((d) => d.doctor.id === this.bookingForm.get('doctorId')?.value)?.doctor;
+    return doc ? `${doc.fullName} (${doc.specialization})` : '';
+  }
+
+  get selectedPatientLabel(): string {
+    if (this.patientForm.get('patientMode')?.value === 'new') {
+      return `New patient: ${this.patientForm.get('fullName')?.value} (${this.patientForm.get('phone')?.value})`;
+    }
+    const p = this.patients.find((x) => x.id === this.patientForm.get('patientId')?.value);
+    return p ? `${p.fullName} (${p.phone})` : '';
+  }
+
   get selectedDoctorSlots(): string[] {
     const docId = this.bookingForm.get('doctorId')?.value;
     const doc = this.doctors.find((d) => d.doctor.id === docId);
@@ -160,16 +196,39 @@ export class BookingFlow implements OnInit {
   }
 
   confirmBooking() {
-    this.isSubmitting = true;
-    const bookingData = this.bookingForm.value;
+    if (this.isSubmitting) return;
     const patientData = this.patientForm.value;
+    if (patientData.patientMode !== 'new' && !patientData.patientId) {
+      this.toastService.error('Choose a patient first.');
+      return;
+    }
+    this.isSubmitting = true;
 
-    // In a real app we might create the patient first if mode === 'new'
-    // For mock, we'll assume we use existing patient
+    if (patientData.patientMode === 'new') {
+      // Register the patient first. This used to skip that and book the first patient in the list
+      // (or a made-up id when there were none), so the appointment belonged to someone else.
+      this.patientService
+        .createPatient({ fullName: patientData.fullName, phone: patientData.phone, gender: patientData.gender })
+        .subscribe({
+          next: (res) => {
+            if (res.success && res.data?.id) {
+              this.book(res.data.id);
+            } else {
+              this.failBooking(res.message || 'The new patient could not be registered.');
+            }
+          },
+          error: (err) => this.failBooking(err?.error?.message || 'The new patient could not be registered.'),
+        });
+      return;
+    }
+    this.book(patientData.patientId);
+  }
 
+  private book(patientId: string) {
+    const bookingData = this.bookingForm.value;
     this.appointmentService
       .createAppointment({
-        patientId: patientData.patientId || (this.patients.length > 0 ? this.patients[0].id : '1'),
+        patientId,
         doctorId: bookingData.doctorId,
         appointmentDate: bookingData.appointmentDate,
         appointmentTime: bookingData.appointmentTime,
@@ -178,17 +237,15 @@ export class BookingFlow implements OnInit {
       .subscribe({
         next: () => {
           this.isSubmitting = false;
-          if (this.isReschedule) {
-            this.toastService.success('Appointment rescheduled successfully');
-          } else {
-            this.toastService.success('Appointment booked successfully');
-          }
-          this.router.navigate(['/appointments']);
+          this.toastService.success(this.isReschedule ? 'Appointment rescheduled successfully' : 'Appointment booked successfully');
+          this.router.navigate(['/', hospitalCodeFrom(this.route), 'appointments']);
         },
-        error: () => {
-          this.isSubmitting = false;
-          this.toastService.error('Failed to book appointment');
-        },
+        error: (err) => this.failBooking(err?.error?.message || 'Failed to book appointment'),
       });
+  }
+
+  private failBooking(message: string) {
+    this.isSubmitting = false;
+    this.toastService.error(message);
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse } from '../models/common.model';
+import { Observable, map } from 'rxjs';
+import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import {
   CreateOrderRequest, CreateOrderResponse,
   VerifyPaymentRequest, SavePaymentRequest, PaymentResponse
@@ -32,7 +32,16 @@ export class PaymentService {
     });
   }
 
-  getHistory(): Observable<ApiResponse<PaymentResponse[]>> {
-    return this.http.get<ApiResponse<PaymentResponse[]>>(`${this.baseUrl}/history`);
+  /**
+   * The payment list, newest first. The backend answers with a page ({ content, page }), not a bare
+   * array, so the rows are unwrapped here. The screen filters and totals in the browser, which is why
+   * it asks for a large page; a clinic with more payments than that will need server-side paging.
+   */
+  getHistory(size = 200): Observable<ApiResponse<PaymentResponse[]>> {
+    return this.http
+      .get<ApiResponse<RawPagedResponse<PaymentResponse>>>(`${this.baseUrl}/history`, {
+        params: { page: 0, size, sort: 'createdAt,desc' },
+      })
+      .pipe(map((res) => ({ ...res, data: PagedResponse.from(res.data ?? { content: [] }).content })));
   }
 }

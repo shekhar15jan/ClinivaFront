@@ -59,7 +59,7 @@ import { DatePipe } from '@angular/common';
                     <td class="px-4 py-3 text-sm text-red-600 font-medium">₹{{ (bill.paymentStatus !== 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
                     <td class="px-4 py-3"><span [class]="statusClass(bill.paymentStatus)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span></td>
                     <td class="px-4 py-3">
-                      <a [routerLink]="['/billing', bill.id]" class="text-primary hover:underline text-sm font-medium">View</a>
+                      <a [routerLink]="[bill.id]" class="text-primary hover:underline text-sm font-medium">View</a>
                     </td>
                   </tr>
                 }
@@ -69,7 +69,7 @@ import { DatePipe } from '@angular/common';
 
           <div class="md:hidden divide-y divide-outline-variant">
             @for (bill of bills; track bill.id) {
-              <a [routerLink]="['/billing', bill.id]" class="flex items-center justify-between p-4 hover:bg-surface-container transition-colors cursor-pointer">
+              <a [routerLink]="[bill.id]" class="flex items-center justify-between p-4 hover:bg-surface-container transition-colors cursor-pointer">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-1">
                     <span class="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-primary-container text-primary-on-container">INV-{{ bill.id.substring(0, 6) }}</span>

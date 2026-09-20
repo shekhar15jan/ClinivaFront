@@ -65,6 +65,11 @@ export class AuthService {
     return this.http.post<ApiResponse<{ message: string }>>(`${this.apiUrl}/auth/register`, request);
   }
 
+  /** Replaces a temporary or expired password. Needs no session: the current password proves identity. */
+  changePassword(email: string, currentPassword: string, newPassword: string): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/auth/change-password`, { email, currentPassword, newPassword });
+  }
+
   sendOtp(request: SendOtpRequest): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/send-otp`, request);
   }
