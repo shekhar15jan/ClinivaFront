@@ -17,6 +17,8 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
           {{ actionLabel }}
         </button>
       }
+      <!-- Buttons placed between the tags, e.g. <app-empty-state><button>Create</button></app-empty-state>. -->
+      <ng-content />
     </div>
   `,
 })

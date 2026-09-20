@@ -1,3 +1,4 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { EmptyStateComponent } from './empty-state.component';
 import { vi } from 'vitest';
@@ -40,5 +41,24 @@ describe('EmptyStateComponent', () => {
     const spy = vi.spyOn(component.action, 'emit');
     component.action.emit();
     expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a button placed between its tags, and that button works', () => {
+    // The health-packages page passes its "Create Package" button this way. Without a content slot it
+    // was dropped, so a clinic with no packages had no way to create the first one.
+    @Component({
+      standalone: true,
+      imports: [EmptyStateComponent],
+      template: `<app-empty-state title="No Health Packages"><button id="make" (click)="clicked = true">Create Package</button></app-empty-state>`,
+    })
+    class Host {
+      clicked = false;
+    }
+    const fixture = TestBed.createComponent(Host);
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('#make') as HTMLButtonElement;
+    expect(button).toBeTruthy();
+    button.click();
+    expect(fixture.componentInstance.clicked).toBe(true);
   });
 });

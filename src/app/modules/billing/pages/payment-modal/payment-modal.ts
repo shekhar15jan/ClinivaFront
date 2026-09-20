@@ -39,30 +39,10 @@ type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
             </div>
           </div>
 
-          @if (selectedMethod === 'UPI' && upiQrCode) {
-            <div class="mb-4 text-center">
-              <p class="text-sm text-gray-600 mb-2">Scan QR Code</p>
-              <div class="bg-white border rounded-lg p-4 inline-block">
-                <img [src]="upiQrCode" alt="UPI QR Code" class="w-40 h-40" />
-              </div>
-            </div>
-          }
-
-          @if (selectedMethod === 'UPI' && !upiQrCode && !loadingQr) {
-            <button
-              (click)="generateQr()"
-              class="w-full mb-4 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50"
-            >
-              <span class="material-symbols-outlined text-lg align-middle">qr_code</span>
-              Generate UPI QR Code
-            </button>
-          }
-
-          @if (loadingQr) {
-            <div class="text-center py-3 mb-4">
-              <div class="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-              <p class="text-sm text-gray-500 mt-1">Generating QR...</p>
-            </div>
+          @if (selectedMethod !== 'CASH') {
+            <p class="mb-4 text-xs text-gray-500" id="payment-note">
+              Record this only once the money has reached the clinic. It is saved as received by {{ methodLabels[selectedMethod] }}.
+            </p>
           }
 
           <div class="flex justify-end gap-3 pt-4 border-t">
@@ -71,6 +51,7 @@ type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
               class="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50"
             >Cancel</button>
             <button
+              id="payment-confirm"
               (click)="onConfirm()"
               [disabled]="isProcessing"
               class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
@@ -100,33 +81,14 @@ export class PaymentModal {
   paymentMethods: PaymentMethod[] = ['CASH', 'UPI', 'CARD', 'NET_BANKING'];
   methodLabels: Record<PaymentMethod, string> = {
     CASH: 'Cash',
-    UPI: 'UPI / QR Code',
+    UPI: 'UPI',
     CARD: 'Card',
     NET_BANKING: 'Net Banking',
   };
 
   selectedMethod: PaymentMethod = 'CASH';
-  upiQrCode: string | null = null;
-  loadingQr = false;
   isProcessing = false;
   error = '';
-
-  generateQr() {
-    if (!this.billId) return;
-    this.loadingQr = true;
-    this.paymentService.generateUpiQr(this.billId).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.upiQrCode = res.data;
-        }
-        this.loadingQr = false;
-      },
-      error: () => {
-        this.error = 'Failed to generate QR code';
-        this.loadingQr = false;
-      },
-    });
-  }
 
   onConfirm() {
     if (!this.billId || this.isProcessing) return;
@@ -146,12 +108,12 @@ export class PaymentModal {
           this.paymentSuccess.emit();
           this.onCancel();
         } else {
-          this.error = 'Payment failed. Please try again.';
+          this.error = res.message || 'The payment could not be recorded.';
         }
         this.isProcessing = false;
       },
       error: (err) => {
-        this.error = err?.message || 'Payment processing error';
+        this.error = err?.error?.message || 'The payment could not be recorded.';
         this.isProcessing = false;
       },
     });
@@ -159,7 +121,6 @@ export class PaymentModal {
 
   onCancel() {
     this.selectedMethod = 'CASH';
-    this.upiQrCode = null;
     this.error = '';
     this.closed.emit();
   }

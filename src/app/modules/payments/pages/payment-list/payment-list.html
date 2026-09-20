@@ -2,10 +2,6 @@
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-on-surface">Payment History</h1>
     <div class="flex items-center gap-2">
-      <button (click)="openUpiQr()" class="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-medical-blue rounded-lg hover:bg-medical-blue-dark shadow-sm">
-        <span class="material-symbols-outlined text-[18px]">qr_code</span>
-        Generate UPI QR
-      </button>
       <button (click)="loadPayments()" class="flex items-center gap-1 text-sm text-medical-blue hover:text-medical-blue-dark font-medium">
         <span class="material-symbols-outlined text-[18px]">refresh</span>
         Refresh
@@ -42,7 +38,7 @@
         type="text"
         [(ngModel)]="searchQuery"
         (input)="onFilterChange()"
-        placeholder="Search by bill ID or payment method..."
+        placeholder="Search by patient, bill or payment method..."
         class="w-full pl-10 pr-4 py-2 bg-white border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue"
       />
     </div>
@@ -81,7 +77,7 @@
       <table class="w-full">
         <thead>
           <tr class="bg-surface-container-low text-left">
-            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Bill ID</th>
+            <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Patient / Bill</th>
             <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Amount</th>
             <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Method</th>
             <th class="px-4 py-3 text-xs font-semibold text-outline uppercase">Mode</th>
@@ -92,7 +88,10 @@
         <tbody>
           @for (p of filteredPayments; track p.id) {
             <tr class="border-t border-gray-100 hover:bg-surface-container-low/50 cursor-pointer" (click)="openDetail(p)">
-              <td class="px-4 py-3 text-sm font-mono text-xs text-on-surface-variant">{{ p.billId.substring(0, 8) }}...</td>
+              <td class="px-4 py-3">
+                <p class="text-sm font-medium text-on-surface">{{ p.patientName || '—' }}</p>
+                <p class="text-xs font-mono text-on-surface-variant">{{ p.billNumber || (p.billId.substring(0, 8) + '...') }}</p>
+              </td>
               <td class="px-4 py-3 text-sm font-semibold text-on-surface">{{ getAmount(p.amountInPaisa) }}</td>
               <td class="px-4 py-3 text-sm text-on-surface-variant capitalize">{{ p.paymentMethod }}</td>
               <td class="px-4 py-3 text-sm text-on-surface-variant capitalize">{{ p.paymentMode || '—' }}</td>
@@ -111,7 +110,10 @@
       @for (p of filteredPayments; track p.id) {
         <div class="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:shadow-sm" (click)="openDetail(p)" (keydown.enter)="openDetail(p)" role="button" tabindex="0">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-mono text-on-surface-variant">{{ p.billId.substring(0, 8) }}...</span>
+            <span class="min-w-0">
+              <span class="block text-sm font-medium text-on-surface truncate">{{ p.patientName || '—' }}</span>
+              <span class="block text-xs font-mono text-on-surface-variant">{{ p.billNumber || (p.billId.substring(0, 8) + '...') }}</span>
+            </span>
             <app-status-badge [status]="p.paymentStatus"></app-status-badge>
           </div>
           <div class="flex items-center justify-between">
@@ -176,43 +178,6 @@
       </div>
       <div class="px-6 py-4 border-t border-outline-variant flex justify-end">
         <button (click)="closeDetail()" class="px-4 py-2 text-sm font-medium bg-surface-container-high text-on-surface rounded-lg hover:bg-surface-container-high/80">Close</button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- UPI QR Modal -->
-@if (showQrModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeQrModal()" (keydown.escape)="closeQrModal()" role="dialog" aria-modal="true">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
-      <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
-        <h3 class="text-base font-bold text-on-surface">Generate UPI QR Code</h3>
-        <button (click)="closeQrModal()" class="text-outline hover:text-on-surface">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <div class="p-6">
-        <div class="mb-4">
-          <label for="payment-qr-bill-id" class="block text-sm font-medium text-on-surface mb-1">Bill ID</label>
-          <div class="flex gap-2">
-            <input id="payment-qr-bill-id" type="text" [(ngModel)]="qrBillId" placeholder="Enter bill ID..." class="flex-1 border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
-            <button (click)="generateQr()" [disabled]="qrLoading" class="px-4 py-2 bg-medical-blue text-white text-sm font-medium rounded-lg hover:bg-medical-blue-dark disabled:opacity-50 flex items-center gap-1">
-              @if (qrLoading) {
-                <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
-              }
-              Generate
-            </button>
-          </div>
-        </div>
-        @if (qrError) {
-          <p class="text-sm text-status-red mb-3">{{ qrError }}</p>
-        }
-        @if (qrCode) {
-          <div class="flex flex-col items-center">
-            <img [src]="qrCode" alt="UPI QR Code" class="w-48 h-48 object-contain border border-outline-variant rounded-lg mb-3" />
-            <p class="text-xs text-outline text-center">Scan this QR code with any UPI app to pay</p>
-          </div>
-        }
       </div>
     </div>
   </div>

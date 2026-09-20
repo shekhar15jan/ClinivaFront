@@ -1,109 +1,166 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppointmentService } from '../../../../core/services/appointment.service';
-import { DoctorService } from '../../../../core/services/doctor.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Appointment } from '../../../../core/models/appointment.model';
-import { Doctor } from '../../../../core/models/doctor.model';
+import { hospitalCodeFrom } from '../../../../core/utils/route.util';
+
+/** A local calendar day as YYYY-MM-DD (toISOString would give the UTC day, which can be yesterday or tomorrow). */
+export function localDay(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** The day `offset` days from `day` (YYYY-MM-DD), across month and year ends. */
+export function shiftDay(day: string, offset: number): string {
+  const [y, m, d] = day.split('-').map(Number);
+  return localDay(new Date(y, m - 1, d + offset));
+}
+
+/** 10:00:00 -> 10:00 */
+export const hm = (time: string): string => (time ?? '').slice(0, 5);
 
 @Component({
   selector: 'app-appointment-calendar',
   templateUrl: './appointment-calendar.html',
   styleUrl: './appointment-calendar.scss',
-  imports: [RouterLink],
+  imports: [RouterLink, ConfirmDialogComponent],
 })
 export class AppointmentCalendar implements OnInit {
   private appointmentService = inject(AppointmentService);
-  private doctorService = inject(DoctorService);
+  private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private toastService = inject(ToastService);
 
-  currentDate = new Date();
-  doctors: Doctor[] = [];
+  selectedDay = localDay(new Date());
   appointments: Appointment[] = [];
   isLoading = true;
-
-  // For simplicity, defining static time blocks for the mock UI
-  timeBlocks = [
-    { time: '09:00 AM', top: 0 },
-    { time: '10:00 AM', top: 64 },
-    { time: '11:00 AM', top: 128 },
-    { time: '12:00 PM', top: 192 },
-    { time: '01:00 PM', top: 256 },
-  ];
+  loadError = '';
+  toCancel: Appointment | null = null;
+  busyId: string | null = null;
 
   ngOnInit(): void {
     this.loadData();
   }
 
+  get isToday(): boolean {
+    return this.selectedDay === localDay(new Date());
+  }
+
+  get dayLabel(): string {
+    const [y, m, d] = this.selectedDay.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  /** Front desk manages bookings; a doctor only sees theirs and starts the consultation. */
+  get canManage(): boolean {
+    const role = this.auth.currentUserValue?.role;
+    return role === 'ADMIN' || role === 'RECEPTIONIST';
+  }
+
+  get isDoctor(): boolean {
+    return this.auth.currentUserValue?.role === 'DOCTOR';
+  }
+
+  get pendingCount(): number {
+    return this.appointments.filter((a) => a.status === 'PENDING').length;
+  }
+
   loadData(): void {
     this.isLoading = true;
-
-    // Fetch doctors
-    this.doctorService.getDoctors().subscribe((dRes) => {
-      if (dRes.success) {
-        this.doctors = dRes.data.content;
-      }
-
-      // Fetch appointments
-      this.appointmentService.getAppointments().subscribe((aRes) => {
-        if (aRes.success) {
-          this.appointments = aRes.data.content;
-        }
+    this.loadError = '';
+    this.appointmentService.getAppointments(0, 200, undefined, undefined, this.selectedDay, this.selectedDay).subscribe({
+      next: (res) => {
+        this.appointments = res.success
+          ? [...res.data.content].sort((a, b) => (a.appointmentTime ?? '').localeCompare(b.appointmentTime ?? ''))
+          : [];
         this.isLoading = false;
-      });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loadError = err?.error?.message || 'The appointments could not be loaded.';
+      },
     });
   }
 
-  getAppointmentsForDoctor(doctorId: string): Appointment[] {
-    return this.appointments.filter((a) => a.doctor?.id === doctorId);
+  goTo(day: string): void {
+    if (!day || day === this.selectedDay) return;
+    this.selectedDay = day;
+    this.loadData();
   }
 
-  getTopPosition(time: string): number {
-    // Simple mock calculation based on HH:mm string
-    const match = time.match(/(\d+):(\d+) (AM|PM)/);
-    if (!match) return 0;
-    let hour = parseInt(match[1]);
-    const min = parseInt(match[2]);
-    const ampm = match[3];
-
-    if (ampm === 'PM' && hour !== 12) hour += 12;
-    if (ampm === 'AM' && hour === 12) hour = 0;
-
-    // Assuming timeline starts at 9:00 AM which is top: 0, and each hour is 64px
-    const startHour = 9;
-    const hoursDiff = hour - startHour;
-    return hoursDiff * 64 + (min / 60) * 64;
+  previousDay(): void {
+    this.goTo(shiftDay(this.selectedDay, -1));
   }
 
-  rescheduleAppointment(appointment: Appointment): void {
+  nextDay(): void {
+    this.goTo(shiftDay(this.selectedDay, 1));
+  }
+
+  today(): void {
+    this.goTo(localDay(new Date()));
+  }
+
+  time(appointment: Appointment): string {
+    return hm(appointment.appointmentTime);
+  }
+
+  approve(appointment: Appointment): void {
+    this.act(appointment, this.appointmentService.approveAppointment(appointment.id), 'Appointment approved', 'The appointment could not be approved.');
+  }
+
+  reject(appointment: Appointment): void {
+    this.act(appointment, this.appointmentService.rejectAppointment(appointment.id), 'Appointment rejected', 'The appointment could not be rejected.');
+  }
+
+  askCancel(appointment: Appointment): void {
+    this.toCancel = appointment;
+  }
+
+  cancel(): void {
+    const appointment = this.toCancel;
+    this.toCancel = null;
+    if (!appointment) return;
+    this.act(appointment, this.appointmentService.cancelAppointment(appointment.id), 'Appointment cancelled', 'The appointment could not be cancelled.');
+  }
+
+  /** Frees the slot, then opens the booking screen with the doctor and patient already chosen. */
+  reschedule(appointment: Appointment): void {
+    this.busyId = appointment.id;
     this.appointmentService.cancelAppointment(appointment.id).subscribe({
       next: () => {
-        this.toastService.success('Appointment cancelled. Redirecting to book a new one...');
-        this.router.navigate(['book'], {
+        this.busyId = null;
+        this.toastService.success('Pick a new time for this patient');
+        this.router.navigate(['/', hospitalCodeFrom(this.route), 'appointments', 'book'], {
           queryParams: {
             doctorId: appointment.doctor?.id,
             patientId: appointment.patient?.id,
             rescheduleFrom: appointment.id,
-          }
+          },
         });
       },
-      error: () => {
-        this.toastService.error('Failed to cancel appointment for reschedule');
-      }
+      error: (err) => {
+        this.busyId = null;
+        this.toastService.error(err?.error?.message || 'The appointment could not be rescheduled.');
+      },
     });
   }
 
-  cancelAppointment(appointment: Appointment): void {
-    if (!confirm('Are you sure you want to cancel this appointment?')) return;
-    this.appointmentService.cancelAppointment(appointment.id).subscribe({
+  private act(appointment: Appointment, request: ReturnType<AppointmentService['approveAppointment']>, done: string, failed: string): void {
+    this.busyId = appointment.id;
+    request.subscribe({
       next: () => {
-        this.toastService.success('Appointment cancelled');
+        this.busyId = null;
+        this.toastService.success(done);
         this.loadData();
       },
-      error: () => {
-        this.toastService.error('Failed to cancel appointment');
-      }
+      error: (err) => {
+        this.busyId = null;
+        this.toastService.error(err?.error?.message || failed);
+      },
     });
   }
 }

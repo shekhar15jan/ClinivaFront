@@ -7,14 +7,6 @@ import { RouterModule } from '@angular/router';
       {
         path: '',
         loadComponent: () => import('./pages/user-list/user-list').then(m => m.UserListComponent)
-      },
-      {
-        path: 'new',
-        loadComponent: () => import('./pages/user-form/user-form').then(m => m.UserFormComponent)
-      },
-      {
-        path: ':id',
-        loadComponent: () => import('./pages/user-form/user-form').then(m => m.UserFormComponent)
       }
     ])
   ]

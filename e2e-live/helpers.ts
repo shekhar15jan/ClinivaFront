@@ -85,6 +85,25 @@ export async function provisionTenant(request: APIRequestContext, planCode = 'HM
   expect(hms, 'HMS product registered in CloudSuite').toBeTruthy();
   const planList = (await (await request.get(`${CLOUDSUITE}/platform/plans`, { headers, params: { productId: hms.id } })).json()).data;
   const plans: Record<string, string> = Object.fromEntries(planList.map((p: any) => [p.code, p.id]));
+  if (planCode === 'HMS_FULL' && !plans['HMS_FULL']) {
+    // A plan with every real HMS module, so one clinic can exercise the whole product.
+    const modules = (await (await request.get(`${CLOUDSUITE}/platform/products/${hms.id}/modules`, { headers })).json()).data;
+    const made = await request.post(`${CLOUDSUITE}/platform/plans`, {
+      headers,
+      data: {
+        code: 'HMS_FULL',
+        name: 'HMS Full (live tests)',
+        price: 1,
+        billingCycle: 'MONTHLY',
+        productId: hms.id,
+        modules: modules
+          .filter((m: any) => !String(m.code).startsWith('E2E_'))
+          .map((m: any) => ({ moduleId: m.id, isAddon: false })),
+      },
+    });
+    expect(made.ok(), 'create the HMS_FULL plan').toBeTruthy();
+    plans['HMS_FULL'] = (await made.json()).data.id;
+  }
   expect(plans[planCode], `plan ${planCode}`).toBeTruthy();
 
   const stamp = Date.now().toString().slice(-8);
@@ -144,21 +163,27 @@ export async function signInAsNewAdmin(page: Page, request: APIRequestContext, p
   });
   expect(changed.ok(), 'change the temporary password').toBeTruthy();
 
+  const hospitalCode = await signInWithOtp(page, request, tenant.adminEmail);
+  return { ...tenant, hospitalCode, password };
+}
+
+/** Signs `email` in through the real sign-in screens: the emailed one-time code is read from the mailbox. Returns the clinic code. */
+export async function signInWithOtp(page: Page, request: APIRequestContext, email: string): Promise<string> {
   await page.goto('/login');
-  await page.fill('input[type="email"]', tenant.adminEmail);
+  await page.fill('input[type="email"]', email);
   await page.locator('button[type="submit"]').first().click();
   await page.waitForURL((url) => /^\/[^/]+\/login$/.test(url.pathname), { timeout: 15000 });
   const hospitalCode = new URL(page.url()).pathname.split('/')[1];
 
-  const before = await countMails(request, tenant.adminEmail, 'otp');
+  const before = await countMails(request, email, 'otp');
   await page.locator('button:has-text("Send OTP")').click();
   await page.waitForURL(/\/otp$/, { timeout: 15000 });
-  const otp = otpFrom(await nextMail(request, tenant.adminEmail, 'otp', before));
+  const otp = otpFrom(await nextMail(request, email, 'otp', before));
   const digits = page.locator('input.otp-digit');
   for (let i = 0; i < 6; i++) await digits.nth(i).fill(otp[i]);
   await page.getByRole('button', { name: /Verify/ }).click();
   await page.waitForURL(new RegExp(`/${hospitalCode}/dashboard`), { timeout: 20000 });
-  return { ...tenant, hospitalCode, password };
+  return hospitalCode;
 }
 
 /** Registers a patient through the real form and returns once the API has accepted it. */
@@ -175,7 +200,7 @@ export async function registerPatient(page: Page, hospitalCode: string, name: st
 }
 
 /** Registers a doctor through the real form and returns once the API has accepted it. */
-export async function registerDoctor(page: Page, hospitalCode: string, name: string, phone: string): Promise<void> {
+export async function registerDoctor(page: Page, hospitalCode: string, name: string, phone: string, email?: string): Promise<void> {
   await page.goto(`/${hospitalCode}/doctors`);
   await page.getByText('Add Doctor', { exact: false }).first().click();
   await page.fill('input[formControlName="fullName"]', name);
@@ -183,8 +208,77 @@ export async function registerDoctor(page: Page, hospitalCode: string, name: str
   await page.fill('input[formControlName="qualification"]', 'MBBS, MD');
   await page.fill('input[formControlName="experienceYears"]', '8');
   await page.fill('input[formControlName="phone"]', phone);
+  // With an email the clinic also creates the doctor's login.
+  if (email) await page.fill('input[formControlName="email"]', email);
   await page.fill('input[formControlName="consultationFee"]', '600');
   const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/doctors$/.test(r.url()));
   await page.getByRole('button', { name: /Save Doctor/ }).click();
   expect((await created).ok(), 'doctor created').toBeTruthy();
+}
+
+/** Opens a doctor's page and gives them hours every day, so slots exist whatever today's weekday is. */
+export async function setDoctorHours(page: Page, hospitalCode: string, doctorName: string): Promise<void> {
+  await page.goto(`/${hospitalCode}/doctors`);
+  await page.getByRole('button', { name: `View ${doctorName}` }).click();
+  await expect(page.getByRole('heading', { name: 'Weekly Schedule' })).toBeVisible({ timeout: 15000 });
+  for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']) {
+    await page.getByLabel(`${day} available`).check();
+    await page.getByLabel(`${day} end`).fill('12:00');
+  }
+  const saved = page.waitForResponse((r) => r.request().method() === 'PUT' && /\/availability$/.test(r.url()));
+  await page.locator('#save-availability').click();
+  expect((await saved).ok(), 'schedule saved').toBeTruthy();
+}
+
+/** Books the first free slot for `patientName` with `doctorName` through the booking screens; returns the appointment id. */
+export async function bookAppointment(page: Page, hospitalCode: string, doctorName: string, patientName: string): Promise<string> {
+  await page.goto(`/${hospitalCode}/appointments/book`);
+  await page.locator('[aria-label="Select Date"] [role="radio"]').first().click();
+  await page.locator('[aria-label="Select Doctor"] [role="radio"]', { hasText: doctorName }).click();
+  const slots = page.locator('[aria-label="Available Time Slots"] [role="radio"]');
+  await expect(slots.first()).toBeVisible({ timeout: 15000 });
+  await slots.first().click();
+  await page.getByRole('button', { name: /Next Step/ }).click();
+  const option = page.locator('#patientId option', { hasText: patientName });
+  await expect(option).toHaveCount(1, { timeout: 15000 });
+  await page.selectOption('#patientId', (await option.getAttribute('value'))!);
+  await page.getByRole('button', { name: /Next Step/ }).click();
+  const booked = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/appointments$/.test(r.url()));
+  await page.getByRole('button', { name: /Confirm/ }).last().click();
+  const response = await booked;
+  expect(response.ok(), 'appointment booked').toBeTruthy();
+  return (await response.json()).data.id as string;
+}
+
+/** Adds a medicine to the clinic's catalog through the real form. */
+export async function addMedicine(page: Page, hospitalCode: string, name: string, priceRupees: string): Promise<void> {
+  await page.goto(`/${hospitalCode}/medicines`);
+  await page.getByRole('button', { name: /Add Medicine|Add New/ }).first().click();
+  await page.fill('#med-form-name', name);
+  await page.fill('#med-form-generic-name', 'Generic');
+  await page.selectOption('#med-form-category', 'Analgesic');
+  await page.fill('#med-form-manufacturer', 'Acme Pharma');
+  await page.fill('#med-form-unit', 'Tablet');
+  await page.fill('#med-form-price', priceRupees);
+  const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/medicines$/.test(r.url()));
+  await page.locator('form button[type="submit"]').click();
+  expect((await created).ok(), 'medicine created').toBeTruthy();
+}
+
+/** Adds a staff login through the Users screen; returns once the API has accepted it. */
+export async function addStaffUser(
+  page: Page,
+  hospitalCode: string,
+  user: { firstName: string; lastName: string; email: string; role: 'RECEPTIONIST' | 'DOCTOR' | 'NURSE' | 'ADMIN' },
+): Promise<void> {
+  await page.goto(`/${hospitalCode}/users`);
+  await page.locator('#add-user').click();
+  await page.fill('#user-first-name', user.firstName);
+  await page.fill('#user-last-name', user.lastName);
+  await page.fill('#user-email', user.email);
+  await page.selectOption('#user-role', user.role);
+  const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/users$/.test(r.url()));
+  await page.locator('#save-user').click();
+  const response = await created;
+  expect(response.ok(), `staff user created (${response.status()})`).toBeTruthy();
 }

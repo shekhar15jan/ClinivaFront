@@ -3,21 +3,24 @@ import { ActivatedRoute } from '@angular/router';
 import { BillingService } from '../../../../core/services/billing.service';
 import { Bill } from '../../../../core/models/billing.model';
 import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
+import { PaymentModal } from '../payment-modal/payment-modal';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 
 @Component({
   selector: 'app-invoice-detail',
   templateUrl: './invoice-detail.html',
   styleUrl: './invoice-detail.scss',
-  imports: [NgClass, DecimalPipe, DatePipe],
+  imports: [NgClass, DecimalPipe, DatePipe, PaymentModal],
 })
 export class InvoiceDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private billingService = inject(BillingService);
+  private toast = inject(ToastService);
 
   bill: Bill | null = null;
   isLoading = false;
   isDownloading = false;
-  isCollecting = false;
+  showPayment = false;
 
   get id(): string | null {
     return this.route.snapshot.paramMap.get('id');
@@ -52,20 +55,17 @@ export class InvoiceDetail implements OnInit {
     });
   }
 
+  /** Opens the payment dialog. The dialog records the payment on the server; nothing is marked paid here. */
   collectPayment() {
     if (this.status === 'PAID' || !this.id) return;
-    this.isCollecting = true;
-    this.billingService.updateBill(this.id, {}).subscribe({
-      next: () => {
-        if (this.bill) {
-          this.bill = { ...this.bill, paymentStatus: 'PAID' };
-        }
-        this.isCollecting = false;
-      },
-      error: () => {
-        this.isCollecting = false;
-      },
-    });
+    this.showPayment = true;
+  }
+
+  /** Reads the bill again, so the badge shows what the server says rather than what the browser assumes. */
+  onPaymentRecorded() {
+    this.showPayment = false;
+    this.toast.success('Payment recorded');
+    if (this.id) this.loadBill(this.id);
   }
 
   printInvoice() {

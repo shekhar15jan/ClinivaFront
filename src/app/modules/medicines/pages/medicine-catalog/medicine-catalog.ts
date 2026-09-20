@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MedicineService } from '../../../../core/services/medicine.service';
 import { Medicine } from '../../../../core/models/medicine.model';
@@ -15,6 +16,9 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 export class MedicineCatalog implements OnInit {
   private medicineService = inject(MedicineService);
   private fb = inject(FormBuilder);
+
+  // The list or search request in flight. A newer one cancels it, so a slow earlier answer cannot overwrite a newer one.
+  private listRequest?: Subscription;
 
   medicines: Medicine[] = [];
   filteredMedicines: Medicine[] = [];
@@ -56,7 +60,8 @@ export class MedicineCatalog implements OnInit {
 
   loadMedicines(): void {
     this.isLoading = true;
-    this.medicineService.getMedicines(this.currentPage, this.pageSize, this.searchQuery || undefined).subscribe({
+    this.listRequest?.unsubscribe();
+    this.listRequest = this.medicineService.getMedicines(this.currentPage, this.pageSize, this.searchQuery || undefined).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.medicines = res.data.content || [];
@@ -75,7 +80,8 @@ export class MedicineCatalog implements OnInit {
     this.currentPage = 0;
     if (this.searchQuery.trim().length > 1) {
       this.isLoading = true;
-      this.medicineService.searchMedicines(this.searchQuery).subscribe({
+      this.listRequest?.unsubscribe();
+      this.listRequest = this.medicineService.searchMedicines(this.searchQuery).subscribe({
         next: (res) => {
           if (res.success && res.data) {
             this.medicines = res.data;

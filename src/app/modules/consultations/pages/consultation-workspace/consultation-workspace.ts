@@ -13,7 +13,20 @@ import { PrescriptionTemplate, Prescription, PrescriptionMedicine } from '../../
 import { Consultation } from '../../../../core/models/consultation.model';
 import { ConsultationStore } from '../../store/consultation.store';
 import { hospitalCodeFrom } from '../../../../core/utils/route.util';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { DatePipe } from '@angular/common';
+
+/**
+ * "1-0-1" means morning, no afternoon, night. The bill works out how much to dispense (and charge, and
+ * take from stock) from these three flags and the duration, not from the text, so they must be sent.
+ * "SOS" (as needed) has no fixed doses, so it sets none and counts as one supply.
+ */
+export function scheduleFlags(frequency: string): { morning: boolean; afternoon: boolean; night: boolean } {
+  const parts = (frequency || '').split('-');
+  if (parts.length !== 3) return { morning: false, afternoon: false, night: false };
+  const taken = (part: string) => parseInt(part, 10) > 0;
+  return { morning: taken(parts[0]), afternoon: taken(parts[1]), night: taken(parts[2]) };
+}
 
 @Component({
   selector: 'app-consultation-workspace',
@@ -30,6 +43,7 @@ export class ConsultationWorkspace implements OnInit {
   private medicineService = inject(MedicineService);
   private prescriptionService = inject(PrescriptionService);
   private cdr = inject(ChangeDetectorRef);
+  private toast = inject(ToastService);
 
   readonly store = inject(ConsultationStore);
 
@@ -157,6 +171,7 @@ export class ConsultationWorkspace implements OnInit {
     if (prescription.medicines && prescription.medicines.length > 0) {
       prescription.medicines.forEach((med: PrescriptionMedicine) => {
         const group = this.fb.group({
+          medicineId: [med.medicineId || ''],
           name: [med.medicineName, Validators.required],
           instructions: [med.instructions || ''],
           frequency: [med.frequency || '1-0-1', Validators.required],
@@ -238,6 +253,8 @@ export class ConsultationWorkspace implements OnInit {
 
   createMedicineFormGroup(): FormGroup {
     return this.fb.group({
+      // The catalog medicine chosen from the suggestions; without it the bill cannot price the medicine.
+      medicineId: [''],
       name: ['', Validators.required],
       instructions: [''],
       frequency: ['1-0-1', Validators.required],
@@ -258,6 +275,12 @@ export class ConsultationWorkspace implements OnInit {
     this.medicineSearchTerms.delete(index);
   }
 
+  /** Typing over a chosen medicine makes it a free-text entry again, so the old catalog id must not stay attached. */
+  onMedicineTyped(index: number, term: string): void {
+    (this.medicines.at(index) as FormGroup).patchValue({ medicineId: '' });
+    this.searchMedicine(index, term);
+  }
+
   searchMedicine(index: number, term: string): void {
     this.medicineSearchTerms.set(index, term);
     if (term.length < 2) {
@@ -276,7 +299,7 @@ export class ConsultationWorkspace implements OnInit {
 
   selectMedicine(index: number, medicine: Medicine): void {
     const group = this.medicines.at(index) as FormGroup;
-    group.patchValue({ name: medicine.medicineName });
+    group.patchValue({ name: medicine.medicineName, medicineId: medicine.id });
     this.medicineSuggestions.set(index, []);
     this.medicineSearchTerms.set(index, medicine.medicineName);
   }
@@ -394,10 +417,13 @@ export class ConsultationWorkspace implements OnInit {
   }
 
   private savePrescription(consultationId: string, formVal: ConsultationWorkspace['consultationForm']['value']): void {
-    const medicines = (formVal.medicines || []).map((m: { name: string; frequency: string; duration: number; instructions?: string }) => ({
+    const medicines = (formVal.medicines || []).map((m: { medicineId?: string; name: string; frequency: string; duration: number; instructions?: string }) => ({
+      medicineId: m.medicineId || undefined,
       medicineName: m.name,
       frequency: m.frequency,
+      ...scheduleFlags(m.frequency),
       duration: m.duration,
+      durationUnit: 'DAYS',
       instructions: m.instructions || '',
     }));
 
@@ -423,6 +449,10 @@ export class ConsultationWorkspace implements OnInit {
           this.medicineSuggestions.clear();
           this.medicineSearchTerms.clear();
           this.addMedicine();
+          // This used to clear the form and say nothing, so the doctor could not tell it had been saved.
+          // The prescription page shows what was saved and is where the bill is generated.
+          this.toast.success('Consultation and prescription saved');
+          this.router.navigate(['/', hospitalCodeFrom(this.route), 'prescriptions', presRes.data.id]);
         } else {
           this.error = 'Consultation saved but failed to save prescription';
         }

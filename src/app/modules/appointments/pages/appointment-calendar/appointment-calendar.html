@@ -1,169 +1,107 @@
 <div class="space-y-4 sm:space-y-6">
   <!-- Header -->
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-    <h2 class="text-headline-md text-on-surface">Appointments</h2>
-    <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-      <div class="flex bg-gray-100 p-1 rounded-lg">
-        <button class="px-4 py-1.5 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm">Day</button>
-        <button class="px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900">Week</button>
-        <button class="px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900">Month</button>
-      </div>
-      <button routerLink="book" class="flex items-center gap-2 px-4 py-2 bg-medical-blue hover:bg-medical-blue-dark text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md">
+    <div>
+      <h2 class="text-headline-md text-on-surface">Appointments</h2>
+      @if (pendingCount > 0 && canManage) {
+        <p class="text-sm text-status-orange mt-1" id="pending-count">{{ pendingCount }} waiting for approval</p>
+      }
+    </div>
+    @if (canManage) {
+      <button routerLink="book" class="flex items-center gap-2 px-4 py-2 bg-medical-blue hover:bg-medical-blue-dark text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
         <span class="material-symbols-outlined text-[20px]">add</span> New Appointment
       </button>
-    </div>
+    }
   </div>
 
-  <!-- Calendar Controls -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex items-center justify-between">
+  <!-- Day navigation -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 flex items-center justify-between flex-wrap gap-3">
     <div class="flex items-center gap-2 sm:gap-4">
-      <button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors">
+      <button type="button" (click)="previousDay()" aria-label="Previous day" class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors">
         <span class="material-symbols-outlined">chevron_left</span>
       </button>
-      <h3 class="text-base sm:text-lg font-semibold text-on-surface truncate">October 24, 2023</h3>
-      <button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors">
+      <h3 id="day-label" class="text-base sm:text-lg font-semibold text-on-surface">{{ dayLabel }}</h3>
+      <button type="button" (click)="nextDay()" aria-label="Next day" class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high text-on-surface-variant transition-colors">
         <span class="material-symbols-outlined">chevron_right</span>
       </button>
     </div>
-    <div class="sm:flex hidden items-center gap-4">
-      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-status-green"></span><span class="text-xs text-gray-600">Available</span></div>
-      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-medical-blue"></span><span class="text-xs text-gray-600">Booked</span></div>
-      <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-gray-100 ring-1 ring-gray-300"></span><span class="text-xs text-gray-600">Blocked</span></div>
+    <div class="flex items-center gap-2">
+      <label for="day-picker" class="sr-only">Choose a date</label>
+      <input id="day-picker" type="date" [value]="selectedDay" (change)="goTo($any($event.target).value)" class="border border-outline-variant rounded-lg px-3 py-1.5 text-sm bg-white" />
+      @if (!isToday) {
+        <button type="button" (click)="today()" class="px-3 py-1.5 text-sm font-medium text-medical-blue border border-medical-blue/30 rounded-lg hover:bg-blue-50">Today</button>
+      }
     </div>
   </div>
 
-  <!-- Desktop Calendar Grid -->
-  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative hidden md:block">
-    @if (isLoading) {
-      <div class="absolute inset-0 bg-white/70 z-10 flex justify-center items-center">
-        <svg class="animate-spin h-8 w-8 text-medical-blue" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      </div>
-    }
-    <div class="flex border-b border-gray-100 bg-gray-50">
-      <div class="w-20 shrink-0 border-r border-gray-100"></div>
-      <div class="flex-1 grid grid-flow-col auto-cols-fr divide-x divide-gray-100">
-        @for (doctor of doctors; track doctor) {
-          <div class="p-4 text-center">
-            <p class="text-sm font-medium text-gray-900">{{ doctor.fullName }}</p>
-            <p class="text-xs text-gray-500">{{ doctor.specialization }}</p>
-          </div>
-        }
-      </div>
+  @if (loadError) {
+    <div class="p-3 rounded-lg bg-red-50 text-sm text-red-700" id="appointments-error">
+      {{ loadError }}
+      <button type="button" class="underline ml-2" (click)="loadData()">Retry</button>
     </div>
-    <div class="flex h-[600px] overflow-y-auto relative">
-      <div class="w-20 shrink-0 border-r border-gray-100 bg-gray-50 relative">
-        @for (tb of timeBlocks; track tb) {
-          <div class="h-16 border-b border-gray-100 p-2 text-right">
-            <span class="text-xs text-gray-500 relative -top-3">{{ tb.time }}</span>
-          </div>
-        }
-      </div>
-      <div class="flex-1 grid grid-flow-col auto-cols-fr divide-x divide-gray-100 relative">
-        @for (doctor of doctors; track doctor) {
-          <div class="relative">
-            @for (appointment of getAppointmentsForDoctor(doctor.id); track appointment.id) {
-              <div 
-                class="absolute left-1 right-1 bg-medical-blue/10 border-l-2 border-medical-blue rounded-r-lg p-2 hover:bg-medical-blue/20 transition-colors group"
-                [style.top.px]="getTopPosition(appointment.appointmentTime)"
-                [style.height.px]="48"
-              >
-                <div class="flex items-start justify-between gap-1">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-xs font-medium text-on-surface truncate">{{ appointment.patient.fullName }}</p>
-                    <p class="text-[10px] text-outline truncate">{{ appointment.appointmentTime }}</p>
-                  </div>
-                  <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      (click)="rescheduleAppointment(appointment)"
-                      class="p-1 bg-white rounded shadow-sm hover:bg-surface-container-high text-medical-blue"
-                      title="Reschedule"
-                    >
-                      <span class="material-symbols-outlined text-[14px]">schedule</span>
-                    </button>
-                    <button 
-                      (click)="cancelAppointment(appointment)"
-                      class="p-1 bg-white rounded shadow-sm hover:bg-error/10 text-error"
-                      title="Cancel"
-                    >
-                      <span class="material-symbols-outlined text-[14px]">close</span>
-                    </button>
-                  </div>
-                </div>
-                @if (appointment.status === 'PENDING') {
-                  <span class="inline-block mt-1 px-1.5 py-0.5 text-[9px] font-medium bg-warning/20 text-warning-dark rounded">Pending</span>
-                } @else if (appointment.status === 'APPROVED') {
-                  <span class="inline-block mt-1 px-1.5 py-0.5 text-[9px] font-medium bg-success/20 text-success-dark rounded">Approved</span>
-                }
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-  </div>
+  }
 
-  <!-- Mobile Appointment List -->
-  <div class="md:hidden space-y-3">
+  <!-- The day's appointments, in time order -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     @if (isLoading) {
-      <div class="flex justify-center py-8"><div class="w-8 h-8 border-2 border-gray-200 border-t-medical-blue rounded-full animate-spin"></div></div>
+      <div class="flex justify-center py-12"><div class="w-8 h-8 border-2 border-gray-200 border-t-medical-blue rounded-full animate-spin"></div></div>
+    } @else if (appointments.length === 0 && !loadError) {
+      <div class="text-center py-12 px-4" id="no-appointments">
+        <p class="text-base font-medium text-on-surface">No appointments on this day</p>
+        <p class="text-sm text-outline mt-1">Use the arrows or the date box to look at another day.</p>
+      </div>
     } @else {
-      @for (doctor of doctors; track doctor) {
-        <div class="bg-white rounded-xl border border-outline-variant p-4">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-sm font-semibold text-on-surface">{{ doctor.fullName }}</h3>
-            <span class="text-xs text-outline">{{ doctor.specialization }}</span>
-          </div>
-          
-          @if (getAppointmentsForDoctor(doctor.id).length > 0) {
-            <div class="space-y-2">
-              @for (appointment of getAppointmentsForDoctor(doctor.id); track appointment.id) {
-                <div class="flex items-center justify-between p-2 bg-surface-container-low rounded-lg border border-outline-variant/50">
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-on-surface truncate">{{ appointment.patient.fullName }}</p>
-                    <div class="flex items-center gap-2 mt-0.5">
-                      <span class="text-xs text-outline">{{ appointment.appointmentTime }}</span>
-                      @if (appointment.status === 'PENDING') {
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium bg-warning/20 text-warning-dark rounded">Pending</span>
-                      } @else if (appointment.status === 'APPROVED') {
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium bg-success/20 text-success-dark rounded">Approved</span>
-                      }
-                    </div>
-                  </div>
-                  <div class="flex gap-1 ml-2">
-                    <button 
-                      (click)="rescheduleAppointment(appointment)"
-                      class="p-1.5 bg-white border border-outline-variant rounded hover:bg-surface-container-high text-medical-blue"
-                      title="Reschedule"
-                    >
-                      <span class="material-symbols-outlined text-[16px]">schedule</span>
-                    </button>
-                    <button 
-                      (click)="cancelAppointment(appointment)"
-                      class="p-1.5 bg-white border border-outline-variant rounded hover:bg-error/10 text-error"
-                      title="Cancel"
-                    >
-                      <span class="material-symbols-outlined text-[16px]">close</span>
-                    </button>
-                  </div>
-                </div>
+      <ul id="appointment-list" class="divide-y divide-gray-100">
+        @for (appointment of appointments; track appointment.id) {
+          <li class="p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-6" [attr.data-status]="appointment.status">
+            <div class="md:w-20 shrink-0">
+              <p class="text-lg font-semibold text-on-surface">{{ time(appointment) }}</p>
+              <p class="text-xs text-outline">Token {{ appointment.tokenNumber }}</p>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-on-surface truncate">{{ appointment.patient.fullName }}</p>
+              <p class="text-xs text-outline truncate">
+                {{ appointment.doctor.fullName }}@if (appointment.doctor.specialization) { · {{ appointment.doctor.specialization }}}
+              </p>
+            </div>
+            <div class="md:w-28 shrink-0">
+              <span
+                class="inline-block px-2.5 py-1 text-xs font-medium rounded-full"
+                [class]="
+                  appointment.status === 'PENDING' ? 'bg-orange-50 text-status-orange' :
+                  appointment.status === 'APPROVED' ? 'bg-green-50 text-status-green' :
+                  appointment.status === 'COMPLETED' ? 'bg-blue-50 text-medical-blue' :
+                  'bg-gray-100 text-gray-600'
+                "
+              >{{ appointment.status.charAt(0) + appointment.status.slice(1).toLowerCase() }}</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap md:justify-end md:w-72">
+              @if (canManage && appointment.status === 'PENDING') {
+                <button type="button" [disabled]="busyId === appointment.id" (click)="approve(appointment)" class="px-3 py-1.5 text-xs font-medium text-white bg-status-green rounded-lg disabled:opacity-50">Approve</button>
+                <button type="button" [disabled]="busyId === appointment.id" (click)="reject(appointment)" class="px-3 py-1.5 text-xs font-medium text-status-red border border-status-red/40 rounded-lg disabled:opacity-50">Reject</button>
+              }
+              @if (isDoctor && appointment.status === 'APPROVED') {
+                <a [routerLink]="['../consultations', appointment.id]" class="px-3 py-1.5 text-xs font-medium text-white bg-medical-blue rounded-lg">Start consultation</a>
+              }
+              @if (canManage && (appointment.status === 'PENDING' || appointment.status === 'APPROVED')) {
+                <button type="button" [disabled]="busyId === appointment.id" (click)="reschedule(appointment)" class="px-3 py-1.5 text-xs font-medium text-medical-blue border border-medical-blue/30 rounded-lg disabled:opacity-50">Reschedule</button>
+                <button type="button" [disabled]="busyId === appointment.id" (click)="askCancel(appointment)" class="px-3 py-1.5 text-xs font-medium text-on-surface-variant border border-outline-variant rounded-lg disabled:opacity-50">Cancel</button>
               }
             </div>
-          } @else {
-            <div class="flex flex-wrap gap-2">
-              @for (tb of timeBlocks.slice(0, 6); track tb) {
-                <span class="px-2.5 py-1 text-xs rounded-full border border-outline-variant text-outline">{{ tb.time }}</span>
-              }
-              @if (timeBlocks.length > 6) { <span class="text-xs text-outline self-center">+{{ timeBlocks.length - 6 }} more</span> }
-            </div>
-          }
-        </div>
-      }
-      @if (doctors.length === 0) {
-        <div class="text-center py-8 text-sm text-outline">No doctors scheduled for today.</div>
-      }
+          </li>
+        }
+      </ul>
     }
   </div>
 </div>
+
+<app-confirm-dialog
+  [open]="!!toCancel"
+  title="Cancel appointment"
+  [message]="'Cancel the appointment for ' + (toCancel?.patient?.fullName ?? 'this patient') + '?'"
+  confirmText="Cancel appointment"
+  cancelText="Keep it"
+  [isDestructive]="true"
+  (confirmed)="cancel()"
+  (cancelled)="toCancel = null"
+/>

@@ -237,7 +237,7 @@
                         formControlName="name"
                         type="text"
                         placeholder="Medicine Name (search catalog...)"
-                        (input)="searchMedicine(i, $any($event.target).value)"
+                        (input)="onMedicineTyped(i, $any($event.target).value)"
                         (focus)="searchMedicine(i, $any($event.target).value)"
                         (blur)="hideSuggestions(i)"
                         class="w-full border-b border-transparent hover:border-outline-variant focus:border-medical-blue bg-transparent focus:bg-white rounded-none p-1 font-semibold text-on-surface focus:outline-none transition-colors"

@@ -1,6 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { PrescriptionService } from '../../../../core/services/prescription.service';
+import { BillingService } from '../../../../core/services/billing.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
+import { hospitalCodeFrom } from '../../../../core/utils/route.util';
 import { Prescription } from '../../../../core/models/prescription.model';
 import { DatePipe } from '@angular/common';
 
@@ -84,6 +89,41 @@ import { DatePipe } from '@angular/common';
               </div>
             }
           </div>
+          @if (canGenerateBill) {
+            <div class="border-t border-gray-200 p-6 bg-[#F8FAFC]" id="generate-bill">
+              <h3 class="text-sm font-semibold text-[#1E293B] mb-1">Bill for this visit</h3>
+              <p class="text-xs text-[#64748B] mb-4">
+                The bill is the doctor's consultation fee plus the prescribed medicines. Add anything else below.
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label for="bill-additional" class="block text-xs text-[#64748B] mb-1">Additional charges (₹)</label>
+                  <input id="bill-additional" type="number" min="0" step="0.01" [(ngModel)]="additionalCharges" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
+                </div>
+                <div>
+                  <label for="bill-discount" class="block text-xs text-[#64748B] mb-1">Discount (₹)</label>
+                  <input id="bill-discount" type="number" min="0" step="0.01" [(ngModel)]="discount" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
+                </div>
+                <div>
+                  <label for="bill-tax" class="block text-xs text-[#64748B] mb-1">Tax (₹)</label>
+                  <input id="bill-tax" type="number" min="0" step="0.01" [(ngModel)]="tax" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
+                </div>
+              </div>
+              @if (billError) {
+                <p class="text-sm text-red-600 mt-3" id="bill-error">{{ billError }}</p>
+              }
+              <div class="mt-4 flex justify-end">
+                <button
+                  id="generate-bill-button"
+                  (click)="generateBill()"
+                  [disabled]="isGeneratingBill"
+                  class="px-5 py-2 bg-[#0052CC] text-white rounded-lg text-sm font-medium hover:bg-[#003d9b] disabled:opacity-50"
+                >
+                  {{ isGeneratingBill ? 'Generating...' : 'Generate Bill' }}
+                </button>
+              </div>
+            </div>
+          }
           <div class="border-t border-gray-200 p-4 flex justify-end gap-3">
             <button
               (click)="print()"
@@ -104,11 +144,22 @@ import { DatePipe } from '@angular/common';
       }
     </div>
   `,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, FormsModule],
 })
 export class PrescriptionDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private prescriptionService = inject(PrescriptionService);
+  private billingService = inject(BillingService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
+
+  // Rupees as typed; sent as paise.
+  additionalCharges: number | null = null;
+  discount: number | null = null;
+  tax: number | null = null;
+  isGeneratingBill = false;
+  billError = '';
 
   id: string | null = null;
   prescription: Prescription | undefined;
@@ -140,6 +191,49 @@ export class PrescriptionDetail implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  /** Only front-desk roles may bill (the API refuses everyone else), so others are not offered the form. */
+  get canGenerateBill(): boolean {
+    const role = this.authService.currentUserValue?.role;
+    return role === 'ADMIN' || role === 'RECEPTIONIST';
+  }
+
+  generateBill() {
+    if (!this.id || this.isGeneratingBill) return;
+    const toPaise = (rupees: number | null) => Math.round((rupees ?? 0) * 100);
+    if ([this.additionalCharges, this.discount, this.tax].some((v) => (v ?? 0) < 0)) {
+      this.billError = 'Amounts cannot be negative.';
+      return;
+    }
+    this.isGeneratingBill = true;
+    this.billError = '';
+    this.billingService
+      .createBill(this.id, {
+        prescriptionId: this.id,
+        additionalChargesInPaisa: toPaise(this.additionalCharges),
+        discountInPaisa: toPaise(this.discount),
+        taxInPaisa: toPaise(this.tax),
+      })
+      .subscribe({
+        next: (res) => {
+          this.isGeneratingBill = false;
+          if (res.success && res.data?.id) {
+            this.toast.success('Bill generated');
+            this.router.navigate(['/', hospitalCodeFrom(this.route), 'billing', res.data.id]);
+          } else {
+            this.billError = res.message || 'The bill could not be generated.';
+          }
+        },
+        error: (err) => {
+          this.isGeneratingBill = false;
+          // A second attempt for the same prescription is refused by the server; say so plainly.
+          this.billError =
+            err?.status === 409
+              ? 'A bill already exists for this prescription. Open it from Billing.'
+              : err?.error?.message || 'The bill could not be generated.';
+        },
+      });
   }
 
   print() {

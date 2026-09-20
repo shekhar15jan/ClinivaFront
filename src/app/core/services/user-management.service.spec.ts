@@ -69,7 +69,7 @@ describe('UserManagementService', () => {
 
   describe('createUser', () => {
     it('should POST and unwrap data', () => {
-      const request: CreateManagedUserRequest = { email: 'new@test.com', firstName: 'New', lastName: 'User', role: 'RECEPTIONIST' };
+      const request: CreateManagedUserRequest = { email: 'new@test.com', firstName: 'New', lastName: 'User', role: 'RECEPTIONIST', password: 'Str0ng#Pass' };
       const created: ManagedUser = { id: 'u2', email: 'new@test.com', firstName: 'New', lastName: 'User', roles: 'RECEPTIONIST', isActive: true, createdAt: '' };
       const mockResponse: ApiResponse<ManagedUser> = { success: true, data: created, message: '', timestamp: '', requestId: '' };
 

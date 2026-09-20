@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { MedicineCatalog } from './medicine-catalog';
 import { MedicineService } from '../../../../core/services/medicine.service';
 import { FormBuilder } from '@angular/forms';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse, PagedResponse } from '../../../../core/models/common.model';
 import { Medicine } from '../../../../core/models/medicine.model';
@@ -129,5 +129,23 @@ describe('MedicineCatalog', () => {
     expect(component.getPriceInRupees(1000)).toBe('10.00');
     expect(component.getPriceInRupees(undefined)).toBe('0.00');
     expect(component.getPriceInRupees(0)).toBe('0.00');
+  });
+
+  it('ignores a slow earlier search once a newer one has been made', () => {
+    const slow = new Subject<ApiResponse<Medicine[]>>();
+    const fast = new Subject<ApiResponse<Medicine[]>>();
+    const searchMedicines = vi.fn().mockReturnValueOnce(slow).mockReturnValueOnce(fast);
+    const component = createComponent({ searchMedicines } as unknown as Partial<MedicineService>);
+
+    component.searchQuery = 'para';
+    component.onSearch();
+    component.searchQuery = 'zzz';
+    component.onSearch();
+    fast.next({ ...mockSearchResponse, data: [] });
+    // The first answer arrives last. It must not bring the old rows back over the newer, empty result.
+    slow.next(mockSearchResponse);
+
+    expect(component.filteredMedicines).toEqual([]);
+    expect(component.totalElements).toBe(0);
   });
 });

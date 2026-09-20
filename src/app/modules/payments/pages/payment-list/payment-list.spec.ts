@@ -128,13 +128,17 @@ describe('PaymentList', () => {
     expect(component.selectedPayment).toBeNull();
   });
 
-  it('should generate UPI QR and show modal', () => {
+  it('finds a payment by patient name or bill number', () => {
     component.ngOnInit();
-    component.openUpiQr();
-    expect(component.showQrModal).toBe(true);
-    expect(component.qrBillId).toBe('');
-    component.qrBillId = 'b1';
-    component.generateQr();
-    expect(component.qrCode).toBe('data:image/png;base64,test');
+    component.payments = [
+      { ...component.payments[0], id: 'a', patientName: 'Rahul Rao', billNumber: 'BILL-2026-0042' },
+      { ...component.payments[0], id: 'b', patientName: 'Meera Nair', billNumber: 'BILL-2026-0043' },
+    ];
+    component.searchQuery = 'rahul';
+    component.onFilterChange();
+    expect(component.filteredPayments.map((p) => p.id)).toEqual(['a']);
+    component.searchQuery = '0043';
+    component.onFilterChange();
+    expect(component.filteredPayments.map((p) => p.id)).toEqual(['b']);
   });
 });

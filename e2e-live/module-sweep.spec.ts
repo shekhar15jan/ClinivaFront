@@ -16,11 +16,18 @@ const LICENSED = [
   ['prescriptions', 'Prescriptions'],
   ['payments', 'Payments'],
   ['settings', 'Settings'],
+  ['medicines', 'Medicines'],
+  ['reports', 'Reports'],
+  ['users', 'Users'],
+  ['audit-logs', 'Audit logs'],
+  ['health-packages', 'Health packages'],
+  ['contacts', 'Contacts'],
+  ['reviews', 'Reviews'],
 ] as const;
 
 test.describe('Professional-plan clinic, real backend', () => {
   test('every licensed screen loads without a failing API call or console error', async ({ page, request }) => {
-    const admin = await signInAsNewAdmin(page, request, 'HMS_PRO');
+    const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const problems: string[] = [];
     let where = 'sign-in';
     page.on('response', (r) => {

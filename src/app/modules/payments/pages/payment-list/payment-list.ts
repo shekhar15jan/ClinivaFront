@@ -25,11 +25,6 @@ export class PaymentList implements OnInit {
 
   selectedPayment: PaymentResponse | null = null;
 
-  showQrModal = false;
-  qrBillId = '';
-  qrCode = '';
-  qrLoading = false;
-  qrError = '';
 
   ngOnInit(): void {
     this.loadPayments();
@@ -60,7 +55,13 @@ export class PaymentList implements OnInit {
     }
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase();
-      result = result.filter((p) => p.billId.toLowerCase().includes(q) || p.paymentMethod.toLowerCase().includes(q));
+      result = result.filter(
+        (p) =>
+          p.billId.toLowerCase().includes(q) ||
+          p.paymentMethod.toLowerCase().includes(q) ||
+          (p.patientName ?? '').toLowerCase().includes(q) ||
+          (p.billNumber ?? '').toLowerCase().includes(q),
+      );
     }
     this.filteredPayments = result;
   }
@@ -91,42 +92,5 @@ export class PaymentList implements OnInit {
 
   closeDetail(): void {
     this.selectedPayment = null;
-  }
-
-  openUpiQr(): void {
-    this.showQrModal = true;
-    this.qrBillId = '';
-    this.qrCode = '';
-    this.qrError = '';
-  }
-
-  closeQrModal(): void {
-    this.showQrModal = false;
-    this.qrCode = '';
-    this.qrError = '';
-  }
-
-  generateQr(): void {
-    if (!this.qrBillId.trim()) {
-      this.qrError = 'Please enter a bill ID';
-      return;
-    }
-    this.qrLoading = true;
-    this.qrError = '';
-    this.qrCode = '';
-    this.paymentService.generateUpiQr(this.qrBillId).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.qrCode = res.data;
-        } else {
-          this.qrError = 'Failed to generate QR code';
-        }
-        this.qrLoading = false;
-      },
-      error: (err) => {
-        this.qrError = err?.message || 'QR generation failed';
-        this.qrLoading = false;
-      },
-    });
   }
 }

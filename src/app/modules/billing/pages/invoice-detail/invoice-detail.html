@@ -25,9 +25,9 @@
           <span class="material-symbols-outlined text-[20px]">download</span> {{ isDownloading ? 'Downloading...' : 'PDF' }}
         </button>
         @if (status === 'UNPAID' || status === 'PARTIALLY_PAID') {
-          <button (click)="collectPayment()" [disabled]="isCollecting" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-status-green hover:bg-status-green/90 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md">
+          <button id="collect-payment" (click)="collectPayment()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-status-green hover:bg-status-green/90 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md">
             <span class="material-symbols-outlined text-[20px]">payments</span>
-            {{ isCollecting ? 'Processing...' : 'Collect Payment' }}
+            Collect Payment
           </button>
         }
         @if (status === 'PAID') {
@@ -118,3 +118,13 @@
     <div class="text-center py-12 text-outline">Invoice not found.</div>
   }
 </div>
+
+@if (bill) {
+  <app-payment-modal
+    [open]="showPayment"
+    [billId]="bill.id"
+    [amountInPaisa]="bill.totalAmountInPaisa"
+    (closed)="showPayment = false"
+    (paymentSuccess)="onPaymentRecorded()"
+  />
+}

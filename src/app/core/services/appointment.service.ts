@@ -18,10 +18,15 @@ export class AppointmentService {
     size = 50,
     status?: string,
     doctorId?: string,
+    /** Inclusive day range, YYYY-MM-DD. */
+    dateFrom?: string,
+    dateTo?: string,
   ): Observable<ApiResponse<PagedResponse<Appointment>>> {
     let url = `${this.apiUrl}?page=${page}&size=${size}`;
     if (status) url += `&status=${status}`;
     if (doctorId) url += `&doctorId=${doctorId}`;
+    if (dateFrom) url += `&dateFrom=${dateFrom}`;
+    if (dateTo) url += `&dateTo=${dateTo}`;
     return this.http
       .get<ApiResponse<RawPagedResponse<Appointment>>>(url)
       .pipe(
