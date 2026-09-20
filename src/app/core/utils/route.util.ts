@@ -12,3 +12,8 @@ export function hospitalCodeFrom(route: ActivatedRoute): string {
   }
   return '';
 }
+
+/** Where a signed-in user starts: a patient in their own portal, everyone else on the clinic dashboard. */
+export function homePathFor(role: string | undefined, hospitalCode: string): string {
+  return role === 'PATIENT' ? `/${hospitalCode}/patient/dashboard` : `/${hospitalCode}/dashboard`;
+}

@@ -96,15 +96,15 @@ describe('BillingService', () => {
   });
 
   describe('getPatientBills', () => {
-    it('should GET patient bills with patientId param', () => {
+    it('should GET the bills of the signed-in patient and send no id', () => {
       const mockResponse: ApiResponse<Bill[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
 
-      service.getPatientBills('p1').subscribe((res) => {
+      service.getPatientBills().subscribe((res) => {
         expect(res.data).toEqual([]);
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/patient/logged-in` && r.params.get('patientId') === 'p1',
+        (r) => r.url === `${baseUrl}/patient/logged-in` && r.params.keys().length === 0,
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);

@@ -19,10 +19,8 @@
     <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
       <p class="text-sm text-status-red">{{ store.error() }}</p>
       <button (click)="refresh()" class="text-xs text-medical-blue hover:underline">Retry</button>
-        </div>
-      } @else {
-        <div class="h-48 flex items-center justify-center text-sm text-outline">No data available</div>
-      }
+    </div>
+  }
 
   <!-- Stat Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

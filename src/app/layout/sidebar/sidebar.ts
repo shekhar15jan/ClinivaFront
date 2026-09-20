@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NavItem, STAFF_NAV, canSee } from '../nav-items';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,20 +24,7 @@ export class Sidebar {
   readonly userRole = computed(() => this.authService.currentUserValue?.role || '');
   readonly isPatient = computed(() => this.userRole() === 'PATIENT');
 
-  readonly staffNavItems = [
-    { code: 'DASHBOARD', label: 'Dashboard', icon: 'dashboard', route: 'dashboard' },
-    { code: 'PATIENT', label: 'Patients', icon: 'person', route: 'patients' },
-    { code: 'DOCTOR', label: 'Doctors', icon: 'medical_services', route: 'doctors' },
-    { code: 'APPOINTMENT', label: 'Appointments', icon: 'event', route: 'appointments' },
-    { code: 'CONSULTATION', label: 'Consultations', icon: 'stethoscope', route: 'consultations' },
-    { code: 'PRESCRIPTION', label: 'Prescriptions', icon: 'receipt_long', route: 'prescriptions' },
-    { code: 'BILLING', label: 'Billing', icon: 'payments', route: 'billing' },
-    { code: 'MEDICINE', label: 'Pharmacy', icon: 'medication', route: 'medicines' },
-    { code: 'REPORTS', label: 'Reports', icon: 'bar_chart', route: 'reports' },
-    { code: 'HEALTH_PACKAGE', label: 'Health Packages', icon: 'card_giftcard', route: 'health-packages' },
-    { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings' },
-    { code: 'SETTINGS', label: 'Email Templates', icon: 'mail', route: 'settings/email-templates', adminOnly: true },
-  ];
+  readonly staffNavItems = STAFF_NAV;
 
   readonly patientNavItems = [
     { code: 'DASHBOARD', label: 'Dashboard', icon: 'dashboard', route: 'patient/dashboard' },
@@ -50,9 +38,8 @@ export class Sidebar {
     this.isPatient() ? this.patientNavItems : this.staffNavItems
   );
 
-  isVisible(item: { code: string; adminOnly?: boolean }) {
+  isVisible(item: NavItem) {
     if (this.isPatient()) return true;
-    if (item.adminOnly && this.userRole() !== 'ADMIN') return false;
-    return item.code === 'DASHBOARD' || this.activeModules().includes(item.code);
+    return canSee(item, this.userRole(), this.activeModules());
   }
 }

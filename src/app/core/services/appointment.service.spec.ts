@@ -132,11 +132,11 @@ describe('AppointmentService', () => {
   });
 
   describe('getDoctorAppointments', () => {
-    it('should GET doctor appointments with doctorId param', () => {
-      service.getDoctorAppointments('d1').subscribe();
+    it('should GET the appointments of the signed-in doctor and send no id', () => {
+      service.getDoctorAppointments().subscribe();
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${apiUrl}/doctor/logged-in` && r.params.get('doctorId') === 'd1',
+        (r) => r.url === `${apiUrl}/doctor/logged-in` && r.params.keys().length === 0,
       );
       expect(req.request.method).toBe('GET');
       req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);
@@ -144,11 +144,11 @@ describe('AppointmentService', () => {
   });
 
   describe('getPatientAppointments', () => {
-    it('should GET patient appointments with patientId param', () => {
-      service.getPatientAppointments('p1').subscribe();
+    it('should GET the appointments of the signed-in patient and send no id', () => {
+      service.getPatientAppointments().subscribe();
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${apiUrl}/patient/logged-in` && r.params.get('patientId') === 'p1',
+        (r) => r.url === `${apiUrl}/patient/logged-in` && r.params.keys().length === 0,
       );
       expect(req.request.method).toBe('GET');
       req.flush({ success: true, data: [] } as unknown as ApiResponse<unknown>);

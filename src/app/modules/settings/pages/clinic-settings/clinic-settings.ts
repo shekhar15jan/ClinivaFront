@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ClinicSettings } from '../../../../core/models/setting.model';
+import { SettingService } from '../../../../core/services/setting.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -8,6 +10,13 @@ import { FormsModule } from '@angular/forms';
   template: `
     <div class="p-6">
       <h1 class="text-2xl font-bold text-[#1E293B] mb-6">Clinic Settings</h1>
+
+      @if (error) {
+        <div class="max-w-3xl mb-4 p-3 rounded-lg bg-red-50 text-sm text-red-700" id="settings-error">
+          {{ error }}
+          <button type="button" class="underline ml-2" (click)="load()">Retry</button>
+        </div>
+      }
 
       <div class="max-w-3xl space-y-6">
         <div class="bg-white rounded-xl border border-gray-200 p-6">
@@ -124,12 +133,21 @@ import { FormsModule } from '@angular/forms';
 
         <div class="flex gap-3">
           <button
-            class="bg-[#0052CC] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#003d9b]"
+            id="save-settings"
+            type="button"
+            (click)="save()"
+            [disabled]="isSaving || isLoading"
+            class="bg-[#0052CC] text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-[#003d9b] disabled:opacity-50"
           >
-            Save Settings
+            {{ isSaving ? 'Saving...' : 'Save Settings' }}
           </button>
-          <button class="text-[#64748B] hover:text-[#1E293B] text-sm font-medium px-4 py-2">
-            Reset to Default
+          <button
+            type="button"
+            (click)="load()"
+            [disabled]="isSaving || isLoading"
+            class="text-[#64748B] hover:text-[#1E293B] text-sm font-medium px-4 py-2 disabled:opacity-50"
+          >
+            Discard Changes
           </button>
         </div>
 
@@ -156,22 +174,92 @@ import { FormsModule } from '@angular/forms';
   `,
   imports: [FormsModule],
 })
-export class ClinicSettingsPage {
+export class ClinicSettingsPage implements OnInit {
   public router = inject(Router);
   public activatedRoute = inject(ActivatedRoute);
+  private settingService = inject(SettingService);
+  private toast = inject(ToastService);
+
+  // Placeholders shown for a moment before the clinic's own settings arrive.
   settings: ClinicSettings = {
-    clinicName: 'Cliniva Hospital',
-    address: '123 Healthcare Avenue, Medical District',
-    phone: '+91 9876543210',
-    email: 'admin@cliniva.com',
-    patientIdPrefix: 'CLI',
+    clinicName: '',
+    address: '',
+    phone: '',
+    email: '',
+    patientIdPrefix: '',
     currency: 'INR',
     timezone: 'Asia/Kolkata',
-    defaultConsultationFeeInPaisa: 50000,
-    enableOnlinePayment: true,
-    enableOtpLogin: true,
+    defaultConsultationFeeInPaisa: 0,
+    enableOnlinePayment: false,
+    enableOtpLogin: false,
   };
 
-  defaultFee = 500;
+  /** The default consultation fee in rupees, as typed. Sent as paise. */
+  defaultFee = 0;
+  isLoading = false;
+  isSaving = false;
+  error = '';
 
+  ngOnInit(): void {
+    this.load();
+  }
+
+  /** Reads the clinic's saved settings from the server, replacing anything typed but not saved. */
+  load(): void {
+    this.isLoading = true;
+    this.error = '';
+    this.settingService.get().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.settings = { ...this.settings, ...res.data };
+          this.defaultFee = (res.data.defaultConsultationFeeInPaisa ?? 0) / 100;
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = err?.error?.message || 'The settings could not be loaded.';
+      },
+    });
+  }
+
+  save(): void {
+    if (this.isSaving) return;
+    if (!this.settings.clinicName?.trim()) {
+      this.toast.error('Enter the clinic name.');
+      return;
+    }
+    if (!this.settings.patientIdPrefix?.trim()) {
+      this.toast.error('Enter a patient ID prefix, for example CLI.');
+      return;
+    }
+    if (!(this.defaultFee >= 0)) {
+      this.toast.error('The default consultation fee cannot be negative.');
+      return;
+    }
+    this.isSaving = true;
+    this.settingService
+      .update({
+        ...this.settings,
+        clinicName: this.settings.clinicName.trim(),
+        patientIdPrefix: this.settings.patientIdPrefix.trim().toUpperCase(),
+        defaultConsultationFeeInPaisa: Math.round(this.defaultFee * 100),
+      })
+      .subscribe({
+        next: (res) => {
+          this.isSaving = false;
+          if (res.success && res.data) {
+            this.settings = { ...this.settings, ...res.data };
+            this.defaultFee = (res.data.defaultConsultationFeeInPaisa ?? 0) / 100;
+            this.toast.success('Settings saved');
+          } else {
+            this.toast.error(res.message || 'The settings could not be saved.');
+          }
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.toast.error(err?.error?.message || 'The settings could not be saved.');
+        },
+      });
+  }
 }

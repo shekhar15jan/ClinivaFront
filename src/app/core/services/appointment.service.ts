@@ -61,16 +61,14 @@ export class AppointmentService {
     return this.http.put<ApiResponse<Appointment>>(`${this.apiUrl}/${id}/reject`, {});
   }
 
-  getDoctorAppointments(doctorId: string): Observable<ApiResponse<Appointment[]>> {
-    return this.http.get<ApiResponse<Appointment[]>>(`${this.apiUrl}/doctor/logged-in`, {
-      params: { doctorId },
-    });
+  /** The signed-in doctor's appointments. The server works out who that is; no id is sent. */
+  getDoctorAppointments(): Observable<ApiResponse<Appointment[]>> {
+    return this.http.get<ApiResponse<Appointment[]>>(`${this.apiUrl}/doctor/logged-in`);
   }
 
-  getPatientAppointments(patientId: string): Observable<ApiResponse<Appointment[]>> {
-    return this.http.get<ApiResponse<Appointment[]>>(`${this.apiUrl}/patient/logged-in`, {
-      params: { patientId },
-    });
+  /** The signed-in patient's appointments. The server works out who that is; no id is sent. */
+  getPatientAppointments(): Observable<ApiResponse<Appointment[]>> {
+    return this.http.get<ApiResponse<Appointment[]>>(`${this.apiUrl}/patient/logged-in`);
   }
 
   getAvailableSlots(doctorId: string, date: string): Observable<ApiResponse<string[]>> {

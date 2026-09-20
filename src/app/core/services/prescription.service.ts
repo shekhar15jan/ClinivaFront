@@ -39,16 +39,14 @@ export class PrescriptionService {
     return this.http.get<ApiResponse<Prescription[]>>(`${this.baseUrl}/patient/${patientId}`);
   }
 
-  getDoctorPrescriptions(doctorId: string): Observable<ApiResponse<Prescription[]>> {
-    return this.http.get<ApiResponse<Prescription[]>>(`${this.baseUrl}/doctor/logged-in`, {
-      params: { doctorId },
-    });
+  /** The signed-in doctor's prescriptions. The server works out who that is; no id is sent. */
+  getDoctorPrescriptions(): Observable<ApiResponse<Prescription[]>> {
+    return this.http.get<ApiResponse<Prescription[]>>(`${this.baseUrl}/doctor/logged-in`);
   }
 
-  getPatientPrescriptions(patientId: string): Observable<ApiResponse<Prescription[]>> {
-    return this.http.get<ApiResponse<Prescription[]>>(`${this.baseUrl}/patient/logged-in`, {
-      params: { patientId },
-    });
+  /** The signed-in patient's prescriptions. The server works out who that is; no id is sent. */
+  getPatientPrescriptions(): Observable<ApiResponse<Prescription[]>> {
+    return this.http.get<ApiResponse<Prescription[]>>(`${this.baseUrl}/patient/logged-in`);
   }
 
   getByAppointment(appointmentId: string): Observable<ApiResponse<Prescription>> {

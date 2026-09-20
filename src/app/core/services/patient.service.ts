@@ -43,6 +43,16 @@ export class PatientService {
     return this.http.get<ApiResponse<PatientVisitResponse>>(`${this.apiUrl}/${id}/visits`);
   }
 
+  /** The signed-in patient's own record (portal). */
+  getMyProfile(): Observable<ApiResponse<Patient>> {
+    return this.http.get<ApiResponse<Patient>>(`${this.apiUrl}/me`);
+  }
+
+  /** A patient updating their own details. */
+  updateMyProfile(patient: Partial<Patient>): Observable<ApiResponse<Patient>> {
+    return this.http.put<ApiResponse<Patient>>(`${this.apiUrl}/me`, patient);
+  }
+
   searchPatients(query: string): Observable<ApiResponse<Patient[]>> {
     return this.http.get<ApiResponse<Patient[]>>(`${this.apiUrl}/search`, {
       params: { q: query },

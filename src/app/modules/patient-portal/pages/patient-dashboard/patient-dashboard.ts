@@ -104,18 +104,17 @@ export class PatientDashboard implements OnInit {
 
   loadData() {
     this.isLoading = true;
-    const patientId = this.authService.currentUserValue?.id || '';
 
-    this.appointmentService.getPatientAppointments(patientId).subscribe({
+    this.appointmentService.getPatientAppointments().subscribe({
       next: (res) => { if (res.success) { this.appointments = res.data || []; } this.isLoading = false; },
       error: () => { this.isLoading = false; },
     });
 
-    this.prescriptionService.getPatientPrescriptions(patientId).subscribe({
+    this.prescriptionService.getPatientPrescriptions().subscribe({
       next: (res) => { if (res.success) { this.prescriptions = res.data || []; } },
     });
 
-    this.billingService.getPatientBills(patientId).subscribe({
+    this.billingService.getPatientBills().subscribe({
       next: (res) => { if (res.success) { this.bills = res.data || []; } },
     });
   }

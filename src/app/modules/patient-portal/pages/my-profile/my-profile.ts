@@ -47,19 +47,13 @@ export class MyProfile implements OnInit {
 
   loadPatientProfile(): void {
     this.loading = true;
-    const email = this.user?.email;
-    if (!email) {
-      this.loading = false;
-      return;
-    }
-    this.patientService.searchPatients(email).subscribe({
+    // The server finds the patient record from the signed-in login. A patient could not call the staff
+    // search this used to use, so the profile never loaded.
+    this.patientService.getMyProfile().subscribe({
       next: (res) => {
-        const patients = res.data;
-        if (patients && patients.length > 0) {
-          this.patient = patients.find(p => p.email === email) || patients[0];
-          if (this.patient) {
-            this.populateForm(this.patient);
-          }
+        if (res.success && res.data) {
+          this.patient = res.data;
+          this.populateForm(this.patient);
         }
         this.loading = false;
       },
@@ -95,7 +89,7 @@ export class MyProfile implements OnInit {
   saveProfile(): void {
     if (!this.patient) return;
     this.isSaving = true;
-    this.patientService.updatePatient(this.patient.id, {
+    this.patientService.updateMyProfile({
       fullName: this.editForm.fullName,
       phone: this.editForm.phone,
       email: this.editForm.email,

@@ -96,15 +96,15 @@ describe('PrescriptionService', () => {
   });
 
   describe('getDoctorPrescriptions', () => {
-    it('should GET doctor prescriptions with doctorId param', () => {
+    it('should GET the prescriptions of the signed-in doctor and send no id', () => {
       const mockResponse: ApiResponse<Prescription[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
 
-      service.getDoctorPrescriptions('d1').subscribe((res) => {
+      service.getDoctorPrescriptions().subscribe((res) => {
         expect(res.data).toEqual([]);
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/doctor/logged-in` && r.params.get('doctorId') === 'd1',
+        (r) => r.url === `${baseUrl}/doctor/logged-in` && r.params.keys().length === 0,
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
@@ -112,15 +112,15 @@ describe('PrescriptionService', () => {
   });
 
   describe('getPatientPrescriptions', () => {
-    it('should GET patient prescriptions with patientId param', () => {
+    it('should GET the prescriptions of the signed-in patient and send no id', () => {
       const mockResponse: ApiResponse<Prescription[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
 
-      service.getPatientPrescriptions('p1').subscribe((res) => {
+      service.getPatientPrescriptions().subscribe((res) => {
         expect(res.data).toEqual([]);
       });
 
       const req = httpMock.expectOne(
-        (r) => r.url === `${baseUrl}/patient/logged-in` && r.params.get('patientId') === 'p1',
+        (r) => r.url === `${baseUrl}/patient/logged-in` && r.params.keys().length === 0,
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);

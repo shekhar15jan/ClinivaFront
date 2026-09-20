@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BillingService } from '../../../../core/services/billing.service';
-import { AuthService } from '../../../../core/services/auth.service';
 import { Bill } from '../../../../core/models/billing.model';
 import { DatePipe } from '@angular/common';
 
@@ -67,13 +66,11 @@ import { DatePipe } from '@angular/common';
 })
 export class MyBills implements OnInit {
   private billingService = inject(BillingService);
-  private authService = inject(AuthService);
   bills: Bill[] = [];
   isLoading = false;
   ngOnInit() {
-    const patientId = this.authService.currentUserValue?.id || '';
     this.isLoading = true;
-    this.billingService.getPatientBills(patientId).subscribe({
+    this.billingService.getPatientBills().subscribe({
       next: (res) => { if (res.success) { this.bills = res.data || []; } this.isLoading = false; },
       error: () => { this.isLoading = false; },
     });

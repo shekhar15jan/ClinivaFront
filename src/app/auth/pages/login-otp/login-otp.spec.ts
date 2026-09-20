@@ -71,6 +71,14 @@ describe('LoginOtp', () => {
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/test-hospital/dashboard']);
   });
 
+  it('should start a patient in their own portal, not on the staff dashboard', () => {
+    const { component, authSpy, routerSpy } = createLoginOtp();
+    authSpy.verifyOtp.mockReturnValue(of({ success: true, data: { user: { role: 'PATIENT' } } }));
+    component.digits = ['1', '2', '3', '4', '5', '6'];
+    component.verifyOtp();
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/test-hospital/patient/dashboard']);
+  });
+
   it('should navigate to dashboard after successful OTP verification with requiresOnboarding', () => {
     const { component, routerSpy } = createLoginOtp();
     (component as unknown as Record<string, unknown>)['authService'] = {

@@ -1,5 +1,6 @@
 export interface CreateReviewRequest {
-  patientId: string;
+  /** Ignored by the server, which uses the signed-in patient and the visit's doctor. */
+  patientId?: string;
   doctorId?: string;
   appointmentId?: string;
   prescriptionId?: string;

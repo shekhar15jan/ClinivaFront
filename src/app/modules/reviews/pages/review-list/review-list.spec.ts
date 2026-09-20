@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { ReviewList } from './review-list';
 import { ReviewService } from '../../../../core/services/review.service';
 import { of, throwError } from 'rxjs';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { vi } from 'vitest';
 import { ApiResponse } from '../../../../core/models/common.model';
 import { ReviewResponse } from '../../../../core/models/review.model';
@@ -19,9 +20,14 @@ describe('ReviewList', () => {
     success: true, data: [{ ...mockReview, id: 'r2', isApproved: true }], message: '', timestamp: '', requestId: '',
   };
 
+  const toast = { success: vi.fn(), error: vi.fn() };
+
   function createComponent(overrides?: Partial<ReviewService>) {
+    toast.success.mockClear();
+    toast.error.mockClear();
     TestBed.configureTestingModule({
       providers: [
+        { provide: ToastService, useValue: toast },
         {
           provide: ReviewService,
           useValue: {
@@ -92,6 +98,17 @@ describe('ReviewList', () => {
     expect(component.pendingReviews.length).toBe(0);
   });
 
+  it('moves an approved review into the Approved list and count straight away', () => {
+    const component = createComponent();
+    component.ngOnInit();
+    const before = component.approvedReviews.length;
+    const pending = component.pendingReviews[0];
+    component.approve(pending);
+    expect(component.approvedReviews.length).toBe(before + 1);
+    expect(component.approvedReviews[0]).toMatchObject({ id: pending.id, isApproved: true });
+    expect(toast.success).toHaveBeenCalledWith('Review approved');
+  });
+
   it('should reject review and remove from pending list', () => {
     const component = createComponent();
     component.ngOnInit();
@@ -100,26 +117,24 @@ describe('ReviewList', () => {
     expect(component.pendingReviews.length).toBe(0);
   });
 
-  it('should handle approve error gracefully', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(vi.fn());
+  it('tells the user when approving fails, and leaves the review pending', () => {
     const component = createComponent({
-      approveReview: vi.fn().mockReturnValue(throwError(() => new Error('fail'))),
+      approveReview: vi.fn().mockReturnValue(throwError(() => ({ error: { message: 'Review not found' } }))),
     });
     component.ngOnInit();
+    const count = component.pendingReviews.length;
     component.approve(component.pendingReviews[0]);
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(toast.error).toHaveBeenCalledWith('Review not found');
+    expect(component.pendingReviews.length).toBe(count);
   });
 
-  it('should handle reject error gracefully', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(vi.fn());
+  it('tells the user when rejecting fails, with a plain message when the server gives none', () => {
     const component = createComponent({
       rejectReview: vi.fn().mockReturnValue(throwError(() => new Error('fail'))),
     });
     component.ngOnInit();
     component.reject(component.pendingReviews[0]);
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(toast.error).toHaveBeenCalledWith('The review could not be rejected.');
   });
 
   it('should open and close detail modal', () => {

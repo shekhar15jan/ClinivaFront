@@ -1,4 +1,4 @@
-import { APIRequestContext, Page, expect } from '@playwright/test';
+import { APIRequestContext, Browser, Page, expect } from '@playwright/test';
 
 const CLOUDSUITE = process.env.CLOUDSUITE_API || 'http://localhost:8081/api/v1';
 const MAILHOG = process.env.MAILHOG_API || 'http://localhost:8025/api/v2';
@@ -71,6 +71,7 @@ export interface ProvisionedTenant {
   productId: string;
   plans: Record<string, string>;
   post: (path: string, data?: unknown) => Promise<any>;
+  patch: (path: string) => Promise<any>;
 }
 
 /** Creates a tenant with an administrator in CloudSuite, the way an operator would. */
@@ -134,6 +135,11 @@ export async function provisionTenant(request: APIRequestContext, planCode = 'HM
       expect(res.ok(), `POST ${path}`).toBeTruthy();
       return res.json();
     },
+    patch: async (path) => {
+      const res = await request.patch(`${CLOUDSUITE}${path}`, { headers });
+      expect(res.ok(), `PATCH ${path}`).toBeTruthy();
+      return res.json();
+    },
   };
 }
 
@@ -182,18 +188,21 @@ export async function signInWithOtp(page: Page, request: APIRequestContext, emai
   const digits = page.locator('input.otp-digit');
   for (let i = 0; i < 6; i++) await digits.nth(i).fill(otp[i]);
   await page.getByRole('button', { name: /Verify/ }).click();
-  await page.waitForURL(new RegExp(`/${hospitalCode}/dashboard`), { timeout: 20000 });
+  // Patients land on their own dashboard, staff on the clinic's.
+  await page.waitForURL(new RegExp(`/${hospitalCode}/(patient/)?dashboard`), { timeout: 20000 });
   return hospitalCode;
 }
 
 /** Registers a patient through the real form and returns once the API has accepted it. */
-export async function registerPatient(page: Page, hospitalCode: string, name: string, phone: string): Promise<void> {
+export async function registerPatient(page: Page, hospitalCode: string, name: string, phone: string, email?: string): Promise<void> {
   await page.goto(`/${hospitalCode}/patients`);
   await page.getByRole('button', { name: /Add Patient/ }).click();
   await page.fill('#patientFullName', name);
   await page.fill('#patientDob', '1990-05-17');
   await page.selectOption('#patientGender', 'FEMALE');
   await page.fill('#patientPhone', phone);
+  // With an email the clinic also creates the patient's login for the portal.
+  if (email) await page.fill('#patientEmail', email);
   const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/patients$/.test(r.url()));
   await page.getByRole('button', { name: /Save Patient/ }).click();
   expect((await created).ok(), 'patient created').toBeTruthy();
@@ -281,4 +290,72 @@ export async function addStaffUser(
   await page.locator('#save-user').click();
   const response = await created;
   expect(response.ok(), `staff user created (${response.status()})`).toBeTruthy();
+}
+
+export interface PaidVisit {
+  doctorName: string;
+  doctorEmail: string;
+  patientName: string;
+  medicine: string;
+  billNumber: string;
+  /** Consultation 600 + 10 doses x 12.50 + 50 extra - 25 discount. */
+  totalInPaisa: 75000;
+}
+
+/**
+ * A whole visit by the people who do each part, on real services: the front desk books and approves, the doctor
+ * (signed in with their own emailed code) consults and prescribes, the front desk bills and takes cash.
+ */
+export async function completePaidVisit(page: Page, request: APIRequestContext, browser: Browser, hospitalCode: string, patientEmail?: string): Promise<PaidVisit> {
+  const stamp = Date.now().toString().slice(-6);
+  const doctorName = `Dr. Visit ${stamp}`;
+  const doctorEmail = `dr.visit${stamp}@live-staff.test`;
+  const patientName = `Visit Patient ${stamp}`;
+  const medicine = `Cefix ${stamp}`;
+
+  await registerDoctor(page, hospitalCode, doctorName, `98${stamp}21`.slice(0, 10), doctorEmail);
+  await registerPatient(page, hospitalCode, patientName, `97${stamp}22`.slice(0, 10), patientEmail);
+  await addMedicine(page, hospitalCode, medicine, '12.50');
+  await setDoctorHours(page, hospitalCode, doctorName);
+  const appointmentId = await bookAppointment(page, hospitalCode, doctorName, patientName);
+
+  await page.goto(`/${hospitalCode}/appointments`);
+  const row = page.locator('li', { hasText: patientName });
+  const approved = page.waitForResponse((r) => r.request().method() === 'PUT' && /\/approve$/.test(r.url()));
+  await row.getByRole('button', { name: 'Approve' }).click();
+  expect((await approved).ok(), 'appointment approved').toBeTruthy();
+
+  const context = await browser.newContext();
+  const doctor = await context.newPage();
+  await signInWithOtp(doctor, request, doctorEmail);
+  await doctor.goto(`/${hospitalCode}/consultations/${appointmentId}`);
+  await expect(doctor.locator('#chiefComplaint')).toBeVisible({ timeout: 15000 });
+  await doctor.fill('#chiefComplaint', 'Fever for three days');
+  await doctor.fill('#diagnosis', 'Viral fever');
+  const name = doctor.locator('input[formControlName="name"]').first();
+  await name.fill(stamp);
+  await doctor.getByRole('button', { name: new RegExp(medicine) }).click();
+  await doctor.locator('input[formControlName="duration"]').first().fill('5');
+  const prescription = doctor.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/prescriptions$/.test(r.url()));
+  await doctor.getByRole('button', { name: /Finish & Print/ }).click();
+  const prescriptionRes = await prescription;
+  expect(prescriptionRes.ok(), 'prescription saved').toBeTruthy();
+  const prescriptionId = (await prescriptionRes.json()).data.id as string;
+  await context.close();
+
+  await page.goto(`/${hospitalCode}/prescriptions/${prescriptionId}`);
+  await page.fill('#bill-additional', '50');
+  await page.fill('#bill-discount', '25');
+  const generated = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/bills\/generate/.test(r.url()));
+  await page.locator('#generate-bill-button').click();
+  const bill = await generated;
+  expect(bill.ok(), 'bill generated').toBeTruthy();
+  const billNumber = (await bill.json()).data.billNumber as string;
+
+  await page.locator('#collect-payment').click();
+  const paid = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/payments\/save$/.test(r.url()));
+  await page.locator('#payment-confirm').click();
+  expect((await paid).ok(), 'payment saved').toBeTruthy();
+  await expect(page.getByText('PAID', { exact: true }).first()).toBeVisible({ timeout: 15000 });
+  return { doctorName, doctorEmail, patientName, medicine, billNumber, totalInPaisa: 75000 };
 }

@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { PrescriptionService } from '../../../../core/services/prescription.service';
-import { AuthService } from '../../../../core/services/auth.service';
 import { Prescription } from '../../../../core/models/prescription.model';
 import { DatePipe } from '@angular/common';
 
@@ -50,13 +49,11 @@ import { DatePipe } from '@angular/common';
 })
 export class MyPrescriptions implements OnInit {
   private prescriptionService = inject(PrescriptionService);
-  private authService = inject(AuthService);
   prescriptions: Prescription[] = [];
   isLoading = false;
   ngOnInit() {
-    const patientId = this.authService.currentUserValue?.id || '';
     this.isLoading = true;
-    this.prescriptionService.getPatientPrescriptions(patientId).subscribe({
+    this.prescriptionService.getPatientPrescriptions().subscribe({
       next: (res) => { if (res.success) { this.prescriptions = res.data || []; } this.isLoading = false; },
       error: () => { this.isLoading = false; },
     });

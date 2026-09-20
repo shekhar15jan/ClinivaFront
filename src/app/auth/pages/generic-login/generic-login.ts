@@ -6,6 +6,7 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { TenantResolution } from '../../../core/models/tenant.model';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { homePathFor } from '../../../core/utils/route.util';
 
 @Component({
   selector: 'app-generic-login',
@@ -30,9 +31,9 @@ export class GenericLogin implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.authSubscription = this.authService.authState$.subscribe({
-      next: (state: { isAuthenticated: boolean; user: User | null }) => {
+      next: (state: { isAuthenticated: boolean; user: User | null; tenant?: { code?: string } | null }) => {
         if (state.isAuthenticated && state.user) {
-          this.redirectBasedOnRole(state.user);
+          this.redirectBasedOnRole(state.user, state.tenant?.code);
         }
       },
       error: (error) => {
@@ -47,25 +48,16 @@ export class GenericLogin implements OnInit, OnDestroy {
     }
   }
 
-  private redirectBasedOnRole(user: User): void {
+  private redirectBasedOnRole(user: User, hospitalCode?: string): void {
     const queryParams = this.route.snapshot.queryParams;
     if (queryParams["returnUrl"]) {
       this.router.navigateByUrl(queryParams["returnUrl"]);
       return;
     }
-    if (user.role === 'PATIENT') {
-      this.router.navigate(['/patient/dashboard']);
-    } else if (user.role === 'DOCTOR') {
-      this.router.navigate(['/dashboard']);
-    } else if (user.role === 'RECEPTIONIST') {
-      this.router.navigate(['/dashboard']);
-    } else if (user.role === 'NURSE') {
-      this.router.navigate(['/dashboard']);
-    } else if (user.role === 'ADMIN') {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.router.navigate(['/generic-login']);
-    }
+    // Every screen lives under the clinic code. A bare "/dashboard" was read as a clinic called
+    // "dashboard" and sent an already signed-in user straight back to the login page.
+    if (!hospitalCode) return;
+    this.router.navigate([homePathFor(user.role, hospitalCode)]);
   }
 
   resolveTenant(): void {

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ViewChildren, QueryList, ElementRef, signal 
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { homePathFor } from '../../../core/utils/route.util';
 
 @Component({
   selector: 'app-login-otp',
@@ -84,7 +85,8 @@ export class LoginOtp implements OnInit {
         next: (response) => {
           this.isLoading = false;
           if (response.success && response.data) {
-            this.router.navigate([`/${this.hospitalCode}/dashboard`]);
+            // A patient goes to their own portal; staff to the clinic dashboard.
+            this.router.navigate([homePathFor(response.data.user?.role, this.hospitalCode)]);
           }
         },
         error: (err) => {

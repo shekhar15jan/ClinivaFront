@@ -58,6 +58,23 @@ describe('PatientService', () => {
     });
   });
 
+  describe("the signed-in patient's own record", () => {
+    it('reads it from /me without sending any id', () => {
+      service.getMyProfile().subscribe();
+      const req = httpMock.expectOne(`${apiUrl}/me`);
+      expect(req.request.method).toBe('GET');
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+
+    it('updates it at /me', () => {
+      service.updateMyProfile({ phone: '9876500000' }).subscribe();
+      const req = httpMock.expectOne(`${apiUrl}/me`);
+      expect(req.request.method).toBe('PUT');
+      expect(req.request.body).toEqual({ phone: '9876500000' });
+      req.flush({ success: true, data: {} } as unknown as ApiResponse<unknown>);
+    });
+  });
+
   describe('getPatientById', () => {
     it('should GET by id', () => {
       const mockResponse: ApiResponse<Patient> = {

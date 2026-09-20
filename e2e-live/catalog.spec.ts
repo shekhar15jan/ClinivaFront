@@ -89,9 +89,17 @@ test.describe('Medicines and health packages, real backend', () => {
     await page.getByRole('button', { name: /Confirm|Book Now|Submit|Book$/ }).last().click();
     expect((await booked).ok(), 'package booked').toBeTruthy();
 
-    // The booking shows on the bookings screen.
+    // The booking shows on the bookings screen, waiting; the front desk approves it and that is kept.
     await page.goto(`/${admin.hospitalCode}/health-packages/bookings`);
-    await expect(page.getByText('Walk In Visitor').first()).toBeVisible({ timeout: 15000 });
+    const booking = page.locator('tr', { hasText: 'Walk In Visitor' });
+    await expect(booking).toContainText(name, { timeout: 15000 });
+    await expect(booking).toContainText('PENDING');
+    const approved = page.waitForResponse((r) => r.request().method() === 'PUT' && /\/bookings\/[0-9a-f-]{36}\/approve$/.test(r.url()));
+    await booking.getByRole('button', { name: 'Approve' }).click();
+    expect((await approved).ok(), 'booking approved').toBeTruthy();
+    await expect(booking).toContainText('APPROVED');
+    await page.reload();
+    await expect(page.locator('tr', { hasText: 'Walk In Visitor' })).toContainText('APPROVED', { timeout: 15000 });
 
     // Deactivate
     await page.goto(`/${admin.hospitalCode}/health-packages`);

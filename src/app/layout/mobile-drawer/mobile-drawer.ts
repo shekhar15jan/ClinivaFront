@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { AuthService } from '../../core/services/auth.service';
+import { STAFF_NAV, canSee } from '../nav-items';
 
 @Component({
   selector: 'app-mobile-drawer',
@@ -30,8 +31,8 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
 
             <nav class="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-              @for (item of navItems; track item.code) {
-                @if (item.code === 'DASHBOARD' || activeModules().includes(item.code)) {
+              @for (item of navItems; track item.route) {
+                @if (isVisible(item)) {
                   <a
                     [routerLink]="item.route"
                     (click)="closed.emit()"
@@ -91,18 +92,9 @@ export class MobileDrawer {
 
   readonly activeModules = this.effectiveLicense.activeModules;
 
-  readonly navItems = [
-    { code: 'DASHBOARD', label: 'Dashboard', icon: 'dashboard', route: 'dashboard' },
-    { code: 'PATIENT', label: 'Patients', icon: 'person', route: 'patients' },
-    { code: 'DOCTOR', label: 'Doctors', icon: 'medical_services', route: 'doctors' },
-    { code: 'APPOINTMENT', label: 'Appointments', icon: 'event', route: 'appointments' },
-    { code: 'CONSULTATION', label: 'Consultations', icon: 'stethoscope', route: 'consultations' },
-    { code: 'PRESCRIPTION', label: 'Prescriptions', icon: 'receipt_long', route: 'prescriptions' },
-    { code: 'BILLING', label: 'Billing', icon: 'payments', route: 'billing' },
-    { code: 'PAYMENT', label: 'Payments', icon: 'account_balance_wallet', route: 'billing' },
-    { code: 'MEDICINE', label: 'Pharmacy', icon: 'medication', route: 'medicines' },
-    { code: 'REPORTS', label: 'Reports', icon: 'bar_chart', route: 'reports' },
-    { code: 'HEALTH_PACKAGE', label: 'Health Packages', icon: 'card_giftcard', route: 'health-packages' },
-    { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings' },
-  ];
+  readonly navItems = STAFF_NAV;
+
+  isVisible(item: (typeof STAFF_NAV)[number]): boolean {
+    return canSee(item, this.authService.currentUserValue?.role ?? '', this.activeModules());
+  }
 }

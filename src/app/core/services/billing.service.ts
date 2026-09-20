@@ -52,9 +52,8 @@ export class BillingService {
     });
   }
 
-  getPatientBills(patientId: string): Observable<ApiResponse<Bill[]>> {
-    return this.http.get<ApiResponse<Bill[]>>(`${this.baseUrl}/patient/logged-in`, {
-      params: { patientId },
-    });
+  /** The signed-in patient's bills. The server works out who that is; no id is sent. */
+  getPatientBills(): Observable<ApiResponse<Bill[]>> {
+    return this.http.get<ApiResponse<Bill[]>>(`${this.baseUrl}/patient/logged-in`);
   }
 }
