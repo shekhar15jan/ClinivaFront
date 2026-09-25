@@ -54,7 +54,7 @@ export class ChangePassword implements OnInit {
     if (this.errorMessage) return;
 
     this.isLoading = true;
-    this.authService.changePassword(this.email, this.currentPassword, this.newPassword).subscribe({
+    this.authService.changePassword(this.email, this.currentPassword, this.newPassword, this.hospitalCode).subscribe({
       next: () => {
         this.isLoading = false;
         this.authService.pendingEmail = this.email;

@@ -3,8 +3,8 @@ export interface Patient {
   patientId: string;
   fullName: string;
   dateOfBirth: string;
-  age: number;
-  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  age?: number | null;
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | null;
   phone: string;
   email?: string;
   address?: string;

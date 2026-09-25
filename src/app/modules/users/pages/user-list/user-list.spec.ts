@@ -38,6 +38,7 @@ describe('UserListComponent', () => {
     service = {
       getUsers: vi.fn().mockReturnValue(of(paged(users))),
       createUser: vi.fn().mockReturnValue(of(user('new'))),
+      updateUser: vi.fn().mockReturnValue(of(user('u1'))),
       deactivateUser: vi.fn().mockReturnValue(of(void 0)),
       activateUser: vi.fn().mockReturnValue(of(void 0)),
       resetPassword: vi.fn().mockReturnValue(of({ temporaryPassword: 'Tmp#Pass1234' })),
@@ -136,6 +137,48 @@ describe('UserListComponent', () => {
       component.isSaving = true;
       component.submit();
       expect(service['createUser']).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('editing a user', () => {
+    it('fills the form, keeps the sign-in email fixed, and saves name and role', () => {
+      const component = create();
+      component.openEdit(user('u1'));
+      expect(component.form.controls.email.disabled).toBe(true);
+      expect(component.form.controls.role.enabled).toBe(true);
+      component.form.patchValue({ firstName: ' Asha ', role: 'NURSE' });
+      component.submit();
+      expect(service['updateUser']).toHaveBeenCalledWith('u1', { firstName: 'Asha', lastName: 'Nair', role: 'NURSE' });
+      expect(service['createUser']).not.toHaveBeenCalled();
+      expect(component.showForm).toBe(false);
+      expect(component.editing).toBeNull();
+    });
+
+    it('does not let administrators change their own role', () => {
+      const component = create();
+      component.openEdit(user('me', { roles: 'ADMIN' }));
+      expect(component.form.controls.role.disabled).toBe(true);
+      component.submit();
+      expect(service['updateUser'].mock.calls[0][1].role).toBe('ADMIN');
+    });
+
+    it('shows the server reason and keeps the form open when saving fails', () => {
+      const component = create();
+      service['updateUser'].mockReturnValue(throwError(() => ({ error: { message: 'Doctor limit reached for your plan' } })));
+      component.openEdit(user('u1'));
+      component.submit();
+      expect(component.formError).toBe('Doctor limit reached for your plan');
+      expect(component.showForm).toBe(true);
+    });
+
+    it('adding after editing starts from an empty, fully editable form', () => {
+      const component = create();
+      component.openEdit(user('me', { roles: 'ADMIN' }));
+      component.openForm();
+      expect(component.editing).toBeNull();
+      expect(component.form.controls.email.enabled).toBe(true);
+      expect(component.form.controls.role.enabled).toBe(true);
+      expect(component.form.controls.email.value).toBe('');
     });
   });
 

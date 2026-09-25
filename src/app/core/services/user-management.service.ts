@@ -33,6 +33,13 @@ export class UserManagementService {
       .pipe(map((res) => res.data));
   }
 
+  /** Name and role of a staff account (the email is the sign-in and does not change). */
+  updateUser(id: string, request: { firstName: string; lastName: string; role: string }): Observable<ManagedUser> {
+    return this.http
+      .put<ApiResponse<ManagedUser>>(`${this.apiUrl}/${id}`, request)
+      .pipe(map((res) => res.data));
+  }
+
   deactivateUser(id: string): Observable<void> {
     return this.http
       .patch<ApiResponse<void>>(`${this.apiUrl}/${id}/deactivate`, {})

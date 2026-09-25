@@ -54,4 +54,11 @@ export class DoctorService {
   setAvailability(doctorId: string, availability: UpdateAvailabilityRequest): Observable<ApiResponse<void>> {
     return this.http.put<ApiResponse<void>>(`${this.apiUrl}/${doctorId}/availability`, availability);
   }
+
+  /** FR-DOC-01: the doctor's photo (PNG, JPEG or WebP, up to 512 KB). */
+  uploadPhoto(doctorId: string, file: File): Observable<ApiResponse<Doctor>> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<ApiResponse<Doctor>>(`${this.apiUrl}/${doctorId}/photo`, form);
+  }
 }

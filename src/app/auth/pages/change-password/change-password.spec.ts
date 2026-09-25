@@ -59,7 +59,7 @@ describe('ChangePassword', () => {
     const { component, authSpy, routerSpy } = setup();
     fill(component);
     component.submit();
-    expect(authSpy.changePassword).toHaveBeenCalledWith('sai@clinic.test', 'Temp#1234', 'BrandNew#99');
+    expect(authSpy.changePassword).toHaveBeenCalledWith('sai@clinic.test', 'Temp#1234', 'BrandNew#99', 'sai-clinic');
     expect(routerSpy.navigate).toHaveBeenCalledWith(['/sai-clinic/login'], { queryParams: { passwordChanged: '1' } });
     expect(component.errorMessage).toBe('');
   });

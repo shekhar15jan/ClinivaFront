@@ -54,6 +54,7 @@ describe('LoginOtp', () => {
     expect(authSpy.verifyOtp).toHaveBeenCalledWith({
       email: 'admin@cliniva.com',
       otp: '123456',
+      tenantCode: 'test-hospital',
     });
   });
 
@@ -110,6 +111,7 @@ describe('LoginOtp', () => {
     component.resendOtp();
     expect(authSpy.sendOtp).toHaveBeenCalledWith({
       email: 'admin@cliniva.com',
+      tenantCode: 'test-hospital',
     });
   });
 

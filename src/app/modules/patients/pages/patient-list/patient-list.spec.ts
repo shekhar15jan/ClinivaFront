@@ -91,4 +91,41 @@ describe('PatientList', () => {
     component.onSubmitAdd();
     expect(component.isSubmitting).toBe(false);
   });
+
+  describe('importing a CSV', () => {
+    const file = new File(['name,phone\nA,9000000001'], 'patients.csv', { type: 'text/csv' });
+    const reply = (data: unknown) => ({ success: true, data, message: 'ok', timestamp: '', requestId: 'r' });
+
+    it('says how many were imported and how many were left out, with the reasons', () => {
+      const component = createComponent({
+        uploadPatients: vi.fn().mockReturnValue(of(reply({ imported: 2, skipped: 1, errors: ['Row 3: Duplicate phone 9000000001'] }))),
+      } as unknown as Partial<PatientService>);
+      component.csvFile = file;
+      component.uploadCsv();
+      expect(component.uploadResult).toBe('Imported 2 patients, skipped 1.');
+      expect(component.uploadIssues).toEqual(['Row 3: Duplicate phone 9000000001']);
+      expect(component.uploadFailed).toBe(false);
+      expect(component.showCsvUpload).toBe(false);
+    });
+
+    it('uses the singular for one patient and mentions no skips when there were none', () => {
+      const component = createComponent({
+        uploadPatients: vi.fn().mockReturnValue(of(reply({ imported: 1, skipped: 0, errors: [] }))),
+      } as unknown as Partial<PatientService>);
+      component.csvFile = file;
+      component.uploadCsv();
+      expect(component.uploadResult).toBe('Imported 1 patient.');
+    });
+
+    it('shows the server reason when the file is refused', () => {
+      const component = createComponent({
+        uploadPatients: vi.fn().mockReturnValue(throwError(() => ({ error: { message: 'Only CSV files are accepted' } }))),
+      } as unknown as Partial<PatientService>);
+      component.csvFile = file;
+      component.uploadCsv();
+      expect(component.uploadResult).toBe('Only CSV files are accepted');
+      expect(component.uploadFailed).toBe(true);
+      expect(component.isUploading).toBe(false);
+    });
+  });
 });

@@ -62,8 +62,10 @@ describe('LoginEmail', () => {
     const { component, authSpy } = createLoginEmail();
     component.email = 'admin@cliniva.com';
     component.sendOtp();
+    // The clinic in the link picks the right account when an email is used at several clinics.
     expect(authSpy.sendOtp).toHaveBeenCalledWith({
       email: 'admin@cliniva.com',
+      tenantCode: 'test-hospital',
     });
   });
 

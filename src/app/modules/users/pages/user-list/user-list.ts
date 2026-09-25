@@ -87,6 +87,9 @@ export function generatePassword(length = 16): string {
                   </td>
                   <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
+                      @if (user.roles !== 'PATIENT') {
+                        <button type="button" class="text-xs font-medium text-[#003d9b] hover:underline" [attr.aria-label]="'Edit ' + nameOf(user)" (click)="openEdit(user)">Edit</button>
+                      }
                       @if (isSelf(user)) {
                         <span class="text-xs text-gray-400">This is you</span>
                       } @else {
@@ -114,10 +117,10 @@ export function generatePassword(length = 16): string {
     </div>
 
     @if (showForm) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label="Add user">
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" [attr.aria-label]="editing ? 'Edit user' : 'Add user'">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 class="text-base font-bold text-gray-900">Add User</h3>
+            <h3 class="text-base font-bold text-gray-900">{{ editing ? 'Edit User' : 'Add User' }}</h3>
             <button type="button" (click)="closeForm()" class="text-gray-500 hover:text-gray-900" aria-label="Close">✕</button>
           </div>
           <form [formGroup]="form" (ngSubmit)="submit()" class="p-6 space-y-4">
@@ -133,7 +136,10 @@ export function generatePassword(length = 16): string {
             </div>
             <div>
               <label for="user-email" class="block text-sm font-medium text-gray-900 mb-1">Email *</label>
-              <input id="user-email" type="email" formControlName="email" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" />
+              <input id="user-email" type="email" formControlName="email" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm disabled:bg-gray-50 disabled:text-gray-500" />
+              @if (editing) {
+                <p class="text-xs text-gray-500 mt-1">The email is how they sign in, so it stays the same.</p>
+              }
               @if (form.controls.email.touched && form.controls.email.invalid) {
                 <p class="text-xs text-red-600 mt-1">Enter a valid email address.</p>
               }
@@ -141,16 +147,18 @@ export function generatePassword(length = 16): string {
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label for="user-role" class="block text-sm font-medium text-gray-900 mb-1">Role *</label>
-                <select id="user-role" formControlName="role" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white">
+                <select id="user-role" formControlName="role" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white disabled:bg-gray-50">
                   @for (role of roles; track role.value) {
                     <option [value]="role.value">{{ role.label }}</option>
                   }
                 </select>
               </div>
-              <div>
-                <label for="user-phone" class="block text-sm font-medium text-gray-900 mb-1">Phone</label>
-                <input id="user-phone" type="tel" formControlName="phone" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" />
-              </div>
+              @if (!editing) {
+                <div>
+                  <label for="user-phone" class="block text-sm font-medium text-gray-900 mb-1">Phone</label>
+                  <input id="user-phone" type="tel" formControlName="phone" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" />
+                </div>
+              }
             </div>
             @if (formError) {
               <p class="text-sm text-red-600" id="user-form-error">{{ formError }}</p>
@@ -162,7 +170,7 @@ export function generatePassword(length = 16): string {
                 type="submit"
                 [disabled]="form.invalid || isSaving"
                 class="px-5 py-2 text-sm font-medium text-white bg-[#003d9b] rounded-lg disabled:opacity-50"
-              >{{ isSaving ? 'Saving...' : 'Create User' }}</button>
+              >{{ isSaving ? 'Saving...' : editing ? 'Save Changes' : 'Create User' }}</button>
             </div>
           </form>
         </div>
@@ -216,6 +224,8 @@ export class UserListComponent implements OnInit {
   loadError = '';
 
   showForm = false;
+  /** The account being edited; null while adding a new one. */
+  editing: ManagedUser | null = null;
   isSaving = false;
   formError = '';
   form = this.fb.nonNullable.group({
@@ -266,7 +276,26 @@ export class UserListComponent implements OnInit {
   }
 
   openForm(): void {
+    this.editing = null;
+    this.form.enable();
     this.form.reset({ firstName: '', lastName: '', email: '', role: 'RECEPTIONIST', phone: '' });
+    this.formError = '';
+    this.showForm = true;
+  }
+
+  openEdit(user: ManagedUser): void {
+    this.editing = user;
+    this.form.enable();
+    this.form.reset({
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      email: user.email,
+      role: user.roles as ManagedRole,
+      phone: '',
+    });
+    this.form.controls.email.disable();
+    // Nobody changes their own role, so a clinic cannot lose its only administrator by accident.
+    if (this.isSelf(user)) this.form.controls.role.disable();
     this.formError = '';
     this.showForm = true;
   }
@@ -280,6 +309,25 @@ export class UserListComponent implements OnInit {
     const value = this.form.getRawValue();
     this.isSaving = true;
     this.formError = '';
+    if (this.editing) {
+      const editing = this.editing;
+      this.service
+        .updateUser(editing.id, { firstName: value.firstName.trim(), lastName: value.lastName.trim(), role: value.role })
+        .subscribe({
+          next: (user) => {
+            this.isSaving = false;
+            this.showForm = false;
+            this.editing = null;
+            this.toast.success(`${user.email} updated`);
+            this.load();
+          },
+          error: (err) => {
+            this.isSaving = false;
+            this.formError = err?.error?.message || 'The changes could not be saved.';
+          },
+        });
+      return;
+    }
     this.service
       .createUser({
         firstName: value.firstName.trim(),

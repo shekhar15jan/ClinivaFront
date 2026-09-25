@@ -76,13 +76,17 @@ describe('AuthService', () => {
 
         expect(service.isLoggedIn()).toBe(true);
         expect(service.getToken()).toBe('test-token');
-        expect(service.getRefreshToken()).toBe('test-refresh');
+        // Kept in memory only: nothing a script could read is written to browser storage.
+        expect(localStorage.getItem('cliniva_access_token')).toBeNull();
+        expect(localStorage.getItem('cliniva_refresh_token')).toBeNull();
         expect(service.currentUser()?.email).toBe('test@cliniva.com');
       });
 
       const req = httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual(request);
+      // So the browser keeps the HttpOnly refresh cookie the API sets.
+      expect(req.request.withCredentials).toBe(true);
       req.flush(mockResponse);
     });
 
@@ -116,7 +120,6 @@ describe('AuthService', () => {
       service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe(() => {
         expect(service.isLoggedIn()).toBe(true);
         expect(service.getToken()).toBe('test-token');
-        expect(service.getRefreshToken()).toBe('test-refresh');
       });
 
       const req = httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`);
@@ -139,7 +142,6 @@ describe('AuthService', () => {
 
       expect(service.isLoggedIn()).toBe(false);
       expect(service.getToken()).toBeNull();
-      expect(service.getRefreshToken()).toBeNull();
       expect(service.currentUser()).toBeNull();
 
       const logoutReq = httpMock.expectOne(`${service['apiUrl']}/auth/logout`);

@@ -137,20 +137,29 @@ describe('AuthService — Full Coverage', () => {
       expect(service.getToken()).toBeNull();
       expect(service.currentUser()).toBeNull();
 
+      // The refresh token is an HttpOnly cookie: the API revokes it from the cookie, the app never held it.
       const req = httpMock.expectOne(`${apiUrl}/auth/logout`);
-      expect(req.request.body).toEqual({ refreshToken: 'refresh-token' });
+      expect(req.request.body).toEqual({});
+      expect(req.request.withCredentials).toBe(true);
+      expect(localStorage.getItem('cliniva_signed_in')).toBeNull();
       req.flush({ success: true });
     });
   });
 
   describe('silentRefresh', () => {
-    it('should restore tokens from localStorage and refresh', async () => {
+    it('restores the session from the HttpOnly cookie after a reload, storing no token', async () => {
+      localStorage.setItem('cliniva_signed_in', '1');
+      // Tokens saved by older versions are removed, not used.
       localStorage.setItem('cliniva_access_token', 'stored-access');
       localStorage.setItem('cliniva_refresh_token', 'stored-refresh');
 
       const promise = service.silentRefresh();
 
       const refreshReq = httpMock.expectOne(`${apiUrl}/auth/refresh`);
+      expect(refreshReq.request.body).toEqual({});
+      expect(refreshReq.request.withCredentials).toBe(true);
+      expect(localStorage.getItem('cliniva_access_token')).toBeNull();
+      expect(localStorage.getItem('cliniva_refresh_token')).toBeNull();
       refreshReq.flush({
         success: true,
         data: {
@@ -165,6 +174,7 @@ describe('AuthService — Full Coverage', () => {
       await promise;
       expect(service.isLoggedIn()).toBe(true);
       expect(service.getToken()).toBe('new-access');
+      expect(Object.values({ ...localStorage }).join()).not.toContain('new-access');
     });
 
     it('should do nothing if no stored tokens', async () => {
@@ -173,8 +183,7 @@ describe('AuthService — Full Coverage', () => {
     });
 
     it('should handle refresh failure gracefully', async () => {
-      localStorage.setItem('cliniva_access_token', 'stored-access');
-      localStorage.setItem('cliniva_refresh_token', 'stored-refresh');
+      localStorage.setItem('cliniva_signed_in', '1');
 
       const promise = service.silentRefresh();
 
@@ -182,6 +191,9 @@ describe('AuthService — Full Coverage', () => {
       refreshReq.flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
 
       await promise;
+      expect(service.isLoggedIn()).toBe(false);
+      // No point retrying the cookie on the next page load.
+      expect(localStorage.getItem('cliniva_signed_in')).toBeNull();
     });
   });
 
@@ -257,10 +269,13 @@ describe('AuthService — Full Coverage', () => {
     });
   });
 
-  describe('getRefreshToken', () => {
-    it('should return refresh token', () => {
+  describe('token storage', () => {
+    it('keeps the access token in memory only and never writes a token to browser storage', () => {
       service['setSession'](mockAuthData);
-      expect(service.getRefreshToken()).toBe('refresh-token');
+      expect(service.getToken()).toBe(mockAuthData.token);
+      const stored = Object.keys({ ...localStorage }).map((k) => localStorage.getItem(k)).join('|');
+      expect(stored).not.toContain(mockAuthData.token);
+      expect(stored).not.toContain(mockAuthData.refreshToken);
     });
   });
 });

@@ -22,11 +22,16 @@ const saved: ClinicSettings = {
 const ok = (data: ClinicSettings) => ({ success: true, data, message: 'ok', timestamp: '', requestId: 'r' });
 
 describe('ClinicSettingsPage', () => {
-  let service: { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn> };
+  let service: Record<string, ReturnType<typeof vi.fn>>;
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   function create() {
-    service = { get: vi.fn().mockReturnValue(of(ok(saved))), update: vi.fn().mockImplementation((s: ClinicSettings) => of(ok(s))) };
+    service = {
+      get: vi.fn().mockReturnValue(of(ok(saved))),
+      update: vi.fn().mockImplementation((s: ClinicSettings) => of(ok(s))),
+      uploadLogo: vi.fn().mockReturnValue(of(ok({ ...saved, logoUrl: '/api/v1/public/media/abc' }))),
+      removeLogo: vi.fn().mockReturnValue(of(ok({ ...saved, logoUrl: null }))),
+    };
     toast = { success: vi.fn(), error: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
@@ -111,5 +116,50 @@ describe('ClinicSettingsPage', () => {
     component.isSaving = true;
     component.save();
     expect(service.update).not.toHaveBeenCalled();
+  });
+
+  describe('billing, payments and branding', () => {
+    it('saves the GST rate, UPI ID and sender name with the rest', () => {
+      const component = create();
+      component.settings.taxRatePercent = 18;
+      component.settings.upiPayeeId = ' sai@okhdfcbank ';
+      component.settings.emailSenderName = ' Sai Clinic Pune ';
+      component.save();
+      expect(service['update'].mock.calls[0][0]).toMatchObject({
+        taxRatePercent: 18,
+        upiPayeeId: 'sai@okhdfcbank',
+        emailSenderName: 'Sai Clinic Pune',
+      });
+    });
+
+    it('refuses a GST rate outside 0-100 and a malformed UPI ID', () => {
+      const component = create();
+      component.settings.taxRatePercent = 180;
+      component.save();
+      expect(toast.error).toHaveBeenCalledWith('GST must be between 0 and 100%.');
+      component.settings.taxRatePercent = 5;
+      component.settings.upiPayeeId = 'not a upi';
+      component.save();
+      expect(toast.error).toHaveBeenCalledWith('Enter a UPI ID such as clinic@okhdfcbank.');
+      expect(service['update']).not.toHaveBeenCalled();
+    });
+
+    it('uploads a logo, shows it, and can remove it', () => {
+      const component = create();
+      const file = new File([new Uint8Array([0x89, 0x50])], 'logo.png', { type: 'image/png' });
+      component.onLogoSelected({ target: { files: [file], value: 'x' } } as unknown as Event);
+      expect(service['uploadLogo']).toHaveBeenCalledWith(file);
+      expect(component.logoSrc).toContain('/public/media/abc');
+      component.removeLogo();
+      expect(component.logoSrc).toBeNull();
+    });
+
+    it('refuses a logo over 512 KB before uploading', () => {
+      const component = create();
+      const big = new File([new Uint8Array(512 * 1024 + 1)], 'big.png', { type: 'image/png' });
+      component.onLogoSelected({ target: { files: [big], value: 'x' } } as unknown as Event);
+      expect(service['uploadLogo']).not.toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalled();
+    });
   });
 });

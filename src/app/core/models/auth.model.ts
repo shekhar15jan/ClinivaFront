@@ -25,13 +25,16 @@ export interface AuthResponse {
 
 export type LoginStep = 'credentials' | 'otp';
 
+/** `tenantCode`: the clinic in the sign-in link; picks the right account when an email is used at several clinics. */
 export interface SendOtpRequest {
   email: string;
+  tenantCode?: string;
 }
 
 export interface VerifyOtpRequest {
   email: string;
   otp: string;
+  tenantCode?: string;
 }
 
 export interface TenantResolutionRequest {

@@ -18,4 +18,14 @@ export class SettingService {
   update(settings: Partial<ClinicSettings>): Observable<ApiResponse<ClinicSettings>> {
     return this.http.put<ApiResponse<ClinicSettings>>(this.baseUrl, settings);
   }
+
+  uploadLogo(file: File): Observable<ApiResponse<ClinicSettings>> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<ApiResponse<ClinicSettings>>(`${this.baseUrl}/logo`, form);
+  }
+
+  removeLogo(): Observable<ApiResponse<ClinicSettings>> {
+    return this.http.delete<ApiResponse<ClinicSettings>>(`${this.baseUrl}/logo`);
+  }
 }

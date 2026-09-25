@@ -106,7 +106,9 @@ import { DatePipe } from '@angular/common';
                 </div>
                 <div>
                   <label for="bill-tax" class="block text-xs text-[#64748B] mb-1">Tax (₹)</label>
-                  <input id="bill-tax" type="number" min="0" step="0.01" [(ngModel)]="tax" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
+                  <input id="bill-tax" type="number" min="0" step="0.01" [(ngModel)]="tax" placeholder="Clinic GST"
+                         class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
+                  <p class="text-[11px] text-[#64748B] mt-1">Leave empty to apply the clinic's GST rate.</p>
                 </div>
               </div>
               @if (billError) {
@@ -213,7 +215,8 @@ export class PrescriptionDetail implements OnInit {
         prescriptionId: this.id,
         additionalChargesInPaisa: toPaise(this.additionalCharges),
         discountInPaisa: toPaise(this.discount),
-        taxInPaisa: toPaise(this.tax),
+        // Empty means "use the clinic's GST rate"; sending 0 would override it.
+        taxInPaisa: this.tax === null || this.tax === undefined || `${this.tax}` === '' ? undefined : toPaise(this.tax),
       })
       .subscribe({
         next: (res) => {

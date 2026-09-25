@@ -80,6 +80,7 @@ export class LoginOtp implements OnInit {
       .verifyOtp({
         email: this.email,
         otp: this.otpCode,
+        tenantCode: this.hospitalCode,
       })
       .subscribe({
         next: (response) => {
@@ -99,7 +100,7 @@ export class LoginOtp implements OnInit {
 
   resendOtp(): void {
     if (this.email && this.hospitalCode) {
-      this.authService.sendOtp({ email: this.email }).subscribe();
+      this.authService.sendOtp({ email: this.email, tenantCode: this.hospitalCode }).subscribe();
     }
   }
 

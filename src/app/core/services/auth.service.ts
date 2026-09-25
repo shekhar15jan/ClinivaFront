@@ -22,10 +22,14 @@ export class AuthService {
   private tenantContext = inject(TenantContextService);
 
   private readonly apiUrl = `${environment.apiUrl}`;
+  /**
+   * The access token lives only in memory (FR-AUTH-HMS-10): nothing a script could read is stored in the
+   * browser. The refresh token is an HttpOnly cookie set by the API, which also restores the session after
+   * a reload (silentRefresh) and is shared by every tab.
+   */
   private accessToken: string | null = null;
-  private refreshTokenValue: string | null = null;
-  private readonly TOKEN_KEY = 'cliniva_access_token';
-  private readonly REFRESH_KEY = 'cliniva_refresh_token';
+  /** Legacy browser storage keys; cleared once so tokens saved by older versions do not linger. */
+  private readonly LEGACY_KEYS = ['cliniva_access_token', 'cliniva_refresh_token'];
   private currentUserSubject = new BehaviorSubject<User | null>(null);
 
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -66,8 +70,13 @@ export class AuthService {
   }
 
   /** Replaces a temporary or expired password. Needs no session: the current password proves identity. */
-  changePassword(email: string, currentPassword: string, newPassword: string): Observable<ApiResponse<unknown>> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/auth/change-password`, { email, currentPassword, newPassword });
+  changePassword(email: string, currentPassword: string, newPassword: string, tenantCode?: string): Observable<ApiResponse<unknown>> {
+    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/auth/change-password`, {
+      email,
+      currentPassword,
+      newPassword,
+      tenantCode: tenantCode || undefined,
+    });
   }
 
   sendOtp(request: SendOtpRequest): Observable<ApiResponse<void>> {
@@ -76,7 +85,7 @@ export class AuthService {
 
   verifyOtp(request: VerifyOtpRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http
-      .post<ApiResponse<Record<string, unknown>>>(`${this.apiUrl}/auth/verify-otp`, request)
+      .post<ApiResponse<Record<string, unknown>>>(`${this.apiUrl}/auth/verify-otp`, request, { withCredentials: true })
       .pipe(
         map((response) => {
           if (!response.success || !response.data) return response as unknown as ApiResponse<AuthResponse>;
@@ -111,21 +120,18 @@ export class AuthService {
   }
 
   logout(): void {
-    const refreshToken = this.refreshTokenValue;
     this.accessToken = null;
-    this.refreshTokenValue = null;
     this.currentUserSubject.next(null);
     this.currentUser.set(null);
     this.tenantContext.clear();
     this.loginStep.set('credentials');
     this.pendingEmail = null;
     this.pendingTenantCode = null;
-    try {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.REFRESH_KEY);
-    } catch { /* localStorage unavailable */ }
+    this.clearLegacyStorage();
+    this.setHadSession(false);
+    // The API revokes the refresh token from its cookie and clears the cookie.
     this.http
-      .post(`${this.apiUrl}/auth/logout`, { refreshToken })
+      .post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true })
       .pipe(catchError(() => of(null)))
       .subscribe();
   }
@@ -136,10 +142,6 @@ export class AuthService {
 
   public getToken(): string | null {
     return this.accessToken;
-  }
-
-  public getRefreshToken(): string | null {
-    return this.refreshTokenValue;
   }
 
   setTenantResolution(resolution: TenantResolution): void {
@@ -172,86 +174,81 @@ export class AuthService {
     };
   }
 
+  /**
+   * Restores the session after a page load from the HttpOnly refresh cookie. Only attempted when this
+   * browser signed in before (a flag, not a token), so first-time visitors do not get a failing call.
+   */
   async silentRefresh(): Promise<void> {
-    try {
-      const storedToken = localStorage.getItem(this.TOKEN_KEY);
-      const storedRefresh = localStorage.getItem(this.REFRESH_KEY);
-      if (storedToken && storedRefresh) {
-        this.accessToken = storedToken;
-        this.refreshTokenValue = storedRefresh;
-      }
-    } catch { /* localStorage unavailable */ }
-    if (!this.accessToken || !this.refreshTokenValue) return;
-    try {
-      const response = await firstValueFrom(
-        this.http
-          .post<ApiResponse<Record<string, unknown>>>(
-            `${this.apiUrl}/auth/refresh`,
-            { refreshToken: this.refreshTokenValue },
-          )
-          .pipe(catchError(() => of(null))),
-      );
-      if (response?.success && response.data) {
-        this.setSession(this.normalizeResponse(response.data));
-      }
-    } catch {
-      this.accessToken = null;
-      this.refreshTokenValue = null;
-      this.currentUserSubject.next(null);
-      this.currentUser.set(null);
-      try {
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem(this.REFRESH_KEY);
-      } catch { /* localStorage unavailable */ }
+    this.clearLegacyStorage();
+    if (!this.hadSession()) return;
+    const response = await firstValueFrom(this.postRefresh().pipe(catchError(() => of(null))));
+    if (response?.success && response.data) {
+      this.setSession(this.normalizeResponse(response.data));
+    } else {
+      this.clearSession();
     }
   }
 
   refreshToken(): Observable<string> {
-    return this.http
-      .post<ApiResponse<Record<string, unknown>>>(
-        `${this.apiUrl}/auth/refresh`,
-        { refreshToken: this.refreshTokenValue },
-      )
-      .pipe(
-        map((response) => {
-          if (response.success && response.data) {
-            const normalized = this.normalizeResponse(response.data);
-            this.accessToken = normalized.token;
-            this.refreshTokenValue = normalized.refreshToken;
-            if (normalized.user) {
-              this.currentUserSubject.next(normalized.user);
-              this.currentUser.set(normalized.user);
-            }
-            try {
-              localStorage.setItem(this.TOKEN_KEY, normalized.token);
-              localStorage.setItem(this.REFRESH_KEY, normalized.refreshToken);
-            } catch { /* localStorage unavailable */ }
-            return normalized.token;
-          }
-          throw new Error('Refresh failed');
-        }),
-        catchError(() => {
-          this.accessToken = null;
-          this.refreshTokenValue = null;
-          this.currentUserSubject.next(null);
-          this.currentUser.set(null);
-          try {
-            localStorage.removeItem(this.TOKEN_KEY);
-            localStorage.removeItem(this.REFRESH_KEY);
-          } catch { /* localStorage unavailable */ }
-          throw new Error('Session expired');
-        }),
-      );
+    return this.postRefresh().pipe(
+      map((response) => {
+        if (response.success && response.data) {
+          const normalized = this.normalizeResponse(response.data);
+          this.setSession(normalized);
+          return normalized.token;
+        }
+        throw new Error('Refresh failed');
+      }),
+      catchError(() => {
+        this.clearSession();
+        throw new Error('Session expired');
+      }),
+    );
+  }
+
+  private postRefresh(): Observable<ApiResponse<Record<string, unknown>>> {
+    // No token in the body: the API reads the HttpOnly cookie, which every tab shares.
+    return this.http.post<ApiResponse<Record<string, unknown>>>(
+      `${this.apiUrl}/auth/refresh`,
+      {},
+      { withCredentials: true },
+    );
   }
 
   private setSession(authResponse: AuthResponse): void {
     this.accessToken = authResponse.token;
-    this.refreshTokenValue = authResponse.refreshToken;
     this.currentUserSubject.next(authResponse.user);
     this.currentUser.set(authResponse.user);
+    this.setHadSession(true);
+  }
+
+  private clearSession(): void {
+    this.accessToken = null;
+    this.currentUserSubject.next(null);
+    this.currentUser.set(null);
+    this.setHadSession(false);
+  }
+
+  private static readonly SESSION_FLAG = 'cliniva_signed_in';
+
+  private hadSession(): boolean {
     try {
-      localStorage.setItem(this.TOKEN_KEY, authResponse.token);
-      localStorage.setItem(this.REFRESH_KEY, authResponse.refreshToken);
-    } catch { /* localStorage unavailable */ }
+      return localStorage.getItem(AuthService.SESSION_FLAG) === '1';
+    } catch {
+      return true; // storage unavailable: just try the cookie
+    }
+  }
+
+  private setHadSession(value: boolean): void {
+    try {
+      if (value) localStorage.setItem(AuthService.SESSION_FLAG, '1');
+      else localStorage.removeItem(AuthService.SESSION_FLAG);
+    } catch { /* storage unavailable */ }
+  }
+
+  private clearLegacyStorage(): void {
+    try {
+      this.LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
+    } catch { /* storage unavailable */ }
   }
 }

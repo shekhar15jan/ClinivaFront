@@ -111,10 +111,19 @@ describe('PrescriptionDetail', () => {
         prescriptionId: 'rx-001',
         additionalChargesInPaisa: 5000,
         discountInPaisa: 1050,
-        taxInPaisa: 0,
+        // Empty tax: the server applies the clinic's GST rate (sending 0 would override it).
+        taxInPaisa: undefined,
       });
       expect(toast.success).toHaveBeenCalledWith('Bill generated');
       expect(router.navigate).toHaveBeenCalledWith(['/', 'sai-clinic', 'billing', 'bill-9']);
+    });
+
+    it('sends a tax amount typed on the bill, which then wins over the clinic rate', () => {
+      const component = createComponent();
+      component.ngOnInit();
+      component.tax = 12.5;
+      component.generateBill();
+      expect(billing.createBill.mock.calls[0][1].taxInPaisa).toBe(1250);
     });
 
     it('refuses a negative amount without calling the server', () => {

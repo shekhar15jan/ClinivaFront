@@ -4,6 +4,7 @@ import { ClinicSettings } from '../../../../core/models/setting.model';
 import { SettingService } from '../../../../core/services/setting.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { FormsModule } from '@angular/forms';
+import { mediaUrl } from '../../../../core/utils/media-url';
 
 @Component({
   selector: 'app-clinic-settings',
@@ -109,6 +110,53 @@ import { FormsModule } from '@angular/forms';
           </div>
         </div>
 
+        <div class="bg-white rounded-xl border border-gray-200 p-6" id="settings-branding">
+          <h2 class="text-lg font-bold text-[#1E293B] mb-1">Branding</h2>
+          <p class="text-xs text-[#64748B] mb-4">Your logo appears in the app and on printed documents. PNG, JPEG or WebP, up to 512 KB.</p>
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+              @if (logoSrc) {
+                <img [src]="logoSrc" alt="Clinic logo" id="settings-logo-preview" class="max-w-full max-h-full object-contain" />
+              } @else {
+                <span class="material-symbols-outlined text-[#94A3B8]">image</span>
+              }
+            </div>
+            <label class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+              {{ isUploading ? 'Uploading...' : logoSrc ? 'Change logo' : 'Upload logo' }}
+              <input type="file" id="settings-logo-file" accept="image/png,image/jpeg,image/webp" class="hidden"
+                     [disabled]="isUploading" (change)="onLogoSelected($event)" />
+            </label>
+            @if (logoSrc) {
+              <button type="button" id="settings-logo-remove" (click)="removeLogo()" [disabled]="isUploading"
+                      class="text-sm text-red-600 hover:underline disabled:opacity-50">Remove</button>
+            }
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-gray-200 p-6" id="settings-billing">
+          <h2 class="text-lg font-bold text-[#1E293B] mb-4">Billing &amp; Payments</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="settingsTaxRate" class="block text-sm font-medium text-[#475569] mb-1">GST on bills (%)</label>
+              <input id="settingsTaxRate" type="number" min="0" max="100" step="0.01"
+                     [(ngModel)]="settings.taxRatePercent" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
+              <p class="text-xs text-[#64748B] mt-1">Added to new bills. Use 0 if your services are exempt.</p>
+            </div>
+            <div>
+              <label for="settingsUpiId" class="block text-sm font-medium text-[#475569] mb-1">Clinic UPI ID</label>
+              <input id="settingsUpiId" type="text" placeholder="yourclinic@okhdfcbank"
+                     [(ngModel)]="settings.upiPayeeId" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
+              <p class="text-xs text-[#64748B] mt-1">Patients' UPI QR payments go to this ID. Leave empty to not offer UPI QR.</p>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="settingsSenderName" class="block text-sm font-medium text-[#475569] mb-1">Email sender name</label>
+              <input id="settingsSenderName" type="text" maxlength="100" [placeholder]="settings.clinicName || 'Your clinic'"
+                     [(ngModel)]="settings.emailSenderName" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
+              <p class="text-xs text-[#64748B] mt-1">Shown as the sender of emails to patients; replies go to the clinic email above.</p>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white rounded-xl border border-gray-200 p-6">
           <h2 class="text-lg font-bold text-[#1E293B] mb-4">Features</h2>
           <div class="space-y-3">
@@ -192,7 +240,55 @@ export class ClinicSettingsPage implements OnInit {
     defaultConsultationFeeInPaisa: 0,
     enableOnlinePayment: false,
     enableOtpLogin: false,
+    taxRatePercent: 0,
+    upiPayeeId: '',
+    emailSenderName: '',
+    logoUrl: null,
   };
+
+  isUploading = false;
+
+  get logoSrc(): string | null {
+    return mediaUrl(this.settings.logoUrl);
+  }
+
+  onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (file.size > 512 * 1024) {
+      this.toast.error('The image is larger than 512 KB. Please use a smaller one.');
+      return;
+    }
+    this.isUploading = true;
+    this.settingService.uploadLogo(file).subscribe({
+      next: (res) => {
+        this.isUploading = false;
+        if (res.data) this.settings = { ...this.settings, logoUrl: res.data.logoUrl };
+        this.toast.success('Logo updated');
+      },
+      error: (err) => {
+        this.isUploading = false;
+        this.toast.error(err?.error?.message || 'The logo could not be uploaded.');
+      },
+    });
+  }
+
+  removeLogo(): void {
+    this.isUploading = true;
+    this.settingService.removeLogo().subscribe({
+      next: () => {
+        this.isUploading = false;
+        this.settings = { ...this.settings, logoUrl: null };
+        this.toast.success('Logo removed');
+      },
+      error: (err) => {
+        this.isUploading = false;
+        this.toast.error(err?.error?.message || 'The logo could not be removed.');
+      },
+    });
+  }
 
   /** The default consultation fee in rupees, as typed. Sent as paise. */
   defaultFee = 0;
@@ -237,6 +333,16 @@ export class ClinicSettingsPage implements OnInit {
       this.toast.error('The default consultation fee cannot be negative.');
       return;
     }
+    const tax = Number(this.settings.taxRatePercent ?? 0);
+    if (!(tax >= 0 && tax <= 100)) {
+      this.toast.error('GST must be between 0 and 100%.');
+      return;
+    }
+    const upi = (this.settings.upiPayeeId ?? '').trim();
+    if (upi && !/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$/.test(upi)) {
+      this.toast.error('Enter a UPI ID such as clinic@okhdfcbank.');
+      return;
+    }
     this.isSaving = true;
     this.settingService
       .update({
@@ -244,6 +350,9 @@ export class ClinicSettingsPage implements OnInit {
         clinicName: this.settings.clinicName.trim(),
         patientIdPrefix: this.settings.patientIdPrefix.trim().toUpperCase(),
         defaultConsultationFeeInPaisa: Math.round(this.defaultFee * 100),
+        taxRatePercent: Math.round(tax * 100) / 100,
+        upiPayeeId: upi,
+        emailSenderName: (this.settings.emailSenderName ?? '').trim(),
       })
       .subscribe({
         next: (res) => {

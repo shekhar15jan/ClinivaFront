@@ -26,6 +26,8 @@ export class PatientList implements OnInit {
   showCsvUpload = false;
   csvFile: File | null = null;
   isUploading = false;
+  uploadIssues: string[] = [];
+  uploadFailed = false;
   uploadResult: string | null = null;
   addForm: FormGroup;
   isSubmitting = false;
@@ -73,7 +75,6 @@ export class PatientList implements OnInit {
   toggleCsvUpload() {
     this.showCsvUpload = !this.showCsvUpload;
     this.csvFile = null;
-    this.uploadResult = null;
   }
 
   onCsvFileSelected(event: Event) {
@@ -88,18 +89,30 @@ export class PatientList implements OnInit {
     if (!this.csvFile) return;
     this.isUploading = true;
     this.uploadResult = null;
+    this.uploadIssues = [];
+    this.uploadFailed = false;
     this.patientService.uploadPatients(this.csvFile).subscribe({
       next: (res) => {
-        if (res.success) {
-          this.uploadResult = `Imported ${res.data?.imported || 0} patients`;
-          this.showCsvUpload = false;
-          this.loadPatients();
-        }
         this.isUploading = false;
+        if (res.success) {
+          const data = res.data as { imported?: number; skipped?: number; errors?: string[] } | undefined;
+          const imported = data?.imported ?? 0;
+          const skipped = data?.skipped ?? 0;
+          // Say what was left out and why; before, only the imported count was shown.
+          this.uploadResult = `Imported ${imported} ${imported === 1 ? 'patient' : 'patients'}${skipped ? `, skipped ${skipped}` : ''}.`;
+          this.uploadIssues = (data?.errors ?? []).slice(0, 10);
+          this.showCsvUpload = false;
+          this.csvFile = null;
+          this.loadPatients();
+        } else {
+          this.uploadFailed = true;
+          this.uploadResult = res.message || 'The file could not be imported.';
+        }
       },
       error: (err) => {
-        this.uploadResult = err?.message || 'Upload failed';
         this.isUploading = false;
+        this.uploadFailed = true;
+        this.uploadResult = err?.error?.message || 'The file could not be imported.';
       },
     });
   }

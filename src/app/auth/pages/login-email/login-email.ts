@@ -71,7 +71,7 @@ export class LoginEmail implements OnInit {
     this.passwordChangeRequired = false;
 
     this.authService
-      .sendOtp({ email: this.email })
+      .sendOtp({ email: this.email, tenantCode: this.hospitalCode })
       .subscribe({
         next: () => {
           this.isLoading = false;

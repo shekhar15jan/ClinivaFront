@@ -1,4 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
+import { mediaUrl } from '../../../../core/utils/media-url';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DoctorService } from '../../../../core/services/doctor.service';
@@ -62,10 +65,24 @@ export function scheduleProblem(days: ScheduleDay[]): string {
       @if (!isLoading && doctor) {
         <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
           <div class="flex flex-col sm:flex-row items-start gap-4">
-            <div
-              class="w-16 h-16 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#0052CC] text-2xl font-bold"
-            >
-              {{ doctor.fullName.charAt(0) }}
+            <div class="flex flex-col items-center gap-1">
+              @if (photoSrc) {
+                <img [src]="photoSrc" alt="Photo of {{ doctor.fullName }}" id="doctor-photo"
+                     class="w-16 h-16 rounded-full object-cover border border-gray-200" />
+              } @else {
+                <div
+                  class="w-16 h-16 rounded-full bg-[#EEF2FF] flex items-center justify-center text-[#0052CC] text-2xl font-bold"
+                >
+                  {{ doctor.fullName.charAt(0) }}
+                </div>
+              }
+              @if (isAdmin) {
+                <label class="text-xs text-[#0052CC] cursor-pointer hover:underline">
+                  {{ isUploading ? 'Uploading...' : photoSrc ? 'Change photo' : 'Add photo' }}
+                  <input type="file" id="doctor-photo-file" accept="image/png,image/jpeg,image/webp" class="hidden"
+                         [disabled]="isUploading" (change)="onPhotoSelected($event)" />
+                </label>
+              }
             </div>
             <div class="flex-1">
               <h1 class="text-xl font-bold text-[#1E293B]">{{ doctor.fullName }}</h1>
@@ -167,6 +184,40 @@ export class DoctorDetail implements OnInit {
   saved = false;
   scheduleError = '';
   private doctorId = '';
+  private auth = inject(AuthService);
+  private toast = inject(ToastService);
+  isUploading = false;
+
+  get isAdmin(): boolean {
+    return this.auth.currentUserValue?.role === 'ADMIN';
+  }
+
+  get photoSrc(): string | null {
+    return mediaUrl(this.doctor?.profilePhotoUrl);
+  }
+
+  onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !this.doctorId) return;
+    if (file.size > 512 * 1024) {
+      this.toast.error('The photo is larger than 512 KB. Please use a smaller one.');
+      return;
+    }
+    this.isUploading = true;
+    this.doctorService.uploadPhoto(this.doctorId, file).subscribe({
+      next: (res) => {
+        this.isUploading = false;
+        if (res.data && this.doctor) this.doctor = { ...this.doctor, profilePhotoUrl: res.data.profilePhotoUrl };
+        this.toast.success('Photo updated');
+      },
+      error: (err) => {
+        this.isUploading = false;
+        this.toast.error(err?.error?.message || 'The photo could not be uploaded.');
+      },
+    });
+  }
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
