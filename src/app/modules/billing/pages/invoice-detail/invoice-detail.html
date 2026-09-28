@@ -103,11 +103,11 @@
           </div>
           <div class="flex justify-between text-sm text-outline">
             <span>Paid</span>
-            <span>₹{{ ((bill.paymentStatus === 'PAID' ? bill.totalAmountInPaisa : 0) / 100) | number: '1.2-2' }}</span>
+            <span>₹{{ paid | number: '1.2-2' }}</span>
           </div>
           <div class="flex justify-between text-sm font-semibold text-red-600">
             <span>Due</span>
-            <span>₹{{ ((bill.paymentStatus !== 'PAID' ? bill.totalAmountInPaisa : 0) / 100) | number: '1.2-2' }}</span>
+            <span>₹{{ due | number: '1.2-2' }}</span>
           </div>
         </div>
       </div>
@@ -123,7 +123,8 @@
   <app-payment-modal
     [open]="showPayment"
     [billId]="bill.id"
-    [amountInPaisa]="bill.totalAmountInPaisa"
+    [amountInPaisa]="dueInPaisa"
+    [patientName]="bill.patient.fullName || ''"
     (closed)="showPayment = false"
     (paymentSuccess)="onPaymentRecorded()"
   />

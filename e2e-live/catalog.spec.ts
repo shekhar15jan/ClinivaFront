@@ -9,7 +9,7 @@ test.describe('Medicines and health packages, real backend', () => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const stamp = Date.now().toString().slice(-6);
     const name = `Paracetamol ${stamp}`;
-    await page.goto(`/${admin.hospitalCode}/medicines`);
+    await page.goto(`${admin.hospitalCode}/medicines`);
 
     await page.getByRole('button', { name: /Add Medicine|Add New/ }).first().click();
     await page.fill('#med-form-name', name);
@@ -45,7 +45,7 @@ test.describe('Medicines and health packages, real backend', () => {
     // Delete.
     await page.locator('tr', { hasText: name }).getByRole('button', { name: 'Delete' }).click();
     const deleted = page.waitForResponse(isApi('DELETE', /\/hms\/medicines\/[0-9a-f-]{36}$/));
-    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
+    await page.getByRole('dialog', { name: 'Delete Medicine' }).getByRole('button', { name: 'Delete', exact: true }).click();
     expect((await deleted).ok(), 'medicine deleted').toBeTruthy();
     await page.reload();
     await page.getByPlaceholder(/Search medicines/).fill(stamp);
@@ -57,7 +57,7 @@ test.describe('Medicines and health packages, real backend', () => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const stamp = Date.now().toString().slice(-6);
     const name = `Full Body Checkup ${stamp}`;
-    await page.goto(`/${admin.hospitalCode}/health-packages`);
+    await page.goto(`${admin.hospitalCode}/health-packages`);
 
     await page.getByRole('button', { name: 'Create Package' }).first().click();
     await page.fill('#pkg-form-name', name);
@@ -90,7 +90,7 @@ test.describe('Medicines and health packages, real backend', () => {
     expect((await booked).ok(), 'package booked').toBeTruthy();
 
     // The booking shows on the bookings screen, waiting; the front desk approves it and that is kept.
-    await page.goto(`/${admin.hospitalCode}/health-packages/bookings`);
+    await page.goto(`${admin.hospitalCode}/health-packages/bookings`);
     const booking = page.locator('tr', { hasText: 'Walk In Visitor' });
     await expect(booking).toContainText(name, { timeout: 15000 });
     await expect(booking).toContainText('PENDING');
@@ -102,7 +102,7 @@ test.describe('Medicines and health packages, real backend', () => {
     await expect(page.locator('tr', { hasText: 'Walk In Visitor' })).toContainText('APPROVED', { timeout: 15000 });
 
     // Deactivate
-    await page.goto(`/${admin.hospitalCode}/health-packages`);
+    await page.goto(`${admin.hospitalCode}/health-packages`);
     const toggled = page.waitForResponse((r) => ['PUT', 'PATCH'].includes(r.request().method()) && /\/hms\/health-packages\//.test(r.url()));
     await page.locator('tr', { hasText: name }).first().getByRole('button', { name: 'Deactivate' }).click();
     expect((await toggled).ok(), 'package deactivated').toBeTruthy();

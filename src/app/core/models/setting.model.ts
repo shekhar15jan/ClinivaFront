@@ -17,4 +17,13 @@ export interface ClinicSettings {
   emailSenderName?: string | null;
   /** API path of the clinic logo; see mediaUrl(). */
   logoUrl?: string | null;
+  /** The clinic's own Razorpay account. Secrets are write-only: the server says only whether they are set. */
+  razorpayKeyId?: string | null;
+  razorpayKeySecretSet?: boolean;
+  razorpayWebhookSecretSet?: boolean;
+  /** Sent only when changed; an empty string removes it. */
+  razorpayKeySecret?: string | null;
+  razorpayWebhookSecret?: string | null;
+  /** The last part of this clinic's Razorpay webhook address. */
+  clinicCode?: string | null;
 }

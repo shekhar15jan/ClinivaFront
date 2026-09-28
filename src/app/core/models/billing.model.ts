@@ -11,6 +11,8 @@ export interface Bill {
   taxInPaisa: number;
   totalAmountInPaisa: number;
   paymentStatus: BillStatus;
+  /** Received so far, part-payments included; the amount due is the total less this. */
+  amountPaidInPaisa?: number;
   billDate?: string;
   isVoided?: boolean;
   voidReason?: string;
@@ -31,4 +33,10 @@ export interface UpdateBillRequest {
   additionalChargesInPaisa?: number;
   discountInPaisa?: number;
   taxInPaisa?: number;
+}
+
+/** What is still owed on a bill, in paise (never below zero). */
+export function amountDueInPaisa(bill: Pick<Bill, 'totalAmountInPaisa' | 'amountPaidInPaisa' | 'paymentStatus'>): number {
+  if (bill.paymentStatus === 'PAID') return 0;
+  return Math.max(0, (bill.totalAmountInPaisa || 0) - (bill.amountPaidInPaisa || 0));
 }

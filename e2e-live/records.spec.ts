@@ -8,14 +8,14 @@ test.describe('Dashboard, patient record and audit trail, real backend', () => {
   test('the dashboard shows the clinic as it really is, not a fixed picture', async ({ page, request, browser }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     // A brand-new clinic: nothing booked, nobody registered.
-    await page.goto(`/${admin.hospitalCode}/dashboard`);
+    await page.goto(`${admin.hospitalCode}/dashboard`);
     await expect(page.locator('#stat-patients')).toHaveText('0', { timeout: 15000 });
     await expect(page.locator('#stat-today')).toHaveText('0');
     await expect(page.locator('#queue-empty')).toBeVisible();
     await expect(page.locator('#dashboard-name')).toContainText('Live Admin');
 
     const visit = await completePaidVisit(page, request, browser, admin.hospitalCode);
-    await page.goto(`/${admin.hospitalCode}/dashboard`);
+    await page.goto(`${admin.hospitalCode}/dashboard`);
     await expect(page.locator('#stat-patients')).toHaveText('1', { timeout: 15000 });
     await expect(page.locator('#stat-doctors')).toHaveText('1');
     await expect(page.locator('#stat-bills')).toHaveText('0');
@@ -33,7 +33,7 @@ test.describe('Dashboard, patient record and audit trail, real backend', () => {
     const visit = await completePaidVisit(page, request, browser, admin.hospitalCode);
     const stamp = Date.now().toString().slice(-6);
 
-    await page.goto(`/${admin.hospitalCode}/patients`);
+    await page.goto(`${admin.hospitalCode}/patients`);
     await page.locator('tbody tr', { hasText: visit.patientName }).getByRole('link', { name: visit.patientName }).click();
     await expect(page.locator('#patient-name')).toHaveText(visit.patientName, { timeout: 15000 });
 
@@ -58,7 +58,7 @@ test.describe('Dashboard, patient record and audit trail, real backend', () => {
     // Delete asks first, then the patient is gone from the list.
     await page.locator('#delete-patient').click();
     const deleted = page.waitForResponse((r) => r.request().method() === 'DELETE' && /\/hms\/patients\//.test(r.url()));
-    await page.getByRole('button', { name: 'Delete', exact: true }).last().click();
+    await page.getByRole('dialog', { name: 'Delete patient' }).getByRole('button', { name: 'Delete', exact: true }).click();
     expect((await deleted).ok(), 'patient deleted').toBeTruthy();
     await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/patients$`), { timeout: 15000 });
     await expect(page.locator('tbody tr', { hasText: visit.patientName })).toHaveCount(0);
@@ -79,7 +79,7 @@ test.describe('Dashboard, patient record and audit trail, real backend', () => {
         `Duplicate ${stamp},9600${stamp},,MALE,,,,`,
       ].join('\n'),
     );
-    await page.goto(`/${admin.hospitalCode}/patients`);
+    await page.goto(`${admin.hospitalCode}/patients`);
     await page.getByRole('button', { name: /Import CSV/ }).click();
     await page.locator('input[type="file"]').setInputFiles(file);
     const uploaded = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/patients\/upload$/.test(r.url()));
@@ -98,7 +98,7 @@ test.describe('Dashboard, patient record and audit trail, real backend', () => {
   test('the audit log can be narrowed to one kind of record and one kind of action', async ({ page, request, browser }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     await completePaidVisit(page, request, browser, admin.hospitalCode);
-    await page.goto(`/${admin.hospitalCode}/audit-logs`);
+    await page.goto(`${admin.hospitalCode}/audit-logs`);
     await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 15000 });
 
     await page.selectOption('#audit-filter-entity', 'Bill');

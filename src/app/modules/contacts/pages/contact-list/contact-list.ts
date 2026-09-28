@@ -1,10 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ContactService } from '../../../../core/services/contact.service';
 import { ContactMessageResponse } from '../../../../core/models/contact.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { DatePipe } from '@angular/common';
+
+const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-contact-list',
@@ -13,11 +15,16 @@ import { DatePipe } from '@angular/common';
   standalone: true,
   imports: [StatusBadgeComponent, EmptyStateComponent, DatePipe, FormsModule],
 })
-export class ContactList implements OnInit {
+export class ContactList implements OnInit, OnDestroy {
   private contactService = inject(ContactService);
 
+  /** The page on screen; filtering, search and paging are done by the server. */
   messages: ContactMessageResponse[] = [];
-  filteredMessages: ContactMessageResponse[] = [];
+  page = 0;
+  totalPages = 1;
+  totalElements = 0;
+  /** Messages in each status across the whole inbox, not only this page. */
+  counts: Record<string, number> = {};
   isLoading = false;
   error = '';
   statusFilter = '';
@@ -25,49 +32,77 @@ export class ContactList implements OnInit {
   selectedMessage: ContactMessageResponse | null = null;
   replyText = '';
   isReplying = false;
+  private searchTimer?: ReturnType<typeof setTimeout>;
 
   get newCount(): number {
-    return this.messages.filter((m) => m.status === 'NEW').length;
+    return this.counts['NEW'] ?? 0;
   }
 
-  get repliedCount(): number {
-    return this.messages.filter((m) => m.status === 'REPLIED').length;
+  get resolvedCount(): number {
+    return this.counts['RESOLVED'] ?? 0;
+  }
+
+  get totalCount(): number {
+    return Object.values(this.counts).reduce((a, b) => a + b, 0);
+  }
+
+  get hasFilters(): boolean {
+    return !!this.statusFilter || !!this.searchQuery.trim();
   }
 
   ngOnInit(): void {
     this.loadMessages();
   }
 
-  loadMessages(): void {
+  ngOnDestroy(): void {
+    clearTimeout(this.searchTimer);
+  }
+
+  loadMessages(page = this.page): void {
     this.isLoading = true;
     this.error = '';
-    this.contactService.list().subscribe({
+    this.contactService.list({ page, size: PAGE_SIZE, status: this.statusFilter, q: this.searchQuery }).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.messages = res.data;
-          this.applyFilters();
+          this.messages = res.data.content;
+          this.page = res.data.pageNumber;
+          this.totalPages = Math.max(1, res.data.totalPages);
+          this.totalElements = res.data.totalElements;
         }
         this.isLoading = false;
       },
       error: (err) => {
-        this.error = err?.message || 'Failed to load contact messages';
+        this.error = err?.error?.message || err?.message || 'Failed to load contact messages';
         this.isLoading = false;
       },
     });
+    this.contactService.counts().subscribe({
+      next: (res) => { if (res.success && res.data) this.counts = res.data; },
+      error: () => undefined,
+    });
   }
 
+  /** A new filter starts again from the first page. */
   applyFilters(): void {
-    let result = [...this.messages];
-    if (this.statusFilter) {
-      result = result.filter((m) => m.status === this.statusFilter);
-    }
-    if (this.searchQuery) {
-      const q = this.searchQuery.toLowerCase();
-      result = result.filter(
-        (m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q) || m.subject?.toLowerCase().includes(q),
-      );
-    }
-    this.filteredMessages = result;
+    clearTimeout(this.searchTimer);
+    this.loadMessages(0);
+  }
+
+  /** Searches once typing pauses rather than on every key. */
+  onSearchInput(): void {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.loadMessages(0), 300);
+  }
+
+  clearFilters(): void {
+    this.statusFilter = '';
+    this.searchQuery = '';
+    this.applyFilters();
+  }
+
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages || page === this.page) return;
+    this.loadMessages(page);
   }
 
   selectMessage(msg: ContactMessageResponse): void {

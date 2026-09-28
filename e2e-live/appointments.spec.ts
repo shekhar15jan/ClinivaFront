@@ -16,13 +16,13 @@ test.describe('Appointments, real backend', () => {
     await registerPatient(page, admin.hospitalCode, patientName, `97${stamp}02`.slice(0, 10));
 
     // 1. No hours yet: the booking screen has nothing to offer for this doctor.
-    await page.goto(`/${admin.hospitalCode}/appointments/book`);
+    await page.goto(`${admin.hospitalCode}/appointments/book`);
     await page.locator('[aria-label="Select Date"] [role="radio"]').first().click();
     await page.locator('[aria-label="Select Doctor"] [role="radio"]', { hasText: doctorName }).click();
     await expect(page.getByText(/No slots available/)).toBeVisible();
 
     // 2. Set the doctor's hours on their page (every day, so the test does not depend on today's weekday).
-    await page.goto(`/${admin.hospitalCode}/doctors`);
+    await page.goto(`${admin.hospitalCode}/doctors`);
     await page.getByRole('button', { name: `View ${doctorName}` }).click();
     await expect(page.getByRole('heading', { name: 'Weekly Schedule' })).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#doctor-experience')).toContainText('8 years');
@@ -41,7 +41,7 @@ test.describe('Appointments, real backend', () => {
     await expect(page.getByLabel('Monday end')).toHaveValue('12:00');
 
     // 4. Now the same doctor can be booked.
-    await page.goto(`/${admin.hospitalCode}/appointments/book`);
+    await page.goto(`${admin.hospitalCode}/appointments/book`);
     await page.locator('[aria-label="Select Date"] [role="radio"]').first().click();
     await page.locator('[aria-label="Select Doctor"] [role="radio"]', { hasText: doctorName }).click();
     const slots = page.locator('[aria-label="Available Time Slots"] [role="radio"]');
@@ -67,7 +67,7 @@ test.describe('Appointments, real backend', () => {
     await expect(page.getByText(/Appointment booked successfully/)).toBeVisible();
 
     // The appointment exists for this clinic: the day's list has it.
-    await page.goto(`/${admin.hospitalCode}/appointments`);
+    await page.goto(`${admin.hospitalCode}/appointments`);
     await page.waitForLoadState('networkidle');
     await expect(page.getByText(patientName).first()).toBeVisible({ timeout: 15000 });
   });

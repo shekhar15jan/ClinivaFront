@@ -9,7 +9,7 @@ test.describe('Patients, real backend', () => {
     const name = `Live Patient ${stamp}`;
     const phone = `9${stamp}${'0'.repeat(3)}`.slice(0, 10);
 
-    await page.goto(`/${admin.hospitalCode}/patients`);
+    await page.goto(`${admin.hospitalCode}/patients`);
     await page.getByRole('button', { name: /Add Patient/ }).click();
 
     // The form guards itself: invalid input cannot be saved.
@@ -40,7 +40,7 @@ test.describe('Patients, real backend', () => {
     const otherContext = await browser.newContext();
     const otherPage = await otherContext.newPage();
     const other = await signInAsNewAdmin(otherPage, request, 'HMS_PRO');
-    await otherPage.goto(`/${other.hospitalCode}/patients`);
+    await otherPage.goto(`${other.hospitalCode}/patients`);
     await otherPage.waitForLoadState('networkidle');
     await expect(otherPage.locator('tbody tr', { hasText: name })).toHaveCount(0);
     await otherContext.close();

@@ -3,7 +3,7 @@ import { ContactList } from './contact-list';
 import { ContactService } from '../../../../core/services/contact.service';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { ApiResponse } from '../../../../core/models/common.model';
+import { ApiResponse, PagedResponse } from '../../../../core/models/common.model';
 import { ContactMessageResponse } from '../../../../core/models/contact.model';
 
 describe('ContactList', () => {
@@ -13,14 +13,25 @@ describe('ContactList', () => {
     status: 'NEW', adminReply: '', createdAt: '2026-01-01T00:00:00Z',
   };
 
-  const mockListResponse: ApiResponse<ContactMessageResponse[]> = {
-    success: true, data: [mockMessage], message: '', timestamp: '', requestId: '',
-  };
+  const page = (content: ContactMessageResponse[], pageNumber = 0, totalPages = 1): ApiResponse<PagedResponse<ContactMessageResponse>> => ({
+    success: true, message: '', timestamp: '', requestId: '',
+    data: { content, pageNumber, pageSize: 20, totalElements: content.length, totalPages, last: pageNumber >= totalPages - 1 },
+  });
+  const mockListResponse = page([mockMessage]);
+  const counts = { success: true, data: { NEW: 3, IN_PROGRESS: 1, RESOLVED: 2 }, message: '', timestamp: '', requestId: '' };
 
-  function createComponent(overrides?: Partial<ContactService>) {
+  function createComponent(overrides?: Partial<Record<keyof ContactService, unknown>>) {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
-        { provide: ContactService, useValue: { list: vi.fn().mockReturnValue(of(mockListResponse)), ...overrides } },
+        {
+          provide: ContactService,
+          useValue: {
+            list: vi.fn().mockReturnValue(of(mockListResponse)),
+            counts: vi.fn().mockReturnValue(of(counts)),
+            ...overrides,
+          },
+        },
       ],
     });
     return TestBed.runInInjectionContext(() => new ContactList());
@@ -74,5 +85,55 @@ describe('ContactList', () => {
     });
     component.ngOnInit();
     expect(component.messages).toEqual([]);
+  });
+
+  it('shows counts for the whole inbox, not just the page', () => {
+    const component = createComponent();
+    component.ngOnInit();
+    expect(component.newCount).toBe(3);
+    expect(component.resolvedCount).toBe(2);
+    expect(component.totalCount).toBe(6);
+  });
+
+  it('asks the server for the chosen status and search, from the first page', () => {
+    const list = vi.fn().mockReturnValue(of(page([mockMessage], 1, 3)));
+    const component = createComponent({ list });
+    component.ngOnInit();
+    component.statusFilter = 'RESOLVED';
+    component.searchQuery = 'john';
+    component.applyFilters();
+    expect(list).toHaveBeenLastCalledWith({ page: 0, size: 20, status: 'RESOLVED', q: 'john' });
+  });
+
+  it('pages forward and back within range', () => {
+    const list = vi.fn().mockReturnValue(of(page([mockMessage], 0, 3)));
+    const component = createComponent({ list });
+    component.ngOnInit();
+    component.goToPage(1);
+    expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+    list.mockClear();
+    component.goToPage(-1);
+    component.goToPage(3);
+    expect(list).not.toHaveBeenCalled();
+  });
+
+  it('waits for typing to pause before searching', () => {
+    vi.useFakeTimers();
+    try {
+      const list = vi.fn().mockReturnValue(of(mockListResponse));
+      const component = createComponent({ list });
+      component.ngOnInit();
+      list.mockClear();
+      component.searchQuery = 'jo';
+      component.onSearchInput();
+      component.searchQuery = 'joh';
+      component.onSearchInput();
+      expect(list).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(300);
+      expect(list).toHaveBeenCalledTimes(1);
+      expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ q: 'joh', page: 0 }));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

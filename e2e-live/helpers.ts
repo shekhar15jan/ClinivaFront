@@ -4,6 +4,11 @@ const CLOUDSUITE = process.env.CLOUDSUITE_API || 'http://localhost:8081/api/v1';
 const MAILHOG = process.env.MAILHOG_API || 'http://localhost:8025/api/v2';
 const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 
+/** The app's path prefix: '' at localhost:4201, '/cliniva' on staging (BASE_URL=http://localhost:8088/cliniva/). */
+export const BASE_PATH = new URL(process.env.BASE_URL || 'http://localhost:4201').pathname.replace(/\/$/, '');
+/** A clinic's own sign-in page, <base>/<clinic>/login; the generic <base>/login must not count. */
+export const CLINIC_LOGIN = new RegExp(`^${BASE_PATH}/[^/]+/login$`);
+
 /** Decode a quoted-printable mail body (MailHog stores bodies as the SMTP server received them). */
 export function decodeQuotedPrintable(body: string): string {
   return body
@@ -175,11 +180,11 @@ export async function signInAsNewAdmin(page: Page, request: APIRequestContext, p
 
 /** Signs `email` in through the real sign-in screens: the emailed one-time code is read from the mailbox. Returns the clinic code. */
 export async function signInWithOtp(page: Page, request: APIRequestContext, email: string): Promise<string> {
-  await page.goto('/login');
+  await page.goto('login');
   await page.fill('input[type="email"]', email);
   await page.locator('button[type="submit"]').first().click();
-  await page.waitForURL((url) => /^\/[^/]+\/login$/.test(url.pathname), { timeout: 15000 });
-  const hospitalCode = new URL(page.url()).pathname.split('/')[1];
+  await page.waitForURL((url) => CLINIC_LOGIN.test(url.pathname), { timeout: 15000 });
+  const hospitalCode = new URL(page.url()).pathname.split('/').slice(-2)[0] /* <clinic>/login, also under /cliniva/ */;
 
   const before = await countMails(request, email, 'otp');
   await page.locator('button:has-text("Send OTP")').click();
@@ -189,13 +194,17 @@ export async function signInWithOtp(page: Page, request: APIRequestContext, emai
   for (let i = 0; i < 6; i++) await digits.nth(i).fill(otp[i]);
   await page.getByRole('button', { name: /Verify/ }).click();
   // Patients land on their own dashboard, staff on the clinic's.
-  await page.waitForURL(new RegExp(`/${hospitalCode}/(patient/)?dashboard`), { timeout: 20000 });
-  return hospitalCode;
+  // Polls the address itself: the app changes it in place (no page load), which waitForURL can miss.
+  const landing = new RegExp(`/${hospitalCode}/(patient/)?dashboard`, 'i');
+  await expect.poll(() => page.url(), { timeout: 20000, message: 'lands on the clinic dashboard' }).toMatch(landing);
+  // The clinic code as the app writes it (the sign-in link may use other letter case).
+  const parts = new URL(page.url()).pathname.split('/');
+  return parts[parts.indexOf('dashboard') - (parts.includes('patient') ? 2 : 1)];
 }
 
 /** Registers a patient through the real form and returns once the API has accepted it. */
 export async function registerPatient(page: Page, hospitalCode: string, name: string, phone: string, email?: string): Promise<void> {
-  await page.goto(`/${hospitalCode}/patients`);
+  await page.goto(`${hospitalCode}/patients`);
   await page.getByRole('button', { name: /Add Patient/ }).click();
   await page.fill('#patientFullName', name);
   await page.fill('#patientDob', '1990-05-17');
@@ -210,7 +219,7 @@ export async function registerPatient(page: Page, hospitalCode: string, name: st
 
 /** Registers a doctor through the real form and returns once the API has accepted it. */
 export async function registerDoctor(page: Page, hospitalCode: string, name: string, phone: string, email?: string): Promise<void> {
-  await page.goto(`/${hospitalCode}/doctors`);
+  await page.goto(`${hospitalCode}/doctors`);
   await page.getByText('Add Doctor', { exact: false }).first().click();
   await page.fill('input[formControlName="fullName"]', name);
   await page.locator('select[formControlName="specialization"]').selectOption({ index: 1 });
@@ -227,7 +236,7 @@ export async function registerDoctor(page: Page, hospitalCode: string, name: str
 
 /** Opens a doctor's page and gives them hours every day, so slots exist whatever today's weekday is. */
 export async function setDoctorHours(page: Page, hospitalCode: string, doctorName: string): Promise<void> {
-  await page.goto(`/${hospitalCode}/doctors`);
+  await page.goto(`${hospitalCode}/doctors`);
   await page.getByRole('button', { name: `View ${doctorName}` }).click();
   await expect(page.getByRole('heading', { name: 'Weekly Schedule' })).toBeVisible({ timeout: 15000 });
   for (const day of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']) {
@@ -241,7 +250,7 @@ export async function setDoctorHours(page: Page, hospitalCode: string, doctorNam
 
 /** Books the first free slot for `patientName` with `doctorName` through the booking screens; returns the appointment id. */
 export async function bookAppointment(page: Page, hospitalCode: string, doctorName: string, patientName: string): Promise<string> {
-  await page.goto(`/${hospitalCode}/appointments/book`);
+  await page.goto(`${hospitalCode}/appointments/book`);
   await page.locator('[aria-label="Select Date"] [role="radio"]').first().click();
   await page.locator('[aria-label="Select Doctor"] [role="radio"]', { hasText: doctorName }).click();
   const slots = page.locator('[aria-label="Available Time Slots"] [role="radio"]');
@@ -261,7 +270,7 @@ export async function bookAppointment(page: Page, hospitalCode: string, doctorNa
 
 /** Adds a medicine to the clinic's catalog through the real form. */
 export async function addMedicine(page: Page, hospitalCode: string, name: string, priceRupees: string): Promise<void> {
-  await page.goto(`/${hospitalCode}/medicines`);
+  await page.goto(`${hospitalCode}/medicines`);
   await page.getByRole('button', { name: /Add Medicine|Add New/ }).first().click();
   await page.fill('#med-form-name', name);
   await page.fill('#med-form-generic-name', 'Generic');
@@ -280,7 +289,7 @@ export async function addStaffUser(
   hospitalCode: string,
   user: { firstName: string; lastName: string; email: string; role: 'RECEPTIONIST' | 'DOCTOR' | 'NURSE' | 'ADMIN' },
 ): Promise<void> {
-  await page.goto(`/${hospitalCode}/users`);
+  await page.goto(`${hospitalCode}/users`);
   await page.locator('#add-user').click();
   await page.fill('#user-first-name', user.firstName);
   await page.fill('#user-last-name', user.lastName);
@@ -319,7 +328,7 @@ export async function completePaidVisit(page: Page, request: APIRequestContext, 
   await setDoctorHours(page, hospitalCode, doctorName);
   const appointmentId = await bookAppointment(page, hospitalCode, doctorName, patientName);
 
-  await page.goto(`/${hospitalCode}/appointments`);
+  await page.goto(`${hospitalCode}/appointments`);
   const row = page.locator('li', { hasText: patientName });
   const approved = page.waitForResponse((r) => r.request().method() === 'PUT' && /\/approve$/.test(r.url()));
   await row.getByRole('button', { name: 'Approve' }).click();
@@ -328,7 +337,7 @@ export async function completePaidVisit(page: Page, request: APIRequestContext, 
   const context = await browser.newContext();
   const doctor = await context.newPage();
   await signInWithOtp(doctor, request, doctorEmail);
-  await doctor.goto(`/${hospitalCode}/consultations/${appointmentId}`);
+  await doctor.goto(`${hospitalCode}/consultations/${appointmentId}`);
   await expect(doctor.locator('#chiefComplaint')).toBeVisible({ timeout: 15000 });
   await doctor.fill('#chiefComplaint', 'Fever for three days');
   await doctor.fill('#diagnosis', 'Viral fever');
@@ -343,7 +352,7 @@ export async function completePaidVisit(page: Page, request: APIRequestContext, 
   const prescriptionId = (await prescriptionRes.json()).data.id as string;
   await context.close();
 
-  await page.goto(`/${hospitalCode}/prescriptions/${prescriptionId}`);
+  await page.goto(`${hospitalCode}/prescriptions/${prescriptionId}`);
   await page.fill('#bill-additional', '50');
   await page.fill('#bill-discount', '25');
   const generated = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/bills\/generate/.test(r.url()));

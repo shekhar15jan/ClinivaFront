@@ -41,7 +41,7 @@ test.describe('Professional-plan clinic, real backend', () => {
 
     for (const [path, label] of LICENSED) {
       where = label;
-      await page.goto(`/${admin.hospitalCode}/${path}`);
+      await page.goto(`${admin.hospitalCode}/${path}`);
       await page.waitForLoadState('networkidle');
       await expect(page, `${label} keeps its URL (not bounced elsewhere)`).toHaveURL(new RegExp(`/${admin.hospitalCode}/${path}`));
       await expect(page.locator('main, app-root').first()).toContainText(/\S/);

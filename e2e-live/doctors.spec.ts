@@ -7,7 +7,7 @@ test.describe('Doctors, real backend', () => {
     const stamp = Date.now().toString().slice(-6);
     const name = `Dr. Live ${stamp}`;
 
-    await page.goto(`/${admin.hospitalCode}/doctors`);
+    await page.goto(`${admin.hospitalCode}/doctors`);
     await page.getByText('Add Doctor', { exact: false }).first().click();
     await expect(page.getByRole('heading', { name: 'Doctor Registration' })).toBeVisible();
 
@@ -26,7 +26,7 @@ test.describe('Doctors, real backend', () => {
     await save.click();
     expect((await created).ok(), 'doctor created').toBeTruthy();
 
-    await page.goto(`/${admin.hospitalCode}/doctors`);
+    await page.goto(`${admin.hospitalCode}/doctors`);
     await expect(page.getByText(name).first()).toBeVisible({ timeout: 15000 });
     await page.reload();
     await expect(page.getByText(name).first()).toBeVisible({ timeout: 15000 });

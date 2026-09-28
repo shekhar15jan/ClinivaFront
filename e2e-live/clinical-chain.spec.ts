@@ -23,7 +23,7 @@ test.describe('Visit from booking to payment, real backend', () => {
     const appointmentId = await bookAppointment(page, admin.hospitalCode, doctorName, patientName);
 
     // A new booking waits for approval; the front desk approves it from the day's list.
-    await page.goto(`/${admin.hospitalCode}/appointments`);
+    await page.goto(`${admin.hospitalCode}/appointments`);
     const booked = page.locator('li', { hasText: patientName });
     await expect(booked).toContainText('Pending', { timeout: 15000 });
     const approved = page.waitForResponse((r) => r.request().method() === 'PUT' && /\/approve$/.test(r.url()));
@@ -36,7 +36,7 @@ test.describe('Visit from booking to payment, real backend', () => {
     await signInWithOtp(doctorPage, request, doctorEmail);
 
     // Consultation: notes and one medicine from the catalog.
-    await doctorPage.goto(`/${admin.hospitalCode}/appointments`);
+    await doctorPage.goto(`${admin.hospitalCode}/appointments`);
     await doctorPage.locator('li', { hasText: patientName }).getByRole('link', { name: 'Start consultation' }).click();
     await expect(doctorPage).toHaveURL(new RegExp(`/${admin.hospitalCode}/consultations/${appointmentId}$`));
     await expect(doctorPage.locator('#chiefComplaint')).toBeVisible({ timeout: 15000 });
@@ -70,7 +70,7 @@ test.describe('Visit from booking to payment, real backend', () => {
     await doctorContext.close();
 
     // Front desk opens the same prescription and bills it: fee 600 + 10 doses x 12.50 = 125, plus 50 extra, less 25 discount.
-    await page.goto(`/${admin.hospitalCode}/prescriptions/${prescriptionId}`);
+    await page.goto(`${admin.hospitalCode}/prescriptions/${prescriptionId}`);
     await page.fill('#bill-additional', '50');
     await page.fill('#bill-discount', '25');
     const generated = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/bills\/generate/.test(r.url()));
@@ -101,7 +101,7 @@ test.describe('Visit from booking to payment, real backend', () => {
     await expect(page.locator('#collect-payment')).toHaveCount(0);
 
     // The payment appears in the Payments list.
-    await page.goto(`/${admin.hospitalCode}/payments`);
+    await page.goto(`${admin.hospitalCode}/payments`);
     await expect(page.getByText(patientName).first()).toBeVisible({ timeout: 15000 });
   });
 });

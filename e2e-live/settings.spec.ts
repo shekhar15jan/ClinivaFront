@@ -7,7 +7,7 @@ test.describe('Clinic settings, real backend', () => {
     const stamp = Date.now().toString().slice(-6);
     const clinicName = `Live Care ${stamp}`;
 
-    await page.goto(`/${admin.hospitalCode}/settings`);
+    await page.goto(`${admin.hospitalCode}/settings`);
     await expect(page.getByRole('heading', { name: 'Clinic Settings' })).toBeVisible({ timeout: 15000 });
     // The form is filled from what the server holds, not left blank.
     await expect(page.locator('#settingsClinicName')).not.toHaveValue('', { timeout: 15000 });
@@ -30,11 +30,11 @@ test.describe('Clinic settings, real backend', () => {
     // A patient registered now gets the new prefix.
     const patientName = `Prefix Patient ${stamp}`;
     await registerPatient(page, admin.hospitalCode, patientName, `96${stamp}31`.slice(0, 10));
-    await page.goto(`/${admin.hospitalCode}/patients`);
+    await page.goto(`${admin.hospitalCode}/patients`);
     await expect(page.locator('tbody tr', { hasText: patientName })).toContainText('LC-', { timeout: 15000 });
 
     // Email templates open from Advanced.
-    await page.goto(`/${admin.hospitalCode}/settings`);
+    await page.goto(`${admin.hospitalCode}/settings`);
     await page.getByRole('button', { name: /Email Templates|Manage/ }).first().click();
     await expect(page).toHaveURL(/\/settings\/email-templates$/);
     await expect(page.locator('main')).toContainText(/template/i);

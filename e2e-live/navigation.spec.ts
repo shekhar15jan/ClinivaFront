@@ -15,7 +15,7 @@ test.describe('Navigation inside a clinic, real backend', () => {
     const inClinic = (path: string) => new RegExp(`/${admin.hospitalCode}/${path}$`);
 
     // Open a patient from the list, then come back with the header's back button.
-    await page.goto(`/${admin.hospitalCode}/patients`);
+    await page.goto(`${admin.hospitalCode}/patients`);
     await page.locator('tbody tr', { hasText: name }).locator('a').first().click();
     await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/patients/[0-9a-f-]{36}$`));
     await expect(page.getByRole('heading', { name: 'Patient Profile' })).toBeVisible({ timeout: 15000 });
@@ -25,10 +25,10 @@ test.describe('Navigation inside a clinic, real backend', () => {
 
     // On a phone, the bottom bar and the dashboard's "+" (new appointment) stay inside this clinic.
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(`/${admin.hospitalCode}/dashboard`);
+    await page.goto(`${admin.hospitalCode}/dashboard`);
     await page.getByRole('link', { name: /Patients/ }).last().click();
     await expect(page).toHaveURL(inClinic('patients'));
-    await page.goto(`/${admin.hospitalCode}/dashboard`);
+    await page.goto(`${admin.hospitalCode}/dashboard`);
     await page.getByRole('button', { name: 'New Appointment' }).last().click();
     await expect(page).toHaveURL(inClinic('appointments/book'));
 

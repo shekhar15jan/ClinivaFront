@@ -1,16 +1,16 @@
 import { expect, test } from '@playwright/test';
-import { addStaffUser, signInAsNewAdmin, signInWithOtp } from './helpers';
+import { BASE_PATH, CLINIC_LOGIN, addStaffUser, signInAsNewAdmin, signInWithOtp } from './helpers';
 
 const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 
 const link = (page: import('@playwright/test').Page, hospitalCode: string, route: string) =>
-  page.locator(`app-sidebar a[href="/${hospitalCode}/${route}"]`);
+  page.locator(`app-sidebar a[href="${BASE_PATH}/${hospitalCode}/${route}"]`);
 
 test.describe('What each clinic and role is offered, real backend', () => {
   test('a Starter clinic is offered only its plan, and a direct address for anything else is turned away', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_STARTER');
     await page.setViewportSize({ width: 1400, height: 900 });
-    await page.goto(`/${admin.hospitalCode}/dashboard`);
+    await page.goto(`${admin.hospitalCode}/dashboard`);
 
     for (const route of ['patients', 'doctors', 'appointments', 'users', 'settings']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is offered`).toHaveCount(1, { timeout: 15000 });
@@ -20,12 +20,12 @@ test.describe('What each clinic and role is offered, real backend', () => {
     }
 
     // Typing the address of a module outside the plan is answered by a message and the dashboard.
-    await page.goto(`/${admin.hospitalCode}/billing`);
+    await page.goto(`${admin.hospitalCode}/billing`);
     await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
     await expect(page.getByText(/not available in your current plan/i)).toBeVisible();
 
     // Same for another module outside the plan.
-    await page.goto(`/${admin.hospitalCode}/medicines`);
+    await page.goto(`${admin.hospitalCode}/medicines`);
     await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
   });
 
@@ -48,7 +48,7 @@ test.describe('What each clinic and role is offered, real backend', () => {
     }
 
     // A receptionist who types the address of an administrator screen does not get a working screen.
-    await desk.goto(`/${admin.hospitalCode}/users`);
+    await desk.goto(`${admin.hospitalCode}/users`);
     await expect(desk).not.toHaveURL(/\/users$/, { timeout: 15000 });
     await context.close();
   });
@@ -59,10 +59,10 @@ test.describe('What each clinic and role is offered, real backend', () => {
 
     const context = await browser.newContext();
     const visitor = await context.newPage();
-    await visitor.goto('/login');
+    await visitor.goto('login');
     await visitor.fill('input[type="email"]', admin.adminEmail);
     await visitor.locator('button[type="submit"]').first().click();
-    await visitor.waitForURL((url) => /^\/[^/]+\/login$/.test(url.pathname), { timeout: 15000 });
+    await visitor.waitForURL((url) => CLINIC_LOGIN.test(url.pathname), { timeout: 15000 });
     await visitor.locator('button:has-text("Send OTP")').click();
     await expect(visitor.getByText(/suspended/i).first()).toBeVisible({ timeout: 15000 });
     await expect(visitor).toHaveURL(/\/login$/);

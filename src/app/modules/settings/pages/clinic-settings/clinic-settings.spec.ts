@@ -144,6 +144,43 @@ describe('ClinicSettingsPage', () => {
       expect(service['update']).not.toHaveBeenCalled();
     });
 
+    it("saves the clinic's Razorpay keys, sending a secret only when one was typed", () => {
+      const component = create();
+      component.settings.razorpayKeyId = ' rzp_live_AbC123xyz ';
+      component.razorpaySecret = ' the-secret ';
+      component.save();
+      expect(service['update'].mock.calls[0][0]).toMatchObject({
+        razorpayKeyId: 'rzp_live_AbC123xyz',
+        razorpayKeySecret: 'the-secret',
+        razorpayWebhookSecret: undefined,
+      });
+      // The typed secret is not kept on screen after saving.
+      expect(component.razorpaySecret).toBe('');
+    });
+
+    it('refuses a malformed key id, or a key id without its secret', () => {
+      const component = create();
+      component.settings.razorpayKeyId = 'my-key';
+      component.save();
+      expect(toast.error).toHaveBeenCalledWith('Enter the Razorpay Key ID, which starts with rzp_live_ or rzp_test_.');
+      component.settings.razorpayKeyId = 'rzp_live_AbC123xyz';
+      component.settings.razorpayKeySecretSet = false;
+      component.save();
+      expect(toast.error).toHaveBeenCalledWith('Enter the Razorpay key secret for this Key ID.');
+      expect(service['update']).not.toHaveBeenCalled();
+    });
+
+    it("shows the clinic's webhook address and can disconnect Razorpay", () => {
+      const component = create();
+      component.settings.clinicCode = 'SAI01';
+      expect(component.webhookUrl).toMatch(/\/hms\/payments\/webhook\/SAI01$/);
+      component.settings.razorpayKeyId = 'rzp_live_AbC123xyz';
+      component.settings.razorpayKeySecretSet = true;
+      component.removeRazorpay();
+      component.save();
+      expect(service['update'].mock.calls[0][0]).toMatchObject({ razorpayKeyId: '' });
+    });
+
     it('uploads a logo, shows it, and can remove it', () => {
       const component = create();
       const file = new File([new Uint8Array([0x89, 0x50])], 'logo.png', { type: 'image/png' });

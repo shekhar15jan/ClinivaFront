@@ -9,6 +9,9 @@ export interface CreateOrderResponse {
   amountInPaisa: number;
   currency: string;
   billId: string;
+  /** Shown in the Razorpay window. */
+  clinicName?: string | null;
+  billNumber?: string | null;
 }
 
 export interface VerifyPaymentRequest {

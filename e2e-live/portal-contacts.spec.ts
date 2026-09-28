@@ -15,7 +15,7 @@ test.describe('Contact messages and the patient portal, real backend', () => {
     });
     expect(sent.ok(), `contact submitted (${sent.status()})`).toBeTruthy();
 
-    await page.goto(`/${admin.hospitalCode}/contacts`);
+    await page.goto(`${admin.hospitalCode}/contacts`);
     const row = page.locator('tr', { hasText: subject });
     await expect(row).toBeVisible({ timeout: 15000 });
     await expect(row).toContainText('Anita Visitor');
@@ -47,22 +47,22 @@ test.describe('Contact messages and the patient portal, real backend', () => {
     await expect(portal).toHaveURL(new RegExp(`/${admin.hospitalCode}/patient/dashboard`));
 
     // The patient's own screens show this visit, and only this patient's.
-    await portal.goto(`/${admin.hospitalCode}/patient/appointments`);
+    await portal.goto(`${admin.hospitalCode}/patient/appointments`);
     await expect(portal.getByText(visit.doctorName).first()).toBeVisible({ timeout: 15000 });
 
-    await portal.goto(`/${admin.hospitalCode}/patient/prescriptions`);
+    await portal.goto(`${admin.hospitalCode}/patient/prescriptions`);
     await expect(portal.getByText(visit.doctorName).first()).toBeVisible({ timeout: 15000 });
 
-    await portal.goto(`/${admin.hospitalCode}/patient/bills`);
+    await portal.goto(`${admin.hospitalCode}/patient/bills`);
     await expect(portal.getByText('750').first()).toBeVisible({ timeout: 15000 });
     await expect(portal.getByText(/paid/i).first()).toBeVisible();
 
-    await portal.goto(`/${admin.hospitalCode}/patient/profile`);
+    await portal.goto(`${admin.hospitalCode}/patient/profile`);
     await expect(portal.getByText(visit.patientName).first()).toBeVisible({ timeout: 15000 });
     await expect(portal.getByText(patientEmail).first()).toBeVisible();
 
     // The patient rates the completed visit; it waits for the clinic's approval.
-    await portal.goto(`/${admin.hospitalCode}/patient/appointments`);
+    await portal.goto(`${admin.hospitalCode}/patient/appointments`);
     await portal.locator('.rate-visit').first().click();
     await portal.selectOption('#review-rating', '5');
     await portal.fill('#review-text', 'Kind and thorough.');
@@ -73,12 +73,12 @@ test.describe('Contact messages and the patient portal, real backend', () => {
     await expect(portal.getByText('Reviewed').first()).toBeVisible();
 
     // A patient cannot open the clinic's staff screens: they are sent back to their own dashboard.
-    await portal.goto(`/${admin.hospitalCode}/users`);
+    await portal.goto(`${admin.hospitalCode}/users`);
     await expect(portal).not.toHaveURL(/\/users$/);
     await context.close();
 
     // The administrator sees the pending review, with the patient and doctor named, and approves it.
-    await page.goto(`/${admin.hospitalCode}/reviews`);
+    await page.goto(`${admin.hospitalCode}/reviews`);
     const row = page.locator('tr', { hasText: visit.patientName });
     await expect(row).toContainText(visit.doctorName, { timeout: 15000 });
     await expect(row).toContainText('Kind and thorough.');

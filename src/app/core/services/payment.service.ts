@@ -26,6 +26,11 @@ export class PaymentService {
     return this.http.post<ApiResponse<PaymentResponse>>(`${this.baseUrl}/save`, request);
   }
 
+  /** Whether this clinic takes online (Razorpay) payments. */
+  onlineAvailable(): Observable<ApiResponse<{ available: boolean }>> {
+    return this.http.get<ApiResponse<{ available: boolean }>>(`${this.baseUrl}/online-available`);
+  }
+
   generateUpiQr(billId: string): Observable<ApiResponse<string>> {
     return this.http.get<ApiResponse<string>>(`${this.baseUrl}/generate-upi-qr`, {
       params: { billId },

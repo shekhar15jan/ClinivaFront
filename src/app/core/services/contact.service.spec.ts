@@ -46,16 +46,36 @@ describe('ContactService', () => {
   });
 
   describe('list', () => {
-    it('should GET all messages', () => {
-      const apiResp: ApiResponse<ContactMessageResponse[]> = { success: true, data: [mockResponse], message: '', timestamp: '', requestId: '' };
-
-      service.list().subscribe((res) => {
-        expect(res.data?.length).toBe(1);
+    it('should GET one page, passing the status and search to the server', () => {
+      service.list({ page: 2, status: 'RESOLVED', q: ' john ' }).subscribe((res) => {
+        expect(res.data.content.length).toBe(1);
+        expect(res.data.totalElements).toBe(41);
+        expect(res.data.pageNumber).toBe(2);
       });
 
-      const req = httpMock.expectOne(baseUrl);
+      const req = httpMock.expectOne((r) => r.url === baseUrl);
       expect(req.request.method).toBe('GET');
-      req.flush(apiResp);
+      expect(req.request.params.get('page')).toBe('2');
+      expect(req.request.params.get('size')).toBe('20');
+      expect(req.request.params.get('status')).toBe('RESOLVED');
+      expect(req.request.params.get('q')).toBe('john');
+      req.flush({ success: true, data: { content: [mockResponse], number: 2, size: 20, totalElements: 41, totalPages: 3 },
+        message: '', timestamp: '', requestId: '' });
+    });
+
+    it('leaves out an empty status and search', () => {
+      service.list().subscribe();
+      const req = httpMock.expectOne((r) => r.url === baseUrl);
+      expect(req.request.params.has('status')).toBe(false);
+      expect(req.request.params.has('q')).toBe(false);
+      req.flush({ success: true, data: { content: [] }, message: '', timestamp: '', requestId: '' });
+    });
+  });
+
+  describe('counts', () => {
+    it('should GET the count per status', () => {
+      service.counts().subscribe((res) => expect(res.data['NEW']).toBe(4));
+      httpMock.expectOne(`${baseUrl}/counts`).flush({ success: true, data: { NEW: 4 }, message: '', timestamp: '', requestId: '' });
     });
   });
 
@@ -95,7 +115,7 @@ describe('ContactService', () => {
         error: (err) => expect(err.status).toBe(500),
       });
 
-      httpMock.expectOne(baseUrl).flush({}, { status: 500, statusText: 'Server Error' });
+      httpMock.expectOne((r) => r.url === baseUrl).flush({}, { status: 500, statusText: 'Server Error' });
     });
   });
 });

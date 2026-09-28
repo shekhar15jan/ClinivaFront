@@ -7,9 +7,11 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     @if (open) {
-      <div class="fixed inset-0 z-[9997] flex items-center justify-center bg-black/40" (click)="onCancel()" (keydown.enter)="onCancel()" (keydown.space)="onCancel(); $event.preventDefault()" tabindex="0">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" (keydown.space)="$event.stopPropagation()" tabindex="-1">
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ title }}</h3>
+      <div class="fixed inset-0 z-[9997] flex items-center justify-center bg-black/40" (click)="onCancel()" (keydown.escape)="onCancel()" tabindex="-1">
+        <!-- A named, modal dialog: screen readers announce it and it can be found by its title; Escape closes it. -->
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6" role="dialog" aria-modal="true"
+             [attr.aria-labelledby]="titleId" (click)="$event.stopPropagation()" (keydown)="$event.key !== 'Escape' && $event.stopPropagation()" tabindex="-1">
+          <h3 [id]="titleId" class="text-lg font-semibold text-gray-900 mb-2">{{ title }}</h3>
           <p class="text-sm text-gray-600 mb-6">{{ message }}</p>
           <div class="flex justify-end gap-3">
             <button
@@ -36,6 +38,9 @@ export class ConfirmDialogComponent {
   @Input() isDestructive = false;
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
+
+  private static nextId = 0;
+  readonly titleId = `confirm-dialog-title-${ConfirmDialogComponent.nextId++}`;
 
   onConfirm(): void {
     this.confirmed.emit();

@@ -60,4 +60,27 @@ describe('ConfirmDialogComponent', () => {
     expect(component.cancelText).toBe('Keep');
     expect(component.isDestructive).toBe(true);
   });
+
+  it('renders as a named modal dialog, and Escape cancels it', () => {
+    TestBed.configureTestingModule({ imports: [ConfirmDialogComponent] });
+    const fixture = TestBed.createComponent(ConfirmDialogComponent);
+    fixture.componentRef.setInput('open', true);
+    fixture.componentRef.setInput('title', 'Delete patient');
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    const title = fixture.nativeElement.querySelector(`#${dialog.getAttribute('aria-labelledby')}`) as HTMLElement;
+    expect(title.textContent?.trim()).toBe('Delete patient');
+
+    const cancelled = vi.spyOn(fixture.componentInstance.cancelled, 'emit');
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(cancelled).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives each dialog its own title id', () => {
+    const a = setup();
+    const b = TestBed.runInInjectionContext(() => new ConfirmDialogComponent());
+    expect(a.titleId).not.toBe(b.titleId);
+  });
 });

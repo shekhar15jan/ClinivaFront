@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BillingService } from '../../../../core/services/billing.service';
-import { Bill } from '../../../../core/models/billing.model';
+import { Bill, amountDueInPaisa } from '../../../../core/models/billing.model';
 import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
 import { PaymentModal } from '../payment-modal/payment-modal';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
@@ -32,6 +32,19 @@ export class InvoiceDetail implements OnInit {
 
   get total(): number {
     return (this.bill?.totalAmountInPaisa || 0) / 100;
+  }
+
+  /** Still owed, part-payments deducted: what the payment dialog collects. */
+  get dueInPaisa(): number {
+    return this.bill ? amountDueInPaisa(this.bill) : 0;
+  }
+
+  get due(): number {
+    return this.dueInPaisa / 100;
+  }
+
+  get paid(): number {
+    return this.total - this.due;
   }
 
   ngOnInit() {

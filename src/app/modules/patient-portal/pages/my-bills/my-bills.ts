@@ -1,6 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BillingService } from '../../../../core/services/billing.service';
-import { Bill } from '../../../../core/models/billing.model';
+import { Bill, amountDueInPaisa } from '../../../../core/models/billing.model';
+import { RazorpayCheckoutService } from '../../../../core/services/razorpay-checkout.service';
+import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -23,16 +25,27 @@ import { DatePipe } from '@angular/common';
                 <th class="px-4 py-3 text-xs font-semibold uppercase">Paid</th>
                 <th class="px-4 py-3 text-xs font-semibold uppercase">Due</th>
                 <th class="px-4 py-3 text-xs font-semibold uppercase">Status</th>
+                @if (onlineAvailable) { <th class="px-4 py-3"><span class="sr-only">Pay</span></th> }
               </tr></thead>
               <tbody>
                 @for (bill of bills; track bill.id) {
                   <tr class="border-t border-outline-variant">
-                    <td class="px-4 py-3 text-sm font-mono text-on-surface">INV-{{ bill.id.substring(0, 6) }}</td>
+                    <td class="px-4 py-3 text-sm font-mono text-on-surface">{{ bill.billNumber || 'INV-' + bill.id.substring(0, 6) }}</td>
                     <td class="px-4 py-3 text-sm text-outline">{{ bill.createdAt | date:'mediumDate' }}</td>
                     <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm text-outline">₹{{ (bill.paymentStatus === 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm font-medium text-red-600">₹{{ (bill.paymentStatus !== 'PAID' ? bill.totalAmountInPaisa : 0) / 100 }}</td>
-                    <td class="px-4 py-3"><span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span></td>
+                    <td class="px-4 py-3 text-sm text-outline">₹{{ ((bill.totalAmountInPaisa || 0) - due(bill)) / 100 }}</td>
+                    <td class="px-4 py-3 text-sm font-medium text-red-600">₹{{ due(bill) / 100 }}</td>
+                    <td class="px-4 py-3"><span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ statusLabel(bill.paymentStatus) }}</span></td>
+                    @if (onlineAvailable) {
+                      <td class="px-4 py-3 text-right">
+                        @if (due(bill) > 0) {
+                          <button type="button" [id]="'pay-' + bill.id" (click)="pay(bill)" [disabled]="payingId !== null"
+                                  class="px-3 py-1.5 text-xs font-semibold text-white bg-[#0052CC] rounded-lg hover:bg-[#0043a8] disabled:opacity-50">
+                            {{ payingId === bill.id ? 'Opening...' : 'Pay now' }}
+                          </button>
+                        }
+                      </td>
+                    }
                   </tr>
                 }
               </tbody>
@@ -42,18 +55,24 @@ import { DatePipe } from '@angular/common';
             @for (bill of bills; track bill.id) {
               <div class="px-4 py-3.5 flex flex-col gap-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-sm font-mono font-medium text-on-surface">INV-{{ bill.id.substring(0, 6) }}</span>
-                  <span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span>
+                  <span class="text-sm font-mono font-medium text-on-surface">{{ bill.billNumber || 'INV-' + bill.id.substring(0, 6) }}</span>
+                  <span [class]="statusClass(bill.paymentStatus)" class="px-2 py-0.5 rounded-full text-xs font-medium">{{ statusLabel(bill.paymentStatus) }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="text-xs text-outline">{{ bill.createdAt | date:'mediumDate' }}</span>
                   <span class="text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</span>
                 </div>
-                @if (bill.paymentStatus !== 'PAID') {
+                @if (due(bill) > 0) {
                   <div class="flex items-center justify-between">
                     <span class="text-xs text-outline">Due</span>
-                    <span class="text-sm font-medium text-red-600">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</span>
+                    <span class="text-sm font-medium text-red-600">₹{{ due(bill) / 100 }}</span>
                   </div>
+                  @if (onlineAvailable) {
+                    <button type="button" (click)="pay(bill)" [disabled]="payingId !== null"
+                            class="w-full py-2.5 text-sm font-semibold text-white bg-[#0052CC] rounded-lg hover:bg-[#0043a8] disabled:opacity-50">
+                      {{ payingId === bill.id ? 'Opening...' : 'Pay ₹' + due(bill) / 100 + ' now' }}
+                    </button>
+                  }
                 }
               </div>
             }
@@ -66,9 +85,46 @@ import { DatePipe } from '@angular/common';
 })
 export class MyBills implements OnInit {
   private billingService = inject(BillingService);
+  private checkout = inject(RazorpayCheckoutService);
+  private toast = inject(ToastService);
   bills: Bill[] = [];
   isLoading = false;
+  /** "Pay now" is offered only when the clinic takes online payments. */
+  onlineAvailable = false;
+  /** The bill whose checkout is open. */
+  payingId: string | null = null;
+
   ngOnInit() {
+    this.checkout.isAvailable().then((ok) => (this.onlineAvailable = ok));
+    this.load();
+  }
+
+  due(bill: Bill): number {
+    return amountDueInPaisa(bill);
+  }
+
+  statusLabel(status: string): string {
+    return status === 'PARTIALLY_PAID' ? 'Part paid' : status === 'PAID' ? 'Paid' : status === 'UNPAID' ? 'Unpaid' : status;
+  }
+
+  async pay(bill: Bill): Promise<void> {
+    if (this.payingId) return;
+    this.payingId = bill.id;
+    try {
+      const result = await this.checkout.payBill(bill.id, this.due(bill));
+      if (result === 'paid') {
+        this.toast.success('Payment received. Thank you!');
+        this.load();
+      }
+    } catch (e) {
+      this.toast.error((e as Error).message);
+      this.load();
+    } finally {
+      this.payingId = null;
+    }
+  }
+
+  load() {
     this.isLoading = true;
     this.billingService.getPatientBills().subscribe({
       next: (res) => { if (res.success) { this.bills = res.data || []; } this.isLoading = false; },

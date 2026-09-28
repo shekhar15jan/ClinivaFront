@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { countMails, nextMail, otpFrom, provisionTenant, temporaryPasswordFrom } from './helpers';
+import { CLINIC_LOGIN, countMails, nextMail, otpFrom, provisionTenant, temporaryPasswordFrom } from './helpers';
 
 /**
  * The journey a new clinic administrator takes, end to end on real services:
@@ -14,12 +14,12 @@ test.describe('New clinic administrator', () => {
     const chosen = `Live#${Date.now().toString().slice(-6)}Pw`;
 
     // 1. The generic login finds the clinic from the email address.
-    await page.goto('/login');
+    await page.goto('login');
     await page.fill('input[type="email"]', tenant.adminEmail);
     await page.locator('button[type="submit"]').first().click();
     // The clinic's own sign-in page (/<code>/login), not the generic /login we started on.
-    await page.waitForURL((url) => /^\/[^/]+\/login$/.test(url.pathname), { timeout: 15000 });
-    const hospitalCode = new URL(page.url()).pathname.split('/')[1];
+    await page.waitForURL((url) => CLINIC_LOGIN.test(url.pathname), { timeout: 15000 });
+    const hospitalCode = new URL(page.url()).pathname.split('/').slice(-2)[0] /* <clinic>/login, also under /cliniva/ */;
 
     // 2. Asking for a sign-in code is refused until the temporary password is replaced.
     await page.locator('button:has-text("Send OTP")').click();
@@ -62,9 +62,9 @@ test.describe('New clinic administrator', () => {
     await page.waitForURL(new RegExp(`/${hospitalCode}/dashboard`), { timeout: 20000 });
 
     // 6. A module in the Starter plan opens; one that is not licensed is turned away with a reason.
-    await page.goto(`/${hospitalCode}/patients`);
+    await page.goto(`${hospitalCode}/patients`);
     await expect(page).toHaveURL(new RegExp(`/${hospitalCode}/patients`));
-    await page.goto(`/${hospitalCode}/billing`);
+    await page.goto(`${hospitalCode}/billing`);
     await expect(page).toHaveURL(new RegExp(`/${hospitalCode}/dashboard`), { timeout: 15000 });
     await expect(page.getByText(/not available in your current plan/i)).toBeVisible({ timeout: 10000 });
 
@@ -75,7 +75,7 @@ test.describe('New clinic administrator', () => {
     await expect
       .poll(
         async () => {
-          await page.goto(`/${hospitalCode}/billing`);
+          await page.goto(`${hospitalCode}/billing`);
           await page.waitForLoadState('networkidle');
           return new URL(page.url()).pathname.endsWith('/billing');
         },

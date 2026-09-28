@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../core/services/payment.service';
+import { RazorpayCheckoutService } from '../../../../core/services/razorpay-checkout.service';
 
 type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
 
@@ -39,6 +40,20 @@ type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
             </div>
           </div>
 
+          @if (onlineAvailable) {
+            <button
+              id="payment-online"
+              type="button"
+              (click)="payOnline()"
+              [disabled]="isProcessing"
+              class="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 border border-blue-600 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-50 disabled:opacity-50"
+            >
+              <span class="material-symbols-outlined text-[18px]">credit_card</span>
+              Pay online now (card, UPI, net banking)
+            </button>
+            <p class="-mt-2 mb-4 text-xs text-gray-500">Opens Razorpay; the bill is marked paid as soon as the payment goes through.</p>
+          }
+
           @if (selectedMethod !== 'CASH') {
             <p class="mb-4 text-xs text-gray-500" id="payment-note">
               Record this only once the money has reached the clinic. It is saved as received by {{ methodLabels[selectedMethod] }}.
@@ -69,12 +84,15 @@ type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
   `,
   imports: [CommonModule, FormsModule],
 })
-export class PaymentModal {
+export class PaymentModal implements OnChanges {
   private paymentService = inject(PaymentService);
+  private checkout = inject(RazorpayCheckoutService);
 
   @Input() open = false;
   @Input() billId = '';
   @Input() amountInPaisa = 0;
+  /** Filled in on the Razorpay form. */
+  @Input() patientName = '';
   @Output() closed = new EventEmitter<void>();
   @Output() paymentSuccess = new EventEmitter<void>();
 
@@ -89,6 +107,32 @@ export class PaymentModal {
   selectedMethod: PaymentMethod = 'CASH';
   isProcessing = false;
   error = '';
+  /** Shown only when the clinic has saved its own Razorpay keys. */
+  onlineAvailable = false;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['open'] && this.open) {
+      this.checkout.isAvailable().then((ok) => (this.onlineAvailable = ok));
+    }
+  }
+
+  /** Card, UPI or net banking through the clinic's Razorpay account, at the desk or on the patient's phone. */
+  async payOnline(): Promise<void> {
+    if (!this.billId || this.isProcessing) return;
+    this.isProcessing = true;
+    this.error = '';
+    try {
+      const result = await this.checkout.payBill(this.billId, this.amountInPaisa, { name: this.patientName || undefined });
+      if (result === 'paid') {
+        this.paymentSuccess.emit();
+        this.onCancel();
+      }
+    } catch (e) {
+      this.error = (e as Error).message;
+    } finally {
+      this.isProcessing = false;
+    }
+  }
 
   onConfirm() {
     if (!this.billId || this.isProcessing) return;

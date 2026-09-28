@@ -10,7 +10,7 @@ test.describe('User management, real backend', () => {
     // The signed-in administrator has a name (from CloudSuite), so the header is not the "?" placeholder.
     await expect(page.locator('aside, nav').getByText('?', { exact: true })).toHaveCount(0);
 
-    await page.goto(`/${admin.hospitalCode}/users`);
+    await page.goto(`${admin.hospitalCode}/users`);
     await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
     // The administrator is listed with their own name, and cannot deactivate themselves.
     const own = page.locator('tr', { hasText: admin.adminEmail });
@@ -37,7 +37,7 @@ test.describe('User management, real backend', () => {
     // Deactivate, then activate again.
     await row.getByRole('button', { name: 'Deactivate' }).click();
     const deactivated = page.waitForResponse((r) => /\/deactivate$/.test(r.url()));
-    await page.getByRole('button', { name: 'Deactivate', exact: true }).last().click();
+    await page.getByRole('dialog', { name: 'Deactivate user' }).getByRole('button', { name: 'Deactivate', exact: true }).click();
     expect((await deactivated).ok(), 'deactivated').toBeTruthy();
     await expect(row).toContainText('Inactive');
     await page.reload();

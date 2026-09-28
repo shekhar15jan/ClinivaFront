@@ -5,6 +5,7 @@ import { SettingService } from '../../../../core/services/setting.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { FormsModule } from '@angular/forms';
 import { mediaUrl } from '../../../../core/utils/media-url';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-clinic-settings',
@@ -157,6 +158,58 @@ import { mediaUrl } from '../../../../core/utils/media-url';
           </div>
         </div>
 
+        <div class="bg-white rounded-xl border border-gray-200 p-6" id="settings-razorpay">
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="text-lg font-bold text-[#1E293B]">Online payments (Razorpay)</h2>
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium"
+                  [class]="razorpayReady ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'">
+              {{ razorpayReady ? 'Connected' : 'Not set up' }}
+            </span>
+          </div>
+          <p class="text-sm text-[#64748B] mb-4">
+            Patients pay by card, UPI or net banking into your clinic's own Razorpay account. Find the keys in the
+            Razorpay Dashboard under Account &amp; Settings &rarr; API Keys.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="settingsRzpKeyId" class="block text-sm font-medium text-[#475569] mb-1">Key ID</label>
+              <input id="settingsRzpKeyId" type="text" placeholder="rzp_live_..." autocomplete="off"
+                     [(ngModel)]="settings.razorpayKeyId" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:border-[#0052CC]" />
+            </div>
+            <div>
+              <label for="settingsRzpSecret" class="block text-sm font-medium text-[#475569] mb-1">Key secret</label>
+              <input id="settingsRzpSecret" type="password" autocomplete="new-password"
+                     [placeholder]="settings.razorpayKeySecretSet ? 'Saved (leave empty to keep)' : 'Paste the key secret'"
+                     [(ngModel)]="razorpaySecret" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
+            </div>
+            <div class="sm:col-span-2">
+              <label for="settingsRzpWebhookUrl" class="block text-sm font-medium text-[#475569] mb-1">Webhook URL</label>
+              <div class="flex gap-2">
+                <input id="settingsRzpWebhookUrl" type="text" readonly [value]="webhookUrl"
+                       class="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono bg-gray-50 text-[#475569]" />
+                <button type="button" (click)="copyWebhookUrl()" [disabled]="!webhookUrl"
+                        class="px-3 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50">Copy</button>
+              </div>
+              <p class="text-xs text-[#64748B] mt-1">
+                In Razorpay: Account &amp; Settings &rarr; Webhooks &rarr; Add, paste this URL, choose a secret, and tick
+                payment.captured and payment.failed. Bills are then marked paid even if a patient closes the page early.
+              </p>
+            </div>
+            <div>
+              <label for="settingsRzpWebhookSecret" class="block text-sm font-medium text-[#475569] mb-1">Webhook secret</label>
+              <input id="settingsRzpWebhookSecret" type="password" autocomplete="new-password"
+                     [placeholder]="settings.razorpayWebhookSecretSet ? 'Saved (leave empty to keep)' : 'The secret you chose in Razorpay'"
+                     [(ngModel)]="razorpayWebhookSecret" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
+            </div>
+            @if (settings.razorpayKeySecretSet) {
+              <div class="flex items-end">
+                <button type="button" id="settings-rzp-remove" (click)="removeRazorpay()"
+                        class="text-sm text-red-600 hover:underline">Disconnect Razorpay</button>
+              </div>
+            }
+          </div>
+        </div>
+
         <div class="bg-white rounded-xl border border-gray-200 p-6">
           <h2 class="text-lg font-bold text-[#1E293B] mb-4">Features</h2>
           <div class="space-y-3">
@@ -247,6 +300,38 @@ export class ClinicSettingsPage implements OnInit {
   };
 
   isUploading = false;
+
+  /** Typed secrets; empty means "keep what is saved". Never filled from the server. */
+  razorpaySecret = '';
+  razorpayWebhookSecret = '';
+
+  get razorpayReady(): boolean {
+    return !!this.settings.razorpayKeyId && !!this.settings.razorpayKeySecretSet && this.settings.enableOnlinePayment;
+  }
+
+  /** Where Razorpay sends this clinic's payment notices. */
+  get webhookUrl(): string {
+    const code = this.settings.clinicCode;
+    if (!code) return '';
+    const api = environment.apiUrl.startsWith('http') ? environment.apiUrl
+      : `${window.location.origin}${environment.apiUrl}`;
+    return `${api}/hms/payments/webhook/${encodeURIComponent(code)}`;
+  }
+
+  copyWebhookUrl(): void {
+    navigator.clipboard?.writeText(this.webhookUrl).then(
+      () => this.toast.success('Webhook URL copied'),
+      () => this.toast.error('Copy failed. Select the URL and copy it instead.'),
+    );
+  }
+
+  /** Removes the keys on the next save; online payment stops until new keys are entered. */
+  removeRazorpay(): void {
+    this.settings = { ...this.settings, razorpayKeyId: '', razorpayKeySecretSet: false, razorpayWebhookSecretSet: false };
+    this.razorpaySecret = '';
+    this.razorpayWebhookSecret = '';
+    this.toast.success('Razorpay will be disconnected when you save.');
+  }
 
   get logoSrc(): string | null {
     return mediaUrl(this.settings.logoUrl);
@@ -343,6 +428,15 @@ export class ClinicSettingsPage implements OnInit {
       this.toast.error('Enter a UPI ID such as clinic@okhdfcbank.');
       return;
     }
+    const keyId = (this.settings.razorpayKeyId ?? '').trim();
+    if (keyId && !/^rzp_(test|live)_[A-Za-z0-9]{6,40}$/.test(keyId)) {
+      this.toast.error('Enter the Razorpay Key ID, which starts with rzp_live_ or rzp_test_.');
+      return;
+    }
+    if (keyId && !this.razorpaySecret.trim() && !this.settings.razorpayKeySecretSet) {
+      this.toast.error('Enter the Razorpay key secret for this Key ID.');
+      return;
+    }
     this.isSaving = true;
     this.settingService
       .update({
@@ -353,6 +447,10 @@ export class ClinicSettingsPage implements OnInit {
         taxRatePercent: Math.round(tax * 100) / 100,
         upiPayeeId: upi,
         emailSenderName: (this.settings.emailSenderName ?? '').trim(),
+        razorpayKeyId: keyId,
+        // Only what was typed is sent; a missing value keeps the saved secret.
+        razorpayKeySecret: this.razorpaySecret.trim() || undefined,
+        razorpayWebhookSecret: this.razorpayWebhookSecret.trim() || undefined,
       })
       .subscribe({
         next: (res) => {
@@ -360,6 +458,8 @@ export class ClinicSettingsPage implements OnInit {
           if (res.success && res.data) {
             this.settings = { ...this.settings, ...res.data };
             this.defaultFee = (res.data.defaultConsultationFeeInPaisa ?? 0) / 100;
+            this.razorpaySecret = '';
+            this.razorpayWebhookSecret = '';
             this.toast.success('Settings saved');
           } else {
             this.toast.error(res.message || 'The settings could not be saved.');
