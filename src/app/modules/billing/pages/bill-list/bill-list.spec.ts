@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 
 describe('BillList', () => {
   function createComponent(overrides?: Partial<BillingService>) {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         {
@@ -51,5 +52,39 @@ describe('BillList', () => {
     expect(component.statusClass('UNPAID')).toContain('text-[#DC2626]');
     expect(component.statusClass('PARTIALLY_PAID')).toContain('text-[#CA8A04]');
     expect(component.statusClass('UNKNOWN')).toContain('text-[#64748B]');
+  });
+
+  describe('at clinic scale', () => {
+    const bill = { id: 'b1', billNumber: 'BILL-2026-0042', appointmentId: 'a1', patient: { id: '1', fullName: 'Rahul Rao' },
+      consultationFeeInPaisa: 0, discountInPaisa: 0, taxInPaisa: 0, totalAmountInPaisa: 50000, amountPaidInPaisa: 20000,
+      paymentStatus: 'PARTIALLY_PAID' as const, createdAt: '' };
+    const page = (pageNumber = 0) => of({ success: true, message: '', timestamp: '', requestId: '',
+      data: { content: [bill], pageNumber, pageSize: 20, totalElements: 30000, totalPages: 1500, last: false } });
+
+    it('asks the server for status, search and page (they were ignored), and shows what is still due', () => {
+      vi.useFakeTimers();
+      try {
+        const getBills = vi.fn().mockImplementation((p: number) => page(p));
+        const component = createComponent({ getBills } as unknown as Partial<BillingService>);
+        component.ngOnInit();
+        expect(getBills).toHaveBeenLastCalledWith(0, 20, undefined, '');
+        expect(component.totalElements).toBe(30000);
+        expect(component.due(bill)).toBe(30000);
+
+        component.statusFilter = 'UNPAID';
+        component.loadBills(0);
+        expect(getBills).toHaveBeenLastCalledWith(0, 20, 'UNPAID', '');
+
+        component.searchQuery = 'Rao';
+        component.onSearch();
+        vi.advanceTimersByTime(300);
+        expect(getBills).toHaveBeenLastCalledWith(0, 20, 'UNPAID', 'Rao');
+
+        component.goToPage(2);
+        expect(getBills).toHaveBeenLastCalledWith(2, 20, 'UNPAID', 'Rao');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
   });
 });

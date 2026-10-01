@@ -69,9 +69,17 @@ describe('PatientDetail', () => {
     expect(component.loadError).toBe('This patient could not be found.');
   });
 
-  it('does not ask a nurse for visits, which the API refuses', () => {
+  it('shows a nurse the visit history too', () => {
     create('NURSE');
-    expect(service['getPatientVisits']).not.toHaveBeenCalled();
+    expect(service['getPatientVisits']).toHaveBeenCalled();
+  });
+
+  it('keeps the clinical history from the front desk', () => {
+    expect(create('RECEPTIONIST').seesClinical).toBe(false);
+  });
+
+  it('shows the clinical history to clinical staff', () => {
+    expect(create('NURSE').seesClinical).toBe(true);
   });
 
   it('offers edit to the front desk and delete only to an administrator', () => {

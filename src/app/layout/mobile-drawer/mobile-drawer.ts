@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { AuthService } from '../../core/services/auth.service';
 import { STAFF_NAV, canSee } from '../nav-items';
@@ -25,7 +25,7 @@ import { STAFF_NAV, canSee } from '../nav-items';
                 </div>
                 <h1 class="text-lg font-bold text-primary">Cliniva HMS</h1>
               </div>
-              <button (click)="closed.emit()" class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg">
+              <button type="button" (click)="closed.emit()" aria-label="Close menu" class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg">
                 <span class="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -57,9 +57,11 @@ import { STAFF_NAV, canSee } from '../nav-items';
                     <p class="text-xs text-outline truncate">{{ user.role }}</p>
                   </div>
                 </div>
+                <!-- Ends the session (it only went to a login address before, leaving the session alive on shared devices). -->
                 <button
-                  routerLink="/auth/login"
-                  (click)="closed.emit()"
+                  id="drawer-logout"
+                  type="button"
+                  (click)="logout()"
                   class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-error border border-error/20 rounded-lg hover:bg-error/5 transition-colors"
                 >
                   <span class="material-symbols-outlined text-[20px]">logout</span>
@@ -86,6 +88,7 @@ import { STAFF_NAV, canSee } from '../nav-items';
 export class MobileDrawer {
   private effectiveLicense = inject(EffectiveLicenseService);
   protected authService = inject(AuthService);
+  private router = inject(Router);
 
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
@@ -93,6 +96,13 @@ export class MobileDrawer {
   readonly activeModules = this.effectiveLicense.activeModules;
 
   readonly navItems = STAFF_NAV;
+
+  /** Signs out for real: the server revokes the session and clears its cookie, as the desktop sidebar does. */
+  logout(): void {
+    this.closed.emit();
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
 
   isVisible(item: (typeof STAFF_NAV)[number]): boolean {
     return canSee(item, this.authService.currentUserValue?.role ?? '', this.activeModules());

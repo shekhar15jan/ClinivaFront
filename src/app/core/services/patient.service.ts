@@ -13,12 +13,13 @@ export class PatientService {
 
   private readonly apiUrl = `${environment.apiUrl}/hms/patients`;
 
+  /** One page of the clinic's patients, newest first. */
   getPatients(
     page = 0,
-    size = 10,
+    size = 20,
   ): Observable<ApiResponse<PagedResponse<Patient>>> {
     return this.http
-      .get<ApiResponse<RawPagedResponse<Patient>>>(`${this.apiUrl}?page=${page}&size=${size}`)
+      .get<ApiResponse<RawPagedResponse<Patient>>>(`${this.apiUrl}?page=${page}&size=${size}&sort=createdAt,desc`)
       .pipe(
         map((response) => ({
           ...response,
@@ -53,10 +54,13 @@ export class PatientService {
     return this.http.put<ApiResponse<Patient>>(`${this.apiUrl}/me`, patient);
   }
 
-  searchPatients(query: string): Observable<ApiResponse<Patient[]>> {
-    return this.http.get<ApiResponse<Patient[]>>(`${this.apiUrl}/search`, {
-      params: { q: query },
-    });
+  /** Patients whose name, phone, email or patient number contains `query`, one page at a time. */
+  searchPatients(query: string, page = 0, size = 20): Observable<ApiResponse<PagedResponse<Patient>>> {
+    return this.http
+      .get<ApiResponse<RawPagedResponse<Patient>>>(`${this.apiUrl}/search`, {
+        params: { q: query.trim(), page, size },
+      })
+      .pipe(map((response) => ({ ...response, data: PagedResponse.from(response.data ?? { content: [] }) })));
   }
 
   uploadPatients(file: File): Observable<ApiResponse<{ imported: number; errors: string[] }>> {

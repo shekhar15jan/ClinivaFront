@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { completePaidVisit, registerPatient, signInAsNewAdmin } from './helpers';
 
-test.describe('Dashboard, patient record and audit trail, real backend', () => {
+test.describe('Dashboard, patient record and audit trail, real backend', { tag: '@desktop' }, () => {
   test('the dashboard shows the clinic as it really is, not a fixed picture', async ({ page, request, browser }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     // A brand-new clinic: nothing booked, nobody registered.
@@ -114,6 +114,6 @@ test.describe('Dashboard, patient record and audit trail, real backend', () => {
     // A combination with nothing in it says so instead of showing a blank table.
     await page.selectOption('#audit-filter-entity', 'Tenant');
     await page.selectOption('#audit-filter-action', 'LOGIN');
-    await expect(page.getByText(/no .*(logs|entries|records)/i).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/no .*(logs|entries|records)/i).filter({ visible: true }).first()).toBeVisible({ timeout: 10000 });
   });
 });

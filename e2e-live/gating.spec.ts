@@ -6,7 +6,7 @@ const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 const link = (page: import('@playwright/test').Page, hospitalCode: string, route: string) =>
   page.locator(`app-sidebar a[href="${BASE_PATH}/${hospitalCode}/${route}"]`);
 
-test.describe('What each clinic and role is offered, real backend', () => {
+test.describe('What each clinic and role is offered, real backend', { tag: '@desktop' }, () => {
   test('a Starter clinic is offered only its plan, and a direct address for anything else is turned away', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_STARTER');
     await page.setViewportSize({ width: 1400, height: 900 });
@@ -64,7 +64,7 @@ test.describe('What each clinic and role is offered, real backend', () => {
     await visitor.locator('button[type="submit"]').first().click();
     await visitor.waitForURL((url) => CLINIC_LOGIN.test(url.pathname), { timeout: 15000 });
     await visitor.locator('button:has-text("Send OTP")').click();
-    await expect(visitor.getByText(/suspended/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(visitor.getByText(/suspended/i).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
     await expect(visitor).toHaveURL(/\/login$/);
 
     // The sign-in code is not sent for a suspended clinic.

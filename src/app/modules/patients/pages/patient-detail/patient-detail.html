@@ -68,10 +68,12 @@
             <label for="edit-emergency-phone" class="block text-sm font-medium mb-1">Emergency phone</label>
             <input id="edit-emergency-phone" type="tel" [(ngModel)]="form.emergencyContactPhone" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm" />
           </div>
+          @if (seesClinical) {
           <div class="sm:col-span-2">
             <label for="edit-history" class="block text-sm font-medium mb-1">Medical history</label>
             <textarea id="edit-history" rows="3" [(ngModel)]="form.medicalHistory" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm"></textarea>
           </div>
+          }
         </div>
         @if (saveError) { <p class="text-sm text-red-600 mt-3" id="patient-save-error">{{ saveError }}</p> }
         <div class="flex justify-end gap-3 mt-4">
@@ -87,7 +89,9 @@
           <div><dt class="text-outline">Blood group</dt><dd id="detail-blood">{{ bloodGroupLabel(patient.bloodGroup) }}</dd></div>
           <div><dt class="text-outline">Address</dt><dd id="detail-address">{{ patient.address || '—' }}</dd></div>
           <div><dt class="text-outline">Emergency contact</dt><dd id="detail-emergency">{{ patient.emergencyContactName || '—' }}@if (patient.emergencyContactPhone) { · {{ patient.emergencyContactPhone }}}</dd></div>
-          <div class="sm:col-span-2"><dt class="text-outline">Medical history</dt><dd id="detail-history" class="whitespace-pre-wrap">{{ patient.medicalHistory || '—' }}</dd></div>
+          @if (seesClinical) {
+            <div class="sm:col-span-2"><dt class="text-outline">Medical history</dt><dd id="detail-history" class="whitespace-pre-wrap">{{ patient.medicalHistory || '—' }}</dd></div>
+          }
         </dl>
       </div>
     }

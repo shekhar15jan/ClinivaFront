@@ -4,7 +4,7 @@ import { signInAsNewAdmin } from './helpers';
 const isApi = (method: string, path: RegExp) => (r: import('@playwright/test').Response) =>
   r.request().method() === method && path.test(r.url());
 
-test.describe('Medicines and health packages, real backend', () => {
+test.describe('Medicines and health packages, real backend', { tag: '@desktop' }, () => {
   test('a medicine can be added, found, edited and deleted, and the list follows each change', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const stamp = Date.now().toString().slice(-6);
@@ -21,11 +21,11 @@ test.describe('Medicines and health packages, real backend', () => {
     const created = page.waitForResponse(isApi('POST', /\/hms\/medicines$/));
     await page.locator('form button[type="submit"]').click();
     expect((await created).ok(), 'medicine created').toBeTruthy();
-    await expect(page.getByText(name).first()).toBeVisible();
+    await expect(page.getByText(name).filter({ visible: true }).first()).toBeVisible();
 
     // Search narrows the list to it.
     await page.getByPlaceholder(/Search medicines/).fill(stamp);
-    await expect(page.getByText(name).first()).toBeVisible();
+    await expect(page.getByText(name).filter({ visible: true }).first()).toBeVisible();
     await page.getByPlaceholder(/Search medicines/).fill('zzz-no-such-medicine');
     await expect(page.getByText(name)).toHaveCount(0);
     await page.getByPlaceholder(/Search medicines/).fill(stamp);

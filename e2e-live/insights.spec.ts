@@ -5,16 +5,16 @@ import { completePaidVisit, signInAsNewAdmin } from './helpers';
  * What the clinic reads afterwards - dashboard, reports, payment list, audit trail - must agree with what
  * actually happened in the visit, not just render.
  */
-test.describe('Numbers and trail after a paid visit, real backend', () => {
+test.describe('Numbers and trail after a paid visit, real backend', { tag: '@desktop' }, () => {
   test('dashboard, reports, payments and audit log all reflect the visit', async ({ page, request, browser }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const visit = await completePaidVisit(page, request, browser, admin.hospitalCode);
 
     // Reports: revenue, the doctor's consultation, one paid bill.
     await page.goto(`${admin.hospitalCode}/reports`);
-    await expect(page.getByText('₹750').first()).toBeVisible({ timeout: 20000 });
-    await expect(page.getByText(visit.doctorName).first()).toBeVisible();
-    await expect(page.getByText(/1 consultations?/).first()).toBeVisible();
+    await expect(page.getByText('₹750').filter({ visible: true }).first()).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText(visit.doctorName).filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText(/1 consultations?/).filter({ visible: true }).first()).toBeVisible();
     await expect(page.getByText(/1 total patients/)).toBeVisible();
     // After a paid visit every chart has data; a leftover @else used to print "No data available" at the top regardless.
     await expect(page.getByText('No data available')).toHaveCount(0);

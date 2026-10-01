@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { addStaffUser, signInAsNewAdmin } from './helpers';
 
-test.describe('User management, real backend', () => {
+test.describe('User management, real backend', { tag: '@desktop' }, () => {
   test('an administrator adds, deactivates, reactivates and resets staff, and sees their own name', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const stamp = Date.now().toString().slice(-6);

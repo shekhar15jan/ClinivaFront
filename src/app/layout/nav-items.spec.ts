@@ -42,11 +42,13 @@ describe('staff menu', () => {
     }
   });
 
-  it('offers a nurse only what a nurse can use', () => {
+  it("offers a nurse the day's queue and prescriptions to read, and nothing of billing or administration", () => {
     const offered = labels('NURSE', ALL_MODULES);
-    expect(offered).toEqual(expect.arrayContaining(['Dashboard', 'Patients', 'Doctors', 'Consultations', 'Health Packages']));
-    expect(offered).not.toContain('Billing');
-    expect(offered).not.toContain('Appointments');
+    expect(offered).toEqual(expect.arrayContaining(
+      ['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Consultations', 'Prescriptions', 'Health Packages']));
+    for (const label of ['Billing', 'Payments', 'Reports', 'Users', 'Settings', 'Audit Log']) {
+      expect(offered).not.toContain(label);
+    }
   });
 
   it('keeps administration for administrators', () => {

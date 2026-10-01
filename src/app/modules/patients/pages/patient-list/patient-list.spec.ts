@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { PatientList } from './patient-list';
 import { PatientService } from '../../../../core/services/patient.service';
 import { FormBuilder } from '@angular/forms';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse, PagedResponse } from '../../../../core/models/common.model';
@@ -19,10 +21,13 @@ describe('PatientList', () => {
     message: 'ok', timestamp: '', requestId: 'r1',
   };
 
-  function createComponent(overrides?: Partial<PatientService>) {
+  function createComponent(overrides?: Partial<PatientService>, role = 'ADMIN', query: Record<string, string> = {}) {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
-        { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPaged)), createPatient: vi.fn().mockReturnValue(of({ success: true, data: mockPatient, message: 'created', timestamp: '', requestId: 'r1' })), ...overrides } },
+        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: ActivatedRoute, useValue: { queryParamMap: of(convertToParamMap(query)) } },
+        { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPaged)), searchPatients: vi.fn().mockReturnValue(of(mockPaged)), createPatient: vi.fn().mockReturnValue(of({ success: true, data: mockPatient, message: 'created', timestamp: '', requestId: 'r1' })), ...overrides } },
         FormBuilder,
       ],
     });
@@ -127,5 +132,66 @@ describe('PatientList', () => {
       expect(component.uploadFailed).toBe(true);
       expect(component.isUploading).toBe(false);
     });
+  });
+
+  describe('at clinic scale', () => {
+    const pageOf = (n: number, total: number, pageNumber = 0) => ({
+      success: true, message: '', timestamp: '', requestId: '',
+      data: { content: Array.from({ length: n }, (_, k) => ({ ...mockPatient, id: `p${pageNumber}-${k}` })),
+        pageNumber, pageSize: 20, totalElements: total, totalPages: Math.ceil(total / 20), last: false },
+    });
+
+    it('shows one page and how many there are in all', () => {
+      const component = createComponent({ getPatients: vi.fn().mockReturnValue(of(pageOf(20, 20000))) });
+      component.ngOnInit();
+      expect(component.patients.length).toBe(20);
+      expect(component.totalElements).toBe(20000);
+      expect([component.firstShown, component.lastShown]).toEqual([1, 20]);
+    });
+
+    it('moves between pages on the server, within range', () => {
+      const getPatients = vi.fn().mockImplementation((page: number) => of(pageOf(20, 20000, page)));
+      const component = createComponent({ getPatients });
+      component.ngOnInit();
+      component.goToPage(1);
+      expect(getPatients).toHaveBeenLastCalledWith(1, 20);
+      getPatients.mockClear();
+      component.goToPage(-1);
+      component.goToPage(5000);
+      expect(getPatients).not.toHaveBeenCalled();
+    });
+
+    it('searches the whole clinic on the server once typing pauses', () => {
+      vi.useFakeTimers();
+      try {
+        const searchPatients = vi.fn().mockReturnValue(of(pageOf(1, 1)));
+        const component = createComponent({ searchPatients });
+        component.ngOnInit();
+        component.searchQuery = 'Rao';
+        component.onSearchInput();
+        expect(searchPatients).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(300);
+        expect(searchPatients).toHaveBeenCalledWith('Rao', 0, 20);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('opens with the search from the header', () => {
+      const searchPatients = vi.fn().mockReturnValue(of(pageOf(1, 1)));
+      const component = createComponent({ searchPatients }, 'RECEPTIONIST', { q: '98765' });
+      component.ngOnInit();
+      expect(component.searchQuery).toBe('98765');
+      expect(searchPatients).toHaveBeenCalledWith('98765', 0, 20);
+    });
+  });
+
+  it('offers adding patients to the front desk and administrators, and CSV import to administrators only', () => {
+    const nurse = createComponent(undefined, 'NURSE');
+    expect([nurse.canAdd, nurse.canImport]).toEqual([false, false]);
+    const desk = createComponent(undefined, 'RECEPTIONIST');
+    expect([desk.canAdd, desk.canImport]).toEqual([true, false]);
+    const admin = createComponent(undefined, 'ADMIN');
+    expect([admin.canAdd, admin.canImport]).toEqual([true, true]);
   });
 });

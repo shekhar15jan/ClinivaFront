@@ -71,7 +71,7 @@ describe('AppointmentCalendar', () => {
   it('asks for just the chosen day, and lists it in time order', () => {
     const component = create();
     const today = localDay(new Date());
-    expect(service['getAppointments']).toHaveBeenCalledWith(0, 200, undefined, undefined, today, today);
+    expect(service['getAppointments']).toHaveBeenCalledWith(0, 1000, undefined, undefined, today, today);
     expect(component.appointments.map((a) => a.id)).toEqual(['a', 'b']);
     expect(component.isLoading).toBe(false);
   });
@@ -82,7 +82,7 @@ describe('AppointmentCalendar', () => {
     expect(component.isToday).toBe(true);
     component.nextDay();
     expect(component.selectedDay).toBe(shiftDay(today, 1));
-    expect(service['getAppointments']).toHaveBeenLastCalledWith(0, 200, undefined, undefined, shiftDay(today, 1), shiftDay(today, 1));
+    expect(service['getAppointments']).toHaveBeenLastCalledWith(0, 1000, undefined, undefined, shiftDay(today, 1), shiftDay(today, 1));
     component.previousDay();
     component.previousDay();
     expect(component.selectedDay).toBe(shiftDay(today, -1));

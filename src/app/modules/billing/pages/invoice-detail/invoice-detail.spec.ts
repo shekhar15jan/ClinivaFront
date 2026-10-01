@@ -4,6 +4,7 @@ import { BillingService } from '../../../../core/services/billing.service';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
+import { SettingService } from '../../../../core/services/setting.service';
 
 describe('InvoiceDetail', () => {
   const mockBill = {
@@ -14,6 +15,7 @@ describe('InvoiceDetail', () => {
   };
 
   function createComponent(overrides?: Partial<BillingService>) {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
         {
@@ -26,6 +28,9 @@ describe('InvoiceDetail', () => {
           },
         },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'b-001' } } } },
+        { provide: SettingService, useValue: { getProfile: vi.fn().mockReturnValue(of({ success: true, data: {
+          clinicName: 'Sai Clinic', address: '12 Lake Road, Pune', phone: '+91 2041234567', email: 'desk@saiclinic.in', logoUrl: null,
+        } })) } },
       ],
     });
     return TestBed.runInInjectionContext(() => new InvoiceDetail());
@@ -71,5 +76,12 @@ describe('InvoiceDetail', () => {
     });
     component.ngOnInit();
     expect(component.status).toBe('PAID');
+  });
+
+  it("shows the clinic's own name, address and contact (it showed a made-up address)", () => {
+    const component = createComponent();
+    component.ngOnInit();
+    expect(component.clinic?.clinicName).toBe('Sai Clinic');
+    expect(component.clinicContact).toBe('12 Lake Road, Pune\n+91 2041234567  |  desk@saiclinic.in');
   });
 });

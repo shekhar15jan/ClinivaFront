@@ -1,4 +1,4 @@
-import { APIRequestContext, Browser, Page, expect } from '@playwright/test';
+import { APIRequestContext, Browser, Page, devices, expect } from '@playwright/test';
 
 const CLOUDSUITE = process.env.CLOUDSUITE_API || 'http://localhost:8081/api/v1';
 const MAILHOG = process.env.MAILHOG_API || 'http://localhost:8025/api/v2';
@@ -220,7 +220,7 @@ export async function registerPatient(page: Page, hospitalCode: string, name: st
 /** Registers a doctor through the real form and returns once the API has accepted it. */
 export async function registerDoctor(page: Page, hospitalCode: string, name: string, phone: string, email?: string): Promise<void> {
   await page.goto(`${hospitalCode}/doctors`);
-  await page.getByText('Add Doctor', { exact: false }).first().click();
+  await page.getByText('Add Doctor', { exact: false }).filter({ visible: true }).first().click();
   await page.fill('input[formControlName="fullName"]', name);
   await page.locator('select[formControlName="specialization"]').selectOption({ index: 1 });
   await page.fill('input[formControlName="qualification"]', 'MBBS, MD');
@@ -257,6 +257,8 @@ export async function bookAppointment(page: Page, hospitalCode: string, doctorNa
   await expect(slots.first()).toBeVisible({ timeout: 15000 });
   await slots.first().click();
   await page.getByRole('button', { name: /Next Step/ }).click();
+  // Patients are found by search (a clinic can have thousands).
+  await page.fill('#patientSearch', patientName);
   const option = page.locator('#patientId option', { hasText: patientName });
   await expect(option).toHaveCount(1, { timeout: 15000 });
   await page.selectOption('#patientId', (await option.getAttribute('value'))!);
@@ -315,7 +317,9 @@ export interface PaidVisit {
  * A whole visit by the people who do each part, on real services: the front desk books and approves, the doctor
  * (signed in with their own emailed code) consults and prescribes, the front desk bills and takes cash.
  */
-export async function completePaidVisit(page: Page, request: APIRequestContext, browser: Browser, hospitalCode: string, patientEmail?: string): Promise<PaidVisit> {
+/** `doctorDevice` (e.g. 'Pixel 7') has the doctor consult and prescribe on that device. */
+export async function completePaidVisit(page: Page, request: APIRequestContext, browser: Browser, hospitalCode: string, patientEmail?: string,
+                                        doctorDevice?: string): Promise<PaidVisit> {
   const stamp = Date.now().toString().slice(-6);
   const doctorName = `Dr. Visit ${stamp}`;
   const doctorEmail = `dr.visit${stamp}@live-staff.test`;
@@ -334,7 +338,7 @@ export async function completePaidVisit(page: Page, request: APIRequestContext, 
   await row.getByRole('button', { name: 'Approve' }).click();
   expect((await approved).ok(), 'appointment approved').toBeTruthy();
 
-  const context = await browser.newContext();
+  const context = await browser.newContext(doctorDevice ? { ...devices[doctorDevice] } : {});
   const doctor = await context.newPage();
   await signInWithOtp(doctor, request, doctorEmail);
   await doctor.goto(`${hospitalCode}/consultations/${appointmentId}`);
@@ -365,6 +369,6 @@ export async function completePaidVisit(page: Page, request: APIRequestContext, 
   const paid = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/payments\/save$/.test(r.url()));
   await page.locator('#payment-confirm').click();
   expect((await paid).ok(), 'payment saved').toBeTruthy();
-  await expect(page.getByText('PAID', { exact: true }).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText('PAID', { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
   return { doctorName, doctorEmail, patientName, medicine, billNumber, totalInPaisa: 75000 };
 }

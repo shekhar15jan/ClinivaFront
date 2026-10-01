@@ -1,5 +1,8 @@
 import { Component, EventEmitter, Output, inject, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { NotificationService } from '../../core/services/notification.service';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { Notification } from '../../core/models/notification.model';
 import { Subject, interval, takeUntil, startWith, switchMap } from 'rxjs';
 
@@ -12,6 +15,31 @@ export class Header implements OnInit, OnDestroy {
   @Output() menuClick = new EventEmitter<void>();
 
   private notificationService = inject(NotificationService);
+  private router = inject(Router);
+  private auth = inject(AuthService);
+  private license = inject(EffectiveLicenseService);
+
+
+  /** The clinic in the address (/:hospitalCode/...). */
+  private get clinic(): string {
+    return this.router.url.split('?')[0].split('/').filter(Boolean)[0] ?? '';
+  }
+
+  /** "New Appointment" is offered to those who book (front desk, administrators) when the plan has appointments. */
+  get canBook(): boolean {
+    const role = this.auth.currentUserValue?.role;
+    return (role === 'ADMIN' || role === 'RECEPTIONIST') && this.license.activeModules().includes('APPOINTMENT');
+  }
+
+  newAppointment(): void {
+    this.router.navigate(['/', this.clinic, 'appointments', 'book']);
+  }
+
+  /** Patient search from any screen: opens the Patients screen with the results. */
+  searchPatients(text = ''): void {
+    const q = text.trim();
+    this.router.navigate(['/', this.clinic, 'patients'], { queryParams: q ? { q } : {} });
+  }
   private destroy$ = new Subject<void>();
 
   notifications: Notification[] = [];

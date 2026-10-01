@@ -71,7 +71,7 @@ export class DashboardOverview implements OnInit, OnDestroy {
 
   /** Who may list appointments (the API refuses nurses and patients). */
   get seesAppointments(): boolean {
-    return ['ADMIN', 'DOCTOR', 'RECEPTIONIST'].includes(this.role);
+    return ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'NURSE'].includes(this.role);
   }
 
   /** Clinic totals come from the reports API, which only administrators and doctors may call. */
@@ -129,13 +129,20 @@ export class DashboardOverview implements OnInit, OnDestroy {
       pending++;
       const first = this.week[0].day;
       const last = this.week[6].day;
-      this.appointmentService.getAppointments(0, 500, undefined, undefined, first, last).subscribe({
+      // The week's counts come from the server: counting a list capped at 500 undercounted a busy week.
+      pending++;
+      this.appointmentService.getCountsByDay(first, last).subscribe({
         next: (res) => {
-          const all = res.success ? res.data.content : [];
-          this.weekCounts = this.week.map((w) => all.filter((a) => a.appointmentDate === w.day && !['CANCELLED', 'REJECTED'].includes(a.status)).length);
-          const today = localDay(this.today);
-          this.todays = all
-            .filter((a) => a.appointmentDate === today)
+          const counts = res.success ? res.data ?? {} : {};
+          this.weekCounts = this.week.map((w) => counts[w.day] ?? 0);
+          done();
+        },
+        error: () => done(),
+      });
+      const today = localDay(this.today);
+      this.appointmentService.getAppointments(0, 500, undefined, undefined, today, today).subscribe({
+        next: (res) => {
+          this.todays = (res.success ? res.data.content : [])
             .sort((a, b) => (a.appointmentTime ?? '').localeCompare(b.appointmentTime ?? ''));
           done();
         },

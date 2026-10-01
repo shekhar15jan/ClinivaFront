@@ -39,12 +39,16 @@ describe('dashboard helpers', () => {
 
 describe('DashboardOverview', () => {
   const today = localDay(new Date());
-  let appointments: { getAppointments: ReturnType<typeof vi.fn> };
+  let appointments: { getAppointments: ReturnType<typeof vi.fn>; getCountsByDay: ReturnType<typeof vi.fn> };
   let reports: { getDashboardStats: ReturnType<typeof vi.fn> };
   let layout: { setFabConfig: ReturnType<typeof vi.fn> };
 
-  function create(role: string, items: Appointment[] = [appointment('b', today, '11:00:00', 'PENDING'), appointment('a', today, '09:30:00')]) {
-    appointments = { getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: items } })) };
+  function create(role: string, items: Appointment[] = [appointment('b', today, '11:00:00', 'PENDING'), appointment('a', today, '09:30:00')],
+                  counts: Record<string, number> = {}) {
+    appointments = {
+      getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: items } })),
+      getCountsByDay: vi.fn().mockReturnValue(of({ success: true, data: counts })),
+    };
     reports = { getDashboardStats: vi.fn().mockReturnValue(of({ success: true, data: { totalPatients: 7, todayAppointments: 2, pendingBills: 3, totalRevenueInPaisa: 0, activeDoctors: 2 } })) };
     layout = { setFabConfig: vi.fn() };
     TestBed.configureTestingModule({
@@ -67,15 +71,14 @@ describe('DashboardOverview', () => {
     expect(component.isLoading).toBe(false);
   });
 
-  it('asks for the whole week and counts each day, leaving out cancelled and rejected bookings', () => {
-    const monday = weekDays(new Date())[0].day;
-    const component = create('ADMIN', [
-      appointment('1', monday, '10:00:00'), appointment('2', monday, '11:00:00'),
-      appointment('3', monday, '12:00:00', 'CANCELLED'), appointment('4', monday, '13:00:00', 'REJECTED'),
-    ]);
-    expect(appointments.getAppointments).toHaveBeenCalledWith(0, 500, undefined, undefined, monday, weekDays(new Date())[6].day);
-    expect(component.weekCounts[0]).toBe(2);
-    expect(component.barHeight(2)).toBe(100);
+  it("takes the week's counts from the server and lists only today's appointments", () => {
+    const week = weekDays(new Date());
+    // Counted on the server (cancelled and rejected left out there): a busy week has far more than one page.
+    const component = create('ADMIN', undefined, { [week[0].day]: 640, [week[1].day]: 12 });
+    expect(appointments.getCountsByDay).toHaveBeenCalledWith(week[0].day, week[6].day);
+    expect(appointments.getAppointments).toHaveBeenCalledWith(0, 500, undefined, undefined, today, today);
+    expect(component.weekCounts.slice(0, 3)).toEqual([640, 12, 0]);
+    expect(component.barHeight(640)).toBe(100);
   });
 
   it('gives an administrator the clinic totals', () => {
@@ -93,10 +96,11 @@ describe('DashboardOverview', () => {
     expect(component.canManage).toBe(true);
   });
 
-  it('calls nothing for a nurse, who may list neither', () => {
+  it("shows a nurse today's queue, but not the clinic totals", () => {
     const component = create('NURSE');
-    expect(appointments.getAppointments).not.toHaveBeenCalled();
+    expect(appointments.getAppointments).toHaveBeenCalled();
     expect(reports.getDashboardStats).not.toHaveBeenCalled();
+    expect(component.todays.length).toBe(2);
     expect(component.isLoading).toBe(false);
   });
 

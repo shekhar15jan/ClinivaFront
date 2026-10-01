@@ -95,6 +95,7 @@ export class AuditLogViewerComponent implements OnInit {
       case 'STATUS_CHANGE': return 'bg-amber-50 text-amber-600';
       case 'LOGIN': return 'bg-purple-50 text-purple-600';
       case 'LOGOUT': return 'bg-gray-100 text-outline';
+      case 'VIEW': return 'bg-slate-100 text-slate-700';
       default: return 'bg-gray-50 text-outline';
     }
   }

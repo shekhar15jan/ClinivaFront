@@ -7,20 +7,22 @@
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <span class="material-symbols-outlined text-outline text-[20px]">search</span>
         </div>
-        <input type="text" class="block w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-lg leading-5 bg-white placeholder-outline text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Search patients...">
+        <input id="patient-search" type="search" [(ngModel)]="searchQuery" (input)="onSearchInput()" aria-label="Search patients"
+               class="block w-full pl-10 pr-3 py-2.5 border border-outline-variant rounded-lg leading-5 bg-white placeholder-outline text-body-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+               placeholder="Name, phone, email or patient ID">
       </div>
-      <button class="flex items-center gap-2 px-3 py-2 border border-outline-variant bg-white text-on-surface-variant text-body-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors">
-        <span class="material-symbols-outlined text-[20px]">filter_list</span>
-        <span class="hidden sm:inline">Filter</span>
-      </button>
-      <button (click)="toggleCsvUpload()" class="flex items-center gap-2 px-3 py-2 border border-outline-variant bg-white text-on-surface-variant text-body-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors">
+      @if (canImport) {
+      <button (click)="toggleCsvUpload()" aria-label="Import CSV" class="flex items-center gap-2 px-3 py-2 border border-outline-variant bg-white text-on-surface-variant text-body-sm font-medium rounded-lg hover:bg-surface-container-high transition-colors">
         <span class="material-symbols-outlined text-[20px]">upload_file</span>
         <span class="hidden sm:inline">Import CSV</span>
       </button>
-      <button (click)="toggleAddModal()" class="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-body-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95">
+      }
+      @if (canAdd) {
+      <button id="add-patient" (click)="toggleAddModal()" aria-label="Add Patient" class="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-body-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md active:scale-95">
         <span class="material-symbols-outlined text-[20px]">add</span>
         <span class="hidden sm:inline">Add Patient</span>
       </button>
+      }
     </div>
   </div>
 
@@ -70,7 +72,6 @@
               <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Name</th>
               <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Phone</th>
               <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Age/Gender</th>
-              <th scope="col" class="px-6 py-3 text-left text-label-sm text-outline uppercase tracking-wider">Status</th>
               <th scope="col" class="px-6 py-3 text-right text-label-sm text-outline uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -88,14 +89,13 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">{{ patient.phone }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-body-sm text-outline">{{ patient.age ?? '—' }} / {{ patient.gender ? patient.gender.substring(0, 1) : '—' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-1 inline-flex text-label-sm font-semibold rounded-full bg-status-green-light text-status-green">Active</span></td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-body-sm font-medium">
                   <a [routerLink]="[patient.id]" class="text-primary hover:underline">View</a>
                 </td>
               </tr>
             }
             @if (patients.length === 0) {
-              <tr><td colspan="7" class="px-6 py-12 text-center text-outline text-body-sm">No patients found. Add a patient to get started.</td></tr>
+              <tr><td colspan="5" class="px-6 py-12 text-center text-outline text-body-sm">{{ searchQuery.trim() ? 'No patient matches "' + searchQuery.trim() + '".' : 'No patients found. Add a patient to get started.' }}</td></tr>
             }
           </tbody>
         </table>
@@ -124,22 +124,23 @@
         }
       </div>
 
-      <!-- Pagination -->
-      <div class="bg-white px-4 py-3 border-t border-outline-variant flex items-center justify-between">
-        <div class="flex-1 flex items-center justify-between">
-          <p class="text-body-sm text-on-surface">
-            Showing <span class="font-medium">1</span> to <span class="font-medium">{{ patients.length }}</span> of <span class="font-medium">{{ patients.length }}</span>
-          </p>
-          <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
-            <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-outline-variant bg-white text-body-sm font-medium text-outline cursor-not-allowed min-w-touch min-h-touch justify-center">
-              <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-            </button>
-            <button class="relative inline-flex items-center px-4 py-2 border border-outline-variant bg-primary text-body-sm font-medium text-white">1</button>
-            <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-outline-variant bg-white text-body-sm font-medium text-outline cursor-not-allowed min-w-touch min-h-touch justify-center">
-              <span class="material-symbols-outlined text-[20px]">chevron_right</span>
-            </button>
-          </nav>
-        </div>
+      <!-- Pagination (server side) -->
+      <div class="bg-white px-4 py-3 border-t border-outline-variant flex items-center justify-between gap-3">
+        <p class="text-body-sm text-on-surface" id="patient-count">
+          Showing <span class="font-medium">{{ firstShown }}</span> to <span class="font-medium">{{ lastShown }}</span>
+          of <span class="font-medium">{{ totalElements }}</span>
+        </p>
+        <nav class="inline-flex items-center gap-2" aria-label="Pagination">
+          <button id="patients-prev" type="button" (click)="goToPage(page - 1)" [disabled]="page === 0" aria-label="Previous page"
+                  class="inline-flex items-center justify-center min-w-touch min-h-touch rounded-md border border-outline-variant bg-white text-on-surface-variant disabled:opacity-40 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+          </button>
+          <span class="text-body-sm text-on-surface-variant">Page {{ page + 1 }} of {{ totalPages }}</span>
+          <button id="patients-next" type="button" (click)="goToPage(page + 1)" [disabled]="page >= totalPages - 1" aria-label="Next page"
+                  class="inline-flex items-center justify-center min-w-touch min-h-touch rounded-md border border-outline-variant bg-white text-on-surface-variant disabled:opacity-40 disabled:cursor-not-allowed">
+            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+          </button>
+        </nav>
       </div>
     </div>
   }

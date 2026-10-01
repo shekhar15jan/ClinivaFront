@@ -17,5 +17,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // DEVICE='Pixel 7' (or any Playwright device name) runs the journeys on that screen size, leaving out the ones
+  // tagged @desktop (they drive the desktop tables and sidebar on purpose). phone.spec.ts covers the phone layout
+  // in every run.
+  grepInvert: process.env.DEVICE ? /@desktop/ : undefined,
+  projects: [{ name: 'chromium', use: { ...devices[process.env.DEVICE || 'Desktop Chrome'] } }],
 });

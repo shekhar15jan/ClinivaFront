@@ -63,9 +63,9 @@ test.describe('Visit from booking to payment, real backend', () => {
     // The doctor is told, and lands on what was saved; billing is not theirs to do.
     await expect(doctorPage.getByText('Consultation and prescription saved')).toBeVisible();
     await expect(doctorPage).toHaveURL(new RegExp(`/${admin.hospitalCode}/prescriptions/${prescriptionId}$`));
-    await expect(doctorPage.getByText(patientName).first()).toBeVisible();
-    await expect(doctorPage.getByText(doctorName).first()).toBeVisible();
-    await expect(doctorPage.getByText(medicine).first()).toBeVisible();
+    await expect(doctorPage.getByText(patientName).filter({ visible: true }).first()).toBeVisible();
+    await expect(doctorPage.getByText(doctorName).filter({ visible: true }).first()).toBeVisible();
+    await expect(doctorPage.getByText(medicine).filter({ visible: true }).first()).toBeVisible();
     await expect(doctorPage.locator('#generate-bill')).toHaveCount(0);
     await doctorContext.close();
 
@@ -82,8 +82,8 @@ test.describe('Visit from booking to payment, real backend', () => {
     expect(totalInPaisa, 'consultation 600 + medicine 125 + extra 50 - discount 25').toBe(75000);
 
     // The invoice shows the people and the amount, and starts unpaid.
-    await expect(page.getByText(patientName).first()).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText('UNPAID').first()).toBeVisible();
+    await expect(page.getByText(patientName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('UNPAID').filter({ visible: true }).first()).toBeVisible();
 
     // Take the payment in cash. It must be recorded on the server, not just shown as paid in the browser.
     await page.locator('#collect-payment').click();
@@ -93,15 +93,15 @@ test.describe('Visit from booking to payment, real backend', () => {
     expect(payment.ok(), `payment saved (${payment.status()})`).toBeTruthy();
     expect((await payment.json()).data.amountInPaisa).toBe(75000);
     await expect(page.getByText('Payment recorded')).toBeVisible();
-    await expect(page.getByText('PAID', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('PAID', { exact: true }).filter({ visible: true }).first()).toBeVisible();
 
     // A reload still says paid, so it is the server's state, and there is nothing left to collect.
     await page.reload();
-    await expect(page.getByText('PAID', { exact: true }).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('PAID', { exact: true }).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
     await expect(page.locator('#collect-payment')).toHaveCount(0);
 
     // The payment appears in the Payments list.
     await page.goto(`${admin.hospitalCode}/payments`);
-    await expect(page.getByText(patientName).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(patientName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
   });
 });

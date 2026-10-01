@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { registerPatient, signInAsNewAdmin } from './helpers';
 
-test.describe('Clinic settings, real backend', () => {
+test.describe('Clinic settings, real backend', { tag: '@desktop' }, () => {
   test('changes are saved on the server, shown after a reload, and the patient id prefix is honoured', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const stamp = Date.now().toString().slice(-6);

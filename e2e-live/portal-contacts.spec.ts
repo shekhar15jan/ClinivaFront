@@ -3,7 +3,7 @@ import { completePaidVisit, signInAsNewAdmin, signInWithOtp } from './helpers';
 
 const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 
-test.describe('Contact messages and the patient portal, real backend', () => {
+test.describe('Contact messages and the patient portal, real backend', { tag: '@desktop' }, () => {
   test('a website visitor writes in, the administrator replies, and the reply is kept', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const stamp = Date.now().toString().slice(-6);
@@ -48,18 +48,18 @@ test.describe('Contact messages and the patient portal, real backend', () => {
 
     // The patient's own screens show this visit, and only this patient's.
     await portal.goto(`${admin.hospitalCode}/patient/appointments`);
-    await expect(portal.getByText(visit.doctorName).first()).toBeVisible({ timeout: 15000 });
+    await expect(portal.getByText(visit.doctorName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
 
     await portal.goto(`${admin.hospitalCode}/patient/prescriptions`);
-    await expect(portal.getByText(visit.doctorName).first()).toBeVisible({ timeout: 15000 });
+    await expect(portal.getByText(visit.doctorName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
 
     await portal.goto(`${admin.hospitalCode}/patient/bills`);
-    await expect(portal.getByText('750').first()).toBeVisible({ timeout: 15000 });
-    await expect(portal.getByText(/paid/i).first()).toBeVisible();
+    await expect(portal.getByText('750').filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
+    await expect(portal.getByText(/paid/i).filter({ visible: true }).first()).toBeVisible();
 
     await portal.goto(`${admin.hospitalCode}/patient/profile`);
-    await expect(portal.getByText(visit.patientName).first()).toBeVisible({ timeout: 15000 });
-    await expect(portal.getByText(patientEmail).first()).toBeVisible();
+    await expect(portal.getByText(visit.patientName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
+    await expect(portal.getByText(patientEmail).filter({ visible: true }).first()).toBeVisible();
 
     // The patient rates the completed visit; it waits for the clinic's approval.
     await portal.goto(`${admin.hospitalCode}/patient/appointments`);
@@ -70,7 +70,7 @@ test.describe('Contact messages and the patient portal, real backend', () => {
     await portal.locator('#submit-review').click();
     const reviewRes = await reviewed;
     expect(reviewRes.ok(), `review sent (${reviewRes.status()})`).toBeTruthy();
-    await expect(portal.getByText('Reviewed').first()).toBeVisible();
+    await expect(portal.getByText('Reviewed').filter({ visible: true }).first()).toBeVisible();
 
     // A patient cannot open the clinic's staff screens: they are sent back to their own dashboard.
     await portal.goto(`${admin.hospitalCode}/users`);

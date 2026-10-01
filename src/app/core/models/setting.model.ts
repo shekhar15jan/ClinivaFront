@@ -1,3 +1,12 @@
+/** What any signed-in user of the clinic may read: shown on invoices, prescriptions and the portal. */
+export interface ClinicProfile {
+  clinicName: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  logoUrl?: string | null;
+}
+
 export interface ClinicSettings {
   clinicName: string;
   address: string;

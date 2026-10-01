@@ -27,6 +27,13 @@ export interface SavePaymentRequest {
   paymentMode: string;
 }
 
+export interface PaymentSummary {
+  collectedInPaisa: number;
+  successful: number;
+  pendingOrFailed: number;
+  total: number;
+}
+
 export interface PaymentResponse {
   id: string;
   billId: string;

@@ -121,12 +121,36 @@ export class BookingFlow implements OnInit {
     });
   }
 
+  /** Search text for the patient picker; the most recent patients are listed until something is typed. */
+  patientQuery = '';
+  private patientSearchTimer?: ReturnType<typeof setTimeout>;
+
+  /**
+   * Fills the patient picker from the server: the 20 newest patients, or up to 20 matches for the search text.
+   * It used to load the first 100 patients only, so anyone else could not be booked. The chosen patient stays
+   * in the list while searching.
+   */
   loadPatients() {
-    this.patientService.getPatients(0, 100).subscribe((res) => {
-      if (res.success) {
-        this.patients = res.data.content;
+    const query = this.patientQuery.trim();
+    const request = query ? this.patientService.searchPatients(query, 0, 20) : this.patientService.getPatients(0, 20);
+    request.subscribe((res) => {
+      if (!res.success) return;
+      const chosenId = this.patientForm.get('patientId')?.value;
+      const chosen = this.patients.find((p) => p.id === chosenId);
+      const found = res.data.content;
+      this.patients = chosen && !found.some((p) => p.id === chosen.id) ? [chosen, ...found] : found;
+      // A patient named in the link (e.g. "Book" from a patient's page) is shown even if not in the first 20.
+      if (chosenId && !this.patients.some((p) => p.id === chosenId)) {
+        this.patientService.getPatientById(chosenId).subscribe((one) => {
+          if (one.success && one.data) this.patients = [one.data, ...this.patients];
+        });
       }
     });
+  }
+
+  onPatientSearch(): void {
+    clearTimeout(this.patientSearchTimer);
+    this.patientSearchTimer = setTimeout(() => this.loadPatients(), 300);
   }
 
   hm = hm;

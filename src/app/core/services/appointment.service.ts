@@ -37,6 +37,11 @@ export class AppointmentService {
       );
   }
 
+  /** Bookings per day (cancelled and rejected left out), keyed by date, for up to 62 days. */
+  getCountsByDay(dateFrom: string, dateTo: string): Observable<ApiResponse<Record<string, number>>> {
+    return this.http.get<ApiResponse<Record<string, number>>>(`${this.apiUrl}/counts`, { params: { dateFrom, dateTo } });
+  }
+
   createAppointment(request: CreateAppointmentRequest): Observable<ApiResponse<Appointment>> {
     return this.http.post<ApiResponse<Appointment>>(this.apiUrl, request);
   }

@@ -8,7 +8,7 @@ test.describe('Doctors, real backend', () => {
     const name = `Dr. Live ${stamp}`;
 
     await page.goto(`${admin.hospitalCode}/doctors`);
-    await page.getByText('Add Doctor', { exact: false }).first().click();
+    await page.getByText('Add Doctor', { exact: false }).filter({ visible: true }).first().click();
     await expect(page.getByRole('heading', { name: 'Doctor Registration' })).toBeVisible();
 
     const save = page.getByRole('button', { name: /Save Doctor/ });
@@ -27,8 +27,8 @@ test.describe('Doctors, real backend', () => {
     expect((await created).ok(), 'doctor created').toBeTruthy();
 
     await page.goto(`${admin.hospitalCode}/doctors`);
-    await expect(page.getByText(name).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(name).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
     await page.reload();
-    await expect(page.getByText(name).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(name).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
   });
 });

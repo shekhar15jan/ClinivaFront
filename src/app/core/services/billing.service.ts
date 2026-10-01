@@ -15,11 +15,14 @@ export class BillingService {
     page?: number,
     size?: number,
     status?: string,
+    query?: string,
   ): Observable<ApiResponse<PagedResponse<Bill>>> {
     let params = new HttpParams();
     if (page !== undefined) params = params.set('page', page);
     if (size !== undefined) params = params.set('size', size);
     if (status) params = params.set('status', status);
+    // Bill number, patient name or patient id; matched on the server across all of the clinic's bills.
+    if (query?.trim()) params = params.set('q', query.trim());
     return this.http
       .get<ApiResponse<RawPagedResponse<Bill>>>(this.baseUrl, { params })
       .pipe(

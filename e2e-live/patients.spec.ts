@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { signInAsNewAdmin } from './helpers';
 
 /** Registering and finding a patient, on real services, then proving another clinic cannot see them. */
-test.describe('Patients, real backend', () => {
+test.describe('Patients, real backend', { tag: '@desktop' }, () => {
   test('a clinic registers a patient, finds them again after a reload, and another clinic never sees them', async ({ browser, page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_PRO');
     const stamp = Date.now().toString().slice(-6);

@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import {
   CreateOrderRequest, CreateOrderResponse,
-  VerifyPaymentRequest, SavePaymentRequest, PaymentResponse
+  VerifyPaymentRequest, SavePaymentRequest, PaymentResponse, PaymentSummary
 } from '../models/payment.model';
 import { environment } from '../../../environments/environment';
 
@@ -35,6 +35,22 @@ export class PaymentService {
     return this.http.get<ApiResponse<string>>(`${this.baseUrl}/generate-upi-qr`, {
       params: { billId },
     });
+  }
+
+  /** One page of payments, newest first; status and search (bill number, patient name or id) run on the server. */
+  getPage(query: { page?: number; size?: number; status?: string; q?: string } = {}):
+    Observable<ApiResponse<PagedResponse<PaymentResponse>>> {
+    const params: Record<string, string | number> = { page: query.page ?? 0, size: query.size ?? 20, sort: 'createdAt,desc' };
+    if (query.status) params['status'] = query.status;
+    if (query.q?.trim()) params['q'] = query.q.trim();
+    return this.http
+      .get<ApiResponse<RawPagedResponse<PaymentResponse>>>(`${this.baseUrl}/history`, { params })
+      .pipe(map((res) => ({ ...res, data: PagedResponse.from(res.data ?? { content: [] }) })));
+  }
+
+  /** Received total and counts across all of the clinic's payments. */
+  getSummary(): Observable<ApiResponse<PaymentSummary>> {
+    return this.http.get<ApiResponse<PaymentSummary>>(`${this.baseUrl}/summary`);
   }
 
   /**

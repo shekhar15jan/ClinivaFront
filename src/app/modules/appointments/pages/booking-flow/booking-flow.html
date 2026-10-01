@@ -207,6 +207,10 @@
           </div>
           @if (patientForm.get('patientMode')?.value === 'existing') {
             <div>
+              <label for="patientSearch" class="block text-sm font-medium text-gray-700 mb-2">Find patient</label>
+              <input id="patientSearch" type="search" [(ngModel)]="patientQuery" [ngModelOptions]="{ standalone: true }"
+                     (input)="onPatientSearch()" placeholder="Name, phone or patient ID"
+                     class="block w-full mb-3 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-medical-blue focus:border-medical-blue sm:text-sm bg-white" />
               <label for="patientId" class="block text-sm font-medium text-gray-700 mb-2">Select Patient</label>
               <select
                 id="patientId"

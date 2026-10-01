@@ -3,142 +3,99 @@ import { PaymentList } from './payment-list';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { ApiResponse } from '../../../../core/models/common.model';
-import { PaymentResponse } from '../../../../core/models/payment.model';
+import { PaymentResponse, PaymentSummary } from '../../../../core/models/payment.model';
 
 describe('PaymentList', () => {
   const mockPayment: PaymentResponse = {
-    id: 'p1', billId: 'b1', amountInPaisa: 150000, paymentMethod: 'UPI',
-    paymentMode: 'ONLINE', paymentStatus: 'PAID', paidAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z',
+    id: 'p1', billId: 'b1', amountInPaisa: 150000, paymentMethod: 'UPI', paymentMode: 'ONLINE',
+    paymentStatus: 'SUCCESS', paidAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z',
+    billNumber: 'BILL-2026-0042', patientName: 'Rahul Rao',
   };
-
-  const mockResponse: ApiResponse<PaymentResponse[]> = {
-    success: true, data: [mockPayment], message: '', timestamp: '', requestId: '',
-  };
-
-  let component: PaymentList;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(of(mockResponse)), generateUpiQr: vi.fn().mockReturnValue(of({ success: true, data: 'data:image/png;base64,test' })) } },
-      ],
-    });
-    component = TestBed.runInInjectionContext(() => new PaymentList());
-    // don't call detectChanges here; tests control when ngOnInit runs
+  const pageOf = (content: PaymentResponse[], pageNumber = 0, totalElements = content.length, totalPages = 1) => ({
+    success: true, message: '', timestamp: '', requestId: '',
+    data: { content, pageNumber, pageSize: 20, totalElements, totalPages, last: pageNumber >= totalPages - 1 },
   });
+  const summary: PaymentSummary = { collectedInPaisa: 3_250_000_00, successful: 25000, pendingOrFailed: 12, total: 25012 };
 
-  it('should create with initial state', () => {
-    expect(component).toBeTruthy();
+  let service: { getPage: ReturnType<typeof vi.fn>; getSummary: ReturnType<typeof vi.fn> };
+
+  function create(overrides: Partial<typeof service> = {}): PaymentList {
+    service = {
+      getPage: vi.fn().mockReturnValue(of(pageOf([mockPayment], 0, 25012, 1251))),
+      getSummary: vi.fn().mockReturnValue(of({ success: true, data: summary, message: '', timestamp: '', requestId: '' })),
+      ...overrides,
+    };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: PaymentService, useValue: service }] });
+    return TestBed.runInInjectionContext(() => new PaymentList());
+  }
+
+  it('starts empty and loads the first page with the clinic-wide totals', () => {
+    const component = create();
     expect(component.payments).toEqual([]);
-    expect(component.filteredPayments).toEqual([]);
-    expect(component.isLoading).toBe(false);
-    expect(component.error).toBe('');
-    expect(component.statusFilter).toBe('');
-    expect(component.searchQuery).toBe('');
-  });
-
-  it('should load payments on init', () => {
     component.ngOnInit();
-    expect(component.payments.length).toBe(1);
-    expect(component.filteredPayments.length).toBe(1);
-    expect(component.payments[0].paymentMethod).toBe('UPI');
+    expect(service.getPage).toHaveBeenCalledWith({ page: 0, size: 20, status: '', q: '' });
+    expect(component.payments).toEqual([mockPayment]);
+    expect(component.totalElements).toBe(25012);
+    // Totals are over all payments (received ones are SUCCESS), not the page on screen.
+    expect(component.summary).toEqual(summary);
     expect(component.isLoading).toBe(false);
   });
 
-  it('should compute totalCollected, paidCount, pendingCount', () => {
+  it('filters by status on the server, from the first page', () => {
+    const component = create();
     component.ngOnInit();
-    expect(component.totalCollected).toBe(150000);
-    expect(component.paidCount).toBe(1);
-    expect(component.pendingCount).toBe(0);
+    component.goToPage(3);
+    component.statusFilter = 'SUCCESS';
+    component.onFilterChange();
+    expect(service.getPage).toHaveBeenLastCalledWith({ page: 0, size: 20, status: 'SUCCESS', q: '' });
   });
 
-  it('should handle load error', () => {
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(throwError(() => ({ message: 'Network error' }))) } },
-      ],
-    });
-    component = TestBed.runInInjectionContext(() => new PaymentList());
+  it('searches by patient or bill number on the server once typing pauses', () => {
+    vi.useFakeTimers();
+    try {
+      const component = create();
+      component.ngOnInit();
+      component.searchQuery = 'BILL-2026';
+      component.onSearchInput();
+      expect(service.getPage).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(300);
+      expect(service.getPage).toHaveBeenLastCalledWith({ page: 0, size: 20, status: '', q: 'BILL-2026' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('pages within range only', () => {
+    const component = create();
     component.ngOnInit();
+    component.goToPage(1);
+    expect(service.getPage).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+    service.getPage.mockClear();
+    component.goToPage(-1);
+    component.goToPage(99999);
+    expect(service.getPage).not.toHaveBeenCalled();
+  });
+
+  it('says why the payments could not load', () => {
+    const component = create({ getPage: vi.fn().mockReturnValue(throwError(() => ({ error: { message: 'Module is not active: PAYMENT' } }))) });
+    component.ngOnInit();
+    expect(component.error).toBe('Module is not active: PAYMENT');
     expect(component.isLoading).toBe(false);
-    expect(component.error).toBe('Network error');
   });
 
-  it('should handle load error without message', () => {
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(throwError(() => ({}))) } },
-      ],
-    });
-    component = TestBed.runInInjectionContext(() => new PaymentList());
-    component.ngOnInit();
-    expect(component.error).toBe('Failed to load payments');
-  });
-
-  it('should handle null data response', () => {
-    TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [
-        { provide: PaymentService, useValue: { getHistory: vi.fn().mockReturnValue(of({ success: true, data: null, message: '', timestamp: '', requestId: '' })) } },
-      ],
-    });
-    component = TestBed.runInInjectionContext(() => new PaymentList());
-    component.ngOnInit();
-    expect(component.payments).toEqual([]);
-  });
-
-  it('should format paisa to rupees with Indian locale', () => {
+  it('names statuses plainly and formats amounts in rupees', () => {
+    const component = create();
+    expect(component.statusLabel('SUCCESS')).toBe('Received');
+    expect(component.statusLabel('FAILED')).toBe('Failed');
     expect(component.getAmount(150000)).toBe('₹1,500.00');
-    expect(component.getAmount(999)).toBe('₹9.99');
-    expect(component.getAmount(0)).toBe('₹0.00');
   });
 
-  it('should filter by status', () => {
-    component.ngOnInit();
-    expect(component.filteredPayments.length).toBe(1);
-    component.statusFilter = 'PENDING';
-    component.applyFilters();
-    expect(component.filteredPayments.length).toBe(0);
-    component.statusFilter = 'PAID';
-    component.applyFilters();
-    expect(component.filteredPayments.length).toBe(1);
-  });
-
-  it('should search by bill ID and payment method', () => {
-    component.ngOnInit();
-    component.searchQuery = 'b1';
-    component.applyFilters();
-    expect(component.filteredPayments.length).toBe(1);
-    component.searchQuery = 'upi';
-    component.applyFilters();
-    expect(component.filteredPayments.length).toBe(1);
-    component.searchQuery = 'xyz';
-    component.applyFilters();
-    expect(component.filteredPayments.length).toBe(0);
-  });
-
-  it('should open and close detail modal', () => {
-    component.ngOnInit();
-    component.openDetail(component.payments[0]);
-    expect(component.selectedPayment).toBe(component.payments[0]);
+  it('opens and closes a payment', () => {
+    const component = create();
+    component.openDetail(mockPayment);
+    expect(component.selectedPayment).toBe(mockPayment);
     component.closeDetail();
     expect(component.selectedPayment).toBeNull();
-  });
-
-  it('finds a payment by patient name or bill number', () => {
-    component.ngOnInit();
-    component.payments = [
-      { ...component.payments[0], id: 'a', patientName: 'Rahul Rao', billNumber: 'BILL-2026-0042' },
-      { ...component.payments[0], id: 'b', patientName: 'Meera Nair', billNumber: 'BILL-2026-0043' },
-    ];
-    component.searchQuery = 'rahul';
-    component.onFilterChange();
-    expect(component.filteredPayments.map((p) => p.id)).toEqual(['a']);
-    component.searchQuery = '0043';
-    component.onFilterChange();
-    expect(component.filteredPayments.map((p) => p.id)).toEqual(['b']);
   });
 });

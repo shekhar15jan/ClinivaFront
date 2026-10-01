@@ -41,7 +41,7 @@ describe('PatientService', () => {
         expect(res.data.pageNumber).toBe(0);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}?page=0&size=10`);
+      const req = httpMock.expectOne(`${apiUrl}?page=0&size=20&sort=createdAt,desc`);
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });
@@ -53,7 +53,7 @@ describe('PatientService', () => {
         },
       });
 
-      const req = httpMock.expectOne(`${apiUrl}?page=0&size=10`);
+      const req = httpMock.expectOne(`${apiUrl}?page=0&size=20&sort=createdAt,desc`);
       req.flush({ success: false }, { status: 500, statusText: 'Server Error' });
     });
   });
@@ -152,18 +152,18 @@ describe('PatientService', () => {
   });
 
   describe('searchPatients', () => {
-    it('should GET search with q param', () => {
-      const mockResponse: ApiResponse<Patient[]> = { success: true, data: [], message: '', timestamp: '', requestId: '' };
-
-      service.searchPatients('john').subscribe((res) => {
-        expect(res.data).toEqual([]);
+    it('should GET one page of matches for the query', () => {
+      service.searchPatients(' john ', 2).subscribe((res) => {
+        expect(res.data.content.length).toBe(1);
+        expect(res.data.totalElements).toBe(45);
       });
 
-      const req = httpMock.expectOne(
-        (r) => r.url === `${apiUrl}/search` && r.params.get('q') === 'john',
-      );
+      const req = httpMock.expectOne((r) => r.url === `${apiUrl}/search`);
+      expect(req.request.params.get('q')).toBe('john');
+      expect(req.request.params.get('page')).toBe('2');
       expect(req.request.method).toBe('GET');
-      req.flush(mockResponse);
+      req.flush({ success: true, data: { content: [{ id: 'p1' }], number: 2, size: 20, totalElements: 45, totalPages: 3 },
+        message: '', timestamp: '', requestId: '' });
     });
   });
 

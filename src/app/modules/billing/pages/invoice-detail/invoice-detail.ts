@@ -1,21 +1,28 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BillingService } from '../../../../core/services/billing.service';
 import { Bill, amountDueInPaisa } from '../../../../core/models/billing.model';
 import { NgClass, DecimalPipe, DatePipe } from '@angular/common';
 import { PaymentModal } from '../payment-modal/payment-modal';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
+import { SettingService } from '../../../../core/services/setting.service';
+import { ClinicProfile } from '../../../../core/models/setting.model';
+import { mediaUrl } from '../../../../core/utils/media-url';
 
 @Component({
   selector: 'app-invoice-detail',
   templateUrl: './invoice-detail.html',
   styleUrl: './invoice-detail.scss',
-  imports: [NgClass, DecimalPipe, DatePipe, PaymentModal],
+  imports: [NgClass, DecimalPipe, DatePipe, PaymentModal, RouterLink],
 })
 export class InvoiceDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private billingService = inject(BillingService);
   private toast = inject(ToastService);
+  private settingService = inject(SettingService);
+
+  /** The clinic's own name, address and contact for the invoice. */
+  clinic: ClinicProfile | null = null;
 
   bill: Bill | null = null;
   isLoading = false;
@@ -47,7 +54,21 @@ export class InvoiceDetail implements OnInit {
     return this.total - this.due;
   }
 
+  get logoSrc(): string | null {
+    return mediaUrl(this.clinic?.logoUrl);
+  }
+
+  get clinicContact(): string {
+    const c = this.clinic;
+    if (!c) return '';
+    return [c.address, [c.phone, c.email].filter(Boolean).join('  |  ')].filter(Boolean).join('\n');
+  }
+
   ngOnInit() {
+    this.settingService.getProfile().subscribe({
+      next: (res) => (this.clinic = res.data ?? null),
+      error: () => (this.clinic = null),
+    });
     if (this.id) {
       this.loadBill(this.id);
     }

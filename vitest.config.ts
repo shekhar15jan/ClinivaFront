@@ -13,6 +13,9 @@ export default defineConfig({
     browser: {
       enabled: true,
       instances: [{ browser: 'chromium' }],
+      // Vitest's default (63315) can fall inside a block Windows reserves for Hyper-V/WSL (e.g. 63235-63334), and
+      // then no test runs ("listen EACCES"). VITEST_BROWSER_PORT overrides this one if it is ever taken too.
+      api: { port: Number(process.env['VITEST_BROWSER_PORT'] ?? 61315), strictPort: false },
       provider: playwright(),
       headless: true,
     },

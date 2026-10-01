@@ -152,7 +152,8 @@ import { FormsModule } from '@angular/forms';
               <div class="flex items-center gap-2 pt-1">
                 <button
                   [routerLink]="[doc.id]"
-                  class="flex items-center gap-1 px-3 py-1.5 text-label-sm font-medium text-white bg-primary rounded-lg"
+                  [attr.aria-label]="'View ' + doc.fullName"
+                  class="flex items-center gap-1 px-4 min-h-touch text-label-sm font-medium text-white bg-primary rounded-lg"
                 >
                   <span class="material-symbols-outlined text-sm">visibility</span> View
                 </button>

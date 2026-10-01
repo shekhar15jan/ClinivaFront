@@ -72,7 +72,7 @@ export class AppointmentCalendar implements OnInit {
   loadData(): void {
     this.isLoading = true;
     this.loadError = '';
-    this.appointmentService.getAppointments(0, 200, undefined, undefined, this.selectedDay, this.selectedDay).subscribe({
+    this.appointmentService.getAppointments(0, 1000, undefined, undefined, this.selectedDay, this.selectedDay).subscribe({
       next: (res) => {
         this.appointments = res.success
           ? [...res.data.content].sort((a, b) => (a.appointmentTime ?? '').localeCompare(b.appointmentTime ?? ''))

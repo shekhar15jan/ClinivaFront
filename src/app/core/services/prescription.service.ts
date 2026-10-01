@@ -17,10 +17,13 @@ export class PrescriptionService {
   getPrescriptions(
     page?: number,
     size?: number,
+    query?: string,
   ): Observable<ApiResponse<PagedResponse<Prescription>>> {
     let params = new HttpParams();
     if (page !== undefined) params = params.set('page', page);
     if (size !== undefined) params = params.set('size', size);
+    // Patient name or id, or the doctor's name; matched on the server.
+    if (query?.trim()) params = params.set('q', query.trim());
     return this.http
       .get<ApiResponse<RawPagedResponse<Prescription>>>(this.baseUrl, { params })
       .pipe(

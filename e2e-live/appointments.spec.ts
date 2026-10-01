@@ -49,6 +49,8 @@ test.describe('Appointments, real backend', () => {
     await slots.first().click();
     await page.getByRole('button', { name: /Next Step/ }).click();
     // Step 2: the patient registered above is offered.
+    // Patients are found by search (a clinic can have thousands).
+    await page.fill('#patientSearch', patientName);
     const option = page.locator('#patientId option', { hasText: patientName });
     await expect(option).toHaveCount(1, { timeout: 15000 });
     await page.selectOption('#patientId', (await option.getAttribute('value'))!);
@@ -56,7 +58,7 @@ test.describe('Appointments, real backend', () => {
 
     // Step 3: confirm. The booking must reach the backend and be accepted.
     await expect(page.getByRole('heading', { name: 'Confirm Appointment' })).toBeVisible();
-    await expect(page.getByText(doctorName).first()).toBeVisible();
+    await expect(page.getByText(doctorName).filter({ visible: true }).first()).toBeVisible();
     const booked = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/appointments$/.test(r.url()));
     await page.getByRole('button', { name: /Confirm/ }).last().click();
     const response = await booked;
@@ -69,6 +71,6 @@ test.describe('Appointments, real backend', () => {
     // The appointment exists for this clinic: the day's list has it.
     await page.goto(`${admin.hospitalCode}/appointments`);
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText(patientName).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(patientName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
   });
 });

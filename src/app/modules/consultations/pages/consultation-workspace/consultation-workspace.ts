@@ -191,9 +191,9 @@ export class ConsultationWorkspace implements OnInit {
       return;
     }
     this.searchingAppointments = true;
-    this.appointmentService.getAppointments(0, 20, 'APPROVED').subscribe({
+    this.appointmentService.getDoctorAppointments().subscribe({
       next: (res) => {
-        const all = res.data?.content ?? [];
+        const all = (res.data ?? []).filter((a) => a.status === 'APPROVED');
         const q = term.toLowerCase();
         this.appointmentSuggestions = all.filter(
           (a) =>

@@ -58,13 +58,18 @@ export class PatientDetail implements OnInit {
     return ['ADMIN', 'RECEPTIONIST'].includes(this.role);
   }
 
+  /** Clinical history is for clinical staff and administrators; the front desk works with registration details. */
+  get seesClinical(): boolean {
+    return this.role !== 'RECEPTIONIST';
+  }
+
   get canDelete(): boolean {
     return this.role === 'ADMIN';
   }
 
-  /** Visit history is for staff who see appointments; nurses are refused by the API. */
+  /** Visit history (which visits had a consultation, prescription and bill) is for all clinic staff. */
   get canSeeVisits(): boolean {
-    return ['ADMIN', 'DOCTOR', 'RECEPTIONIST'].includes(this.role);
+    return ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'NURSE'].includes(this.role);
   }
 
   ngOnInit(): void {
@@ -135,7 +140,8 @@ export class PatientDetail implements OnInit {
         bloodGroup: blank(this.form.bloodGroup),
         emergencyContactName: blank(this.form.emergencyContactName),
         emergencyContactPhone: blank(this.form.emergencyContactPhone),
-        medicalHistory: blank(this.form.medicalHistory),
+        // Not sent by the front desk: it is not shown the history, and must not blank it out.
+        medicalHistory: this.seesClinical ? blank(this.form.medicalHistory) : undefined,
       })
       .subscribe({
         next: (res) => {
