@@ -197,8 +197,7 @@ export class PrescriptionDetail implements OnInit {
 
   /** Only front-desk roles may bill (the API refuses everyone else), so others are not offered the form. */
   get canGenerateBill(): boolean {
-    const role = this.authService.currentUserValue?.role;
-    return role === 'ADMIN' || role === 'RECEPTIONIST';
+    return this.authService.can('BILLING');
   }
 
   generateBill() {

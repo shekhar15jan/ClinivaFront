@@ -34,7 +34,10 @@ export class UserManagementService {
   }
 
   /** Name and role of a staff account (the email is the sign-in and does not change). */
-  updateUser(id: string, request: { firstName: string; lastName: string; role: string }): Observable<ManagedUser> {
+  updateUser(
+    id: string,
+    request: { firstName: string; lastName: string; role: string; customRoleId?: string | null },
+  ): Observable<ManagedUser> {
     return this.http
       .put<ApiResponse<ManagedUser>>(`${this.apiUrl}/${id}`, request)
       .pipe(map((res) => res.data));

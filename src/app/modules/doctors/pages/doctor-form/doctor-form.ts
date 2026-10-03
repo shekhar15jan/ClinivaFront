@@ -9,6 +9,8 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { DoctorService } from '../../../../core/services/doctor.service';
 
+import { DepartmentService } from '../../../../core/services/department.service';
+import { Department } from '../../../../core/models/department.model';
 @Component({
   selector: 'app-doctor-form',
   template: `
@@ -111,6 +113,22 @@ import { DoctorService } from '../../../../core/services/doctor.service';
             />
           </div>
 
+          @if (departments.length) {
+            <div>
+              <label for="departmentId" class="block text-sm font-medium text-[#475569] mb-1">Department</label>
+              <select
+                id="departmentId"
+                formControlName="departmentId"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-[#0052CC]"
+              >
+                <option value="">Clinic-wide (no department)</option>
+                @for (d of departments; track d.id) {
+                  <option [value]="d.id">{{ d.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
           @if (error) {
             <div class="text-sm text-status-red bg-status-red/5 p-3 rounded-lg">
               {{ error }}
@@ -141,8 +159,10 @@ export class DoctorForm {
   private fb = inject(FormBuilder);
   private doctorService = inject(DoctorService);
   private router = inject(Router);
+  private departmentService = inject(DepartmentService);
 
   doctorForm: FormGroup;
+  departments: Department[] = [];
   isSubmitting = false;
   error = '';
 
@@ -155,7 +175,9 @@ export class DoctorForm {
       phone: ['', Validators.pattern('^[0-9]{10}$')],
       email: ['', Validators.email],
       consultationFee: [0, [Validators.required, Validators.min(1)]],
+      departmentId: [''],
     });
+    this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
   }
 
   onSubmit() {
@@ -173,6 +195,7 @@ export class DoctorForm {
       phone: formVal.phone,
       email: formVal.email,
       consultationFeeInPaisa: (formVal.consultationFee || 0) * 100,
+      departmentId: formVal.departmentId || null,
       isActive: true,
     };
 

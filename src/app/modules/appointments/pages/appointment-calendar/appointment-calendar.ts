@@ -57,8 +57,7 @@ export class AppointmentCalendar implements OnInit {
 
   /** Front desk manages bookings; a doctor only sees theirs and starts the consultation. */
   get canManage(): boolean {
-    const role = this.auth.currentUserValue?.role;
-    return role === 'ADMIN' || role === 'RECEPTIONIST';
+    return this.auth.can('APPOINTMENT_MANAGE');
   }
 
   get isDoctor(): boolean {

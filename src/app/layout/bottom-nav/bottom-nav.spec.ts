@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../testing/role-permissions';
 import { signal } from '@angular/core';
 import { BottomNav } from './bottom-nav';
 import { AuthService } from '../../core/services/auth.service';
@@ -11,7 +12,7 @@ describe('BottomNav (phone bar)', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
-        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: AuthService, useValue: fakeAuth(role) },
         { provide: EffectiveLicenseService, useValue: { activeModules: signal(modules) } },
       ],
     });

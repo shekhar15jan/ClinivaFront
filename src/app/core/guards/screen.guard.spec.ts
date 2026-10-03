@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../testing/role-permissions';
 import { signal } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
@@ -24,7 +25,7 @@ describe('screenGuard', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: { currentUserValue: { id: 'u', role } } },
+        { provide: AuthService, useValue: fakeAuth(role, { id: 'u' }) },
         { provide: EffectiveLicenseService, useValue: { activeModules: signal(modules) } },
         { provide: ToastService, useValue: toast },
       ],

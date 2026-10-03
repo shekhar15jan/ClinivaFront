@@ -15,7 +15,7 @@ function hospitalCodeOf(route: ActivatedRouteSnapshot): string {
 
 /**
  * Every screen inside a clinic: a screen is reachable by its address only if the menu would offer it, using the
- * same table (STAFF_NAV) and rule (role + the clinic's plan). Patients have their own portal and staff do not
+ * same table (STAFF_NAV) and rule (permissions + the clinic's plan). Patients have their own portal and staff do not
  * use it. Without this, typing an address opened screens whose every call the API then refused.
  */
 export const screenGuard: CanActivateChildFn = (child) => {
@@ -34,9 +34,10 @@ export const screenGuard: CanActivateChildFn = (child) => {
 
   const item = STAFF_NAV.find((i) => i.route === section);
   if (!item) return true;
-  if (canSee(item, user.role, inject(EffectiveLicenseService).activeModules())) return true;
+  const permissions = user.permissions ?? [];
+  if (canSee(item, permissions, inject(EffectiveLicenseService).activeModules())) return true;
 
-  const planHasIt = canSee({ ...item, roles: undefined }, user.role, inject(EffectiveLicenseService).activeModules());
+  const planHasIt = canSee({ ...item, perms: undefined }, permissions, inject(EffectiveLicenseService).activeModules());
   inject(ToastService).warning(
     planHasIt ? 'Your role does not have access to this screen.' : 'This module is not available in your current plan.',
   );

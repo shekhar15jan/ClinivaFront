@@ -1,8 +1,10 @@
 import { STAFF_NAV, canSee } from './nav-items';
+import { ROLE_PERMISSIONS } from '../testing/role-permissions';
 
 const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS'];
 
-const labels = (role: string, modules: readonly string[]) => STAFF_NAV.filter((i) => canSee(i, role, modules)).map((i) => i.label);
+const labels = (role: string, modules: readonly string[]) =>
+  STAFF_NAV.filter((i) => canSee(i, ROLE_PERMISSIONS[role] ?? [], modules)).map((i) => i.label);
 
 describe('staff menu', () => {
   it('has an entry for every screen a clinic uses, including the ones that had none', () => {
@@ -21,9 +23,10 @@ describe('staff menu', () => {
     expect(labels('ADMIN', ALL_MODULES)).toHaveLength(STAFF_NAV.length);
   });
 
-  it('hides what the plan does not include, but always offers the dashboard', () => {
-    expect(labels('ADMIN', [])).toEqual(['Dashboard']);
-    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(['Dashboard', 'Patients', 'Doctors', 'Appointments']);
+  it('hides what the plan does not include, but always offers the dashboard and the core screens', () => {
+    expect(labels('ADMIN', [])).toEqual(['Dashboard', 'Departments', 'Emergency Access']);
+    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(
+      ['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Departments', 'Emergency Access']);
   });
 
   it('offers a receptionist the front desk screens and nothing the API would refuse', () => {
@@ -36,8 +39,9 @@ describe('staff menu', () => {
 
   it('offers a doctor clinical screens, not billing or administration', () => {
     const offered = labels('DOCTOR', ALL_MODULES);
-    expect(offered).toEqual(expect.arrayContaining(['Patients', 'Appointments', 'Consultations', 'Prescriptions', 'Reports']));
-    for (const notTheirs of ['Billing', 'Payments', 'Users', 'Audit Log', 'Settings']) {
+    expect(offered).toEqual(expect.arrayContaining(['Patients', 'Appointments', 'Consultations', 'Prescriptions']));
+    // Clinic reports are finance and operations; a doctor's own numbers are on the dashboard.
+    for (const notTheirs of ['Billing', 'Payments', 'Users', 'Audit Log', 'Settings', 'Reports', 'Roles']) {
       expect(offered).not.toContain(notTheirs);
     }
   });
@@ -60,5 +64,32 @@ describe('staff menu', () => {
 
   it('offers nothing to an unknown role except the dashboard', () => {
     expect(labels('', ALL_MODULES)).toEqual(['Dashboard', 'Doctors', 'Health Packages']);
+  });
+
+  it('offers the accountant money screens and the hospital admin operations, neither clinical records', () => {
+    const accountant = labels('ACCOUNTANT', ALL_MODULES);
+    expect(accountant).toEqual(expect.arrayContaining(['Billing', 'Payments', 'Reports']));
+    for (const label of ['Consultations', 'Prescriptions', 'Users', 'Settings', 'Appointments']) {
+      expect(accountant).not.toContain(label);
+    }
+    const ops = labels('HOSPITAL_ADMIN', ALL_MODULES);
+    expect(ops).toEqual(expect.arrayContaining(['Departments', 'Doctors', 'Appointments', 'Reports', 'Reviews']));
+    for (const label of ['Billing', 'Consultations', 'Users', 'Roles', 'Settings', 'Audit Log']) {
+      expect(ops).not.toContain(label);
+    }
+  });
+
+  it('offers the pharmacist the pharmacy and prescriptions', () => {
+    const offered = labels('PHARMACIST', ALL_MODULES);
+    expect(offered).toEqual(expect.arrayContaining(['Pharmacy', 'Prescriptions', 'Patients']));
+    for (const label of ['Billing', 'Consultations', 'Appointments', 'Users']) {
+      expect(offered).not.toContain(label);
+    }
+  });
+
+  it('gives a custom role exactly the screens of its permissions', () => {
+    const offered = STAFF_NAV.filter((i) => canSee(i, ['PATIENT_VIEW', 'BILLING'], ALL_MODULES)).map((i) => i.label);
+    expect(offered).toEqual(expect.arrayContaining(['Patients', 'Billing', 'Payments']));
+    expect(offered).not.toContain('Consultations');
   });
 });

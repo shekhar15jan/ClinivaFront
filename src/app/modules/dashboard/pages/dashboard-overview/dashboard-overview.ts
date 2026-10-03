@@ -5,7 +5,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { ReportService } from '../../../../core/services/report.service';
 import { Appointment } from '../../../../core/models/appointment.model';
-import { DashboardStats } from '../../../../core/models/report.model';
+import { DashboardStats, MyPerformance } from '../../../../core/models/report.model';
 
 /** A local calendar day as YYYY-MM-DD (toISOString would give the UTC day, which can be off by one). */
 export function localDay(date: Date): string {
@@ -51,6 +51,8 @@ export class DashboardOverview implements OnInit, OnDestroy {
   readonly week = weekDays(this.today);
 
   stats: DashboardStats | null = null;
+  /** A doctor's own numbers (their visits and what they were billed), instead of the clinic's money. */
+  mine: MyPerformance | null = null;
   todays: Appointment[] = [];
   weekCounts: number[] = [0, 0, 0, 0, 0, 0, 0];
   isLoading = true;
@@ -69,22 +71,27 @@ export class DashboardOverview implements OnInit, OnDestroy {
     return greetingFor(this.today.getHours());
   }
 
-  /** Who may list appointments (the API refuses nurses and patients). */
+  /** Who may list appointments (APPOINTMENT_VIEW). */
   get seesAppointments(): boolean {
-    return ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'NURSE'].includes(this.role);
+    return this.auth.can('APPOINTMENT_VIEW');
   }
 
-  /** Clinic totals come from the reports API, which only administrators and doctors may call. */
+  /** Clinic counts are for all staff; the money in them (unpaid bills) only comes back with finance reports. */
   get seesTotals(): boolean {
-    return ['ADMIN', 'DOCTOR'].includes(this.role);
+    return !!this.auth.currentUserValue && this.role !== 'PATIENT';
   }
 
   get canManage(): boolean {
-    return ['ADMIN', 'RECEPTIONIST'].includes(this.role);
+    return this.auth.can('APPOINTMENT_MANAGE');
   }
 
   get isDoctor(): boolean {
     return this.role === 'DOCTOR';
+  }
+
+  /** Paisa as rupees, Indian grouping (1,25,000). */
+  rupees(paisa: number): string {
+    return (paisa / 100).toLocaleString('en-IN');
   }
 
   get waiting(): number {
@@ -96,7 +103,10 @@ export class DashboardOverview implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.layoutStore.setFabConfig({ icon: 'add', label: 'New Appointment', route: 'appointments/book' });
+    // The phone's "New Appointment" button only for those who book.
+    if (this.canManage) {
+      this.layoutStore.setFabConfig({ icon: 'add', label: 'New Appointment', route: 'appointments/book' });
+    }
     this.load();
   }
 
@@ -123,6 +133,12 @@ export class DashboardOverview implements OnInit, OnDestroy {
           this.error = err?.error?.message || 'The clinic totals could not be loaded.';
           done();
         },
+      });
+    }
+    if (this.isDoctor) {
+      this.reportService.getMyPerformance().subscribe({
+        next: (res) => (this.mine = res.success ? res.data : null),
+        error: () => (this.mine = null),
       });
     }
     if (this.seesAppointments) {

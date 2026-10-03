@@ -63,6 +63,12 @@ export const routes: Routes = [
             path: 'audit-logs',
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
+          { path: 'departments', loadComponent: () => import('./modules/departments/department-list').then(m => m.DepartmentListComponent) },
+          { path: 'roles', loadComponent: () => import('./modules/roles/role-list').then(m => m.RoleListComponent) },
+          {
+            path: 'emergency-access',
+            loadComponent: () => import('./modules/emergency-access/emergency-access-list').then(m => m.EmergencyAccessListComponent)
+          },
           { path: 'payments', loadChildren: () => import('./modules/payments/payments.module').then(m => m.PaymentsModule) },
           { path: 'health-packages', loadChildren: () => import('./modules/health-packages/health-packages.module').then(m => m.HealthPackagesModule) },
           { path: 'contacts', loadChildren: () => import('./modules/contacts/contacts.module').then(m => m.ContactsModule) },

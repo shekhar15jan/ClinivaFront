@@ -31,14 +31,22 @@ export const ReportStore = signalStore(
   withMethods((store) => {
     const reportService = inject(ReportService);
     return {
-      loadAll: rxMethod<void>(
+      /** Everything; with `finance` false, only the clinic counts and appointment trends (no money). */
+      loadAll: rxMethod<boolean | void>(
         pipe(
           tap(() => patchState(store, { loading: true, error: null })),
-          switchMap(() =>
+          switchMap((finance) =>
             reportService.getDashboardStats().pipe(
               tap((response) => patchState(store, { dashboardStats: response.data })),
               switchMap(() => reportService.getAppointmentTrends()),
               tap((response) => patchState(store, { appointmentTrends: response.data })),
+              switchMap((response) => {
+                if (finance === false) {
+                  patchState(store, { revenueReport: null, doctorPerformance: [], billsStatus: null, loading: false });
+                  return EMPTY;
+                }
+                return [response];
+              }),
               switchMap(() => reportService.getRevenueReport()),
               tap((response) => patchState(store, { revenueReport: response.data })),
               switchMap(() => reportService.getDoctorPerformance()),

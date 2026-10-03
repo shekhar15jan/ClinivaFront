@@ -1,3 +1,13 @@
+/**
+ * Whether the signed-in clinician sees this patient's clinical record. `restricted`: only department access stands
+ * in the way, so emergency access is offered; `emergencyUntil`: emergency access is open until then.
+ */
+export interface ClinicalAccess {
+  clinical: boolean;
+  restricted: boolean;
+  emergencyUntil: string | null;
+}
+
 export interface Patient {
   id: string;
   patientId: string;

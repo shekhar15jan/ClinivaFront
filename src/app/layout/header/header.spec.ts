@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../testing/role-permissions';
 import { signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
@@ -17,7 +18,7 @@ describe('Header', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: Router, useValue: router },
-        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: AuthService, useValue: fakeAuth(role) },
         { provide: EffectiveLicenseService, useValue: { activeModules: signal(modules) } },
         { provide: NotificationService, useValue: { getUnreadCount: vi.fn(() => of({ data: { count: 0 } })) } },
       ],

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { PatientList } from './patient-list';
 import { PatientService } from '../../../../core/services/patient.service';
 import { FormBuilder } from '@angular/forms';
@@ -25,7 +26,7 @@ describe('PatientList', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
-        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: AuthService, useValue: fakeAuth(role) },
         { provide: ActivatedRoute, useValue: { queryParamMap: of(convertToParamMap(query)) } },
         { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPaged)), searchPatients: vi.fn().mockReturnValue(of(mockPaged)), createPatient: vi.fn().mockReturnValue(of({ success: true, data: mockPatient, message: 'created', timestamp: '', requestId: 'r1' })), ...overrides } },
         FormBuilder,

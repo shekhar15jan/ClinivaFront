@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { LayoutStore } from '../../../../core/store/layout.store';
@@ -40,7 +41,7 @@ describe('dashboard helpers', () => {
 describe('DashboardOverview', () => {
   const today = localDay(new Date());
   let appointments: { getAppointments: ReturnType<typeof vi.fn>; getCountsByDay: ReturnType<typeof vi.fn> };
-  let reports: { getDashboardStats: ReturnType<typeof vi.fn> };
+  let reports: { getDashboardStats: ReturnType<typeof vi.fn>; getMyPerformance: ReturnType<typeof vi.fn> };
   let layout: { setFabConfig: ReturnType<typeof vi.fn> };
 
   function create(role: string, items: Appointment[] = [appointment('b', today, '11:00:00', 'PENDING'), appointment('a', today, '09:30:00')],
@@ -49,12 +50,15 @@ describe('DashboardOverview', () => {
       getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: items } })),
       getCountsByDay: vi.fn().mockReturnValue(of({ success: true, data: counts })),
     };
-    reports = { getDashboardStats: vi.fn().mockReturnValue(of({ success: true, data: { totalPatients: 7, todayAppointments: 2, pendingBills: 3, totalRevenueInPaisa: 0, activeDoctors: 2 } })) };
+    reports = {
+      getDashboardStats: vi.fn().mockReturnValue(of({ success: true, data: { totalPatients: 7, todayAppointments: 2, pendingBills: 3, totalRevenueInPaisa: 0, activeDoctors: 2 } })),
+      getMyPerformance: vi.fn().mockReturnValue(of({ success: true, data: { todayAppointments: 2, consultationsThisMonth: 14, consultationsThisYear: 120, patientsThisYear: 90, billedThisMonthInPaisa: 4200000, billedThisYearInPaisa: 36000000 } })),
+    };
     layout = { setFabConfig: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         { provide: LayoutStore, useValue: layout },
-        { provide: AuthService, useValue: { currentUserValue: { role, email: 'x@clinic.test', profile: { firstName: 'Meera', lastName: 'Nair' } } } },
+        { provide: AuthService, useValue: fakeAuth(role, { email: 'x@clinic.test', profile: { firstName: 'Meera', lastName: 'Nair' } }) },
         { provide: AppointmentService, useValue: appointments },
         { provide: ReportService, useValue: reports },
       ],
@@ -85,22 +89,25 @@ describe('DashboardOverview', () => {
     expect(create('ADMIN').stats?.totalPatients).toBe(7);
   });
 
-  it('gives a doctor the clinic totals too', () => {
-    expect(create('DOCTOR').stats?.activeDoctors).toBe(2);
+  it('gives a doctor the clinic counts and their own numbers, not the clinic money', () => {
+    const component = create('DOCTOR');
+    expect(component.stats?.activeDoctors).toBe(2);
+    expect(reports.getMyPerformance).toHaveBeenCalled();
+    expect(component.mine?.consultationsThisMonth).toBe(14);
   });
 
-  it('does not call the reports API for a receptionist, who it would refuse', () => {
+  it('gives the front desk the clinic counts (the API leaves out the money) and booking', () => {
     const component = create('RECEPTIONIST');
-    expect(reports.getDashboardStats).not.toHaveBeenCalled();
-    expect(component.stats).toBeNull();
+    expect(reports.getDashboardStats).toHaveBeenCalled();
+    expect(reports.getMyPerformance).not.toHaveBeenCalled();
     expect(component.canManage).toBe(true);
   });
 
-  it("shows a nurse today's queue, but not the clinic totals", () => {
+  it("shows a nurse today's queue, and no booking shortcut", () => {
     const component = create('NURSE');
     expect(appointments.getAppointments).toHaveBeenCalled();
-    expect(reports.getDashboardStats).not.toHaveBeenCalled();
     expect(component.todays.length).toBe(2);
+    expect(component.canManage).toBe(false);
     expect(component.isLoading).toBe(false);
   });
 

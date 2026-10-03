@@ -67,13 +67,12 @@ export class PatientList implements OnInit, OnDestroy {
 
   /** Registering patients is for the front desk and administrators (the API refuses others). */
   get canAdd(): boolean {
-    const role = this.auth.currentUserValue?.role;
-    return role === 'ADMIN' || role === 'RECEPTIONIST';
+    return this.auth.can('PATIENT_EDIT');
   }
 
-  /** CSV import is for administrators only. */
+  /** CSV import needs PATIENT_ADMIN. */
   get canImport(): boolean {
-    return this.auth.currentUserValue?.role === 'ADMIN';
+    return this.auth.can('PATIENT_ADMIN');
   }
 
   get firstShown(): number {

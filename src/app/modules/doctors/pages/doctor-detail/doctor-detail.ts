@@ -48,6 +48,8 @@ export function scheduleProblem(days: ScheduleDay[]): string {
   return '';
 }
 
+import { DepartmentService } from '../../../../core/services/department.service';
+import { Department } from '../../../../core/models/department.model';
 @Component({
   selector: 'app-doctor-detail',
   template: `
@@ -89,6 +91,20 @@ export function scheduleProblem(days: ScheduleDay[]): string {
               <p class="text-sm text-[#64748B]">
                 {{ doctor.specialization }} &bull; {{ doctor.qualification }}
               </p>
+              @if (isAdmin && departments.length) {
+                <div class="mt-2 flex items-center gap-2">
+                  <label for="doctor-department-select" class="text-sm text-[#475569]">Department</label>
+                  <select id="doctor-department-select" [ngModel]="doctor.departmentId ?? ''" (ngModelChange)="moveTo($event)"
+                    class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white">
+                    <option value="">Clinic-wide</option>
+                    @for (d of departments; track d.id) {
+                      <option [value]="d.id">{{ d.name }}</option>
+                    }
+                  </select>
+                </div>
+              } @else if (doctor.departmentName) {
+                <p class="text-sm text-[#475569] mt-1" id="doctor-department">{{ doctor.departmentName }}</p>
+              }
               <div class="flex gap-4 mt-3">
                 <div class="flex items-center gap-1 text-sm text-[#64748B]">
                   <span class="material-symbols-outlined text-base">call</span> {{ doctor.phone }}
@@ -186,10 +202,27 @@ export class DoctorDetail implements OnInit {
   private doctorId = '';
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private departmentService = inject(DepartmentService);
   isUploading = false;
+  departments: Department[] = [];
 
+  /** Moves the doctor to a department ('' = clinic-wide); their patients follow the department's access. */
+  moveTo(departmentId: string): void {
+    if (!this.doctor) return;
+    const doctor = this.doctor;
+    this.departmentService.assignDoctor(doctor.id, departmentId || null).subscribe({
+      next: () => {
+        const name = this.departments.find((d) => d.id === departmentId)?.name ?? null;
+        this.doctor = { ...doctor, departmentId: departmentId || null, departmentName: name };
+        this.toast.success(name ? `Moved to ${name}` : 'Now clinic-wide');
+      },
+      error: (err) => this.toast.error(err?.error?.message || 'The department could not be changed.'),
+    });
+  }
+
+  /** Editing doctors (and their photo) needs DOCTOR_MANAGE. */
   get isAdmin(): boolean {
-    return this.auth.currentUserValue?.role === 'ADMIN';
+    return this.auth.can('DOCTOR_MANAGE');
   }
 
   get photoSrc(): string | null {
@@ -224,6 +257,9 @@ export class DoctorDetail implements OnInit {
     if (!id) return;
     this.doctorId = id;
     this.isLoading = true;
+    if (this.isAdmin) {
+      this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
+    }
     this.doctorService.getDoctorById(id).subscribe({
       next: (res) => {
         if (res.success) {

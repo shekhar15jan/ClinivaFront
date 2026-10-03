@@ -24,6 +24,7 @@
 
   <!-- Stat Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    @if (finance) {
     <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs font-semibold text-outline uppercase">Total Revenue</p>
@@ -32,6 +33,7 @@
       <p class="text-2xl font-bold text-on-surface">{{ formatPaisa(store.dashboardStats()?.totalRevenueInPaisa) }}</p>
       <p class="text-xs text-outline mt-1">{{ store.dashboardStats()?.pendingBills ?? 0 }} pending bills</p>
     </div>
+    }
     <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
       <div class="flex items-center justify-between mb-2">
         <p class="text-xs font-semibold text-outline uppercase">Appointments Today</p>
@@ -87,6 +89,7 @@
     </div>
 
     <!-- Revenue Bar Chart -->
+    @if (finance) {
     <div class="bg-white rounded-xl border border-gray-200 p-5">
       <h3 class="text-sm font-semibold text-on-surface mb-4">Revenue Breakdown (Monthly)</h3>
       @if (store.revenueReport()?.monthlyBreakdown?.length) {
@@ -124,9 +127,11 @@
         </div>
       }
     </div>
+    }
   </div>
 
-  <!-- Second Row: Bills Status + Doctor Performance -->
+  <!-- Second Row: Bills Status + Doctor Performance (finance) -->
+  @if (finance) {
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <!-- Bills Status Donut -->
     <div class="bg-white rounded-xl border border-gray-200 p-5">
@@ -206,8 +211,10 @@
       }
     </div>
   </div>
+  }
 
   <!-- Export -->
+  @if (finance) {
   <div class="bg-white rounded-xl border border-gray-200 p-5">
     <h3 class="text-sm font-semibold text-on-surface mb-4">Export Reports</h3>
     <div class="flex gap-3 flex-wrap">
@@ -219,4 +226,5 @@
       </button>
     </div>
   </div>
+  }
 </div>

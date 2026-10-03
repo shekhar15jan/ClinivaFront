@@ -5,10 +5,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { AppointmentCalendar } from './pages/appointment-calendar/appointment-calendar';
 import { BookingFlow } from './pages/booking-flow/booking-flow';
 
-/** Booking and changing appointments is for the front desk and administrators (the API refuses others). */
+/** Booking and changing appointments needs APPOINTMENT_MANAGE (the API refuses others). */
 const frontDeskOnly: CanActivateFn = (route) => {
-  const role = inject(AuthService).currentUserValue?.role;
-  return role === 'ADMIN' || role === 'RECEPTIONIST' ? true
+  return inject(AuthService).can('APPOINTMENT_MANAGE') ? true
     : inject(Router).createUrlTree(['/', route.parent?.parent?.params['hospitalCode'] ?? '', 'appointments']);
 };
 

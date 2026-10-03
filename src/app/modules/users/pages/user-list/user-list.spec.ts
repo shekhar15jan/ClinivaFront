@@ -90,7 +90,7 @@ describe('UserListComponent', () => {
   describe('adding a user', () => {
     function fill(component: UserListComponent) {
       component.openForm();
-      component.form.setValue({ firstName: ' Meera ', lastName: 'Nair', email: 'desk@clinic.test', role: 'RECEPTIONIST', phone: '' });
+      component.form.setValue({ firstName: ' Meera ', lastName: 'Nair', email: 'desk@clinic.test', role: 'RECEPTIONIST', phone: '', departmentId: '' });
     }
 
     it('sends the trimmed details with a generated password, then reloads the list', () => {
@@ -148,7 +148,7 @@ describe('UserListComponent', () => {
       expect(component.form.controls.role.enabled).toBe(true);
       component.form.patchValue({ firstName: ' Asha ', role: 'NURSE' });
       component.submit();
-      expect(service['updateUser']).toHaveBeenCalledWith('u1', { firstName: 'Asha', lastName: 'Nair', role: 'NURSE' });
+      expect(service['updateUser']).toHaveBeenCalledWith('u1', { firstName: 'Asha', lastName: 'Nair', role: 'NURSE', customRoleId: null });
       expect(service['createUser']).not.toHaveBeenCalled();
       expect(component.showForm).toBe(false);
       expect(component.editing).toBeNull();

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -57,7 +58,7 @@ describe('AppointmentCalendar', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: AppointmentService, useValue: service },
-        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: AuthService, useValue: fakeAuth(role) },
         { provide: ToastService, useValue: toast },
         { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: { snapshot: { pathFromRoot: [{ paramMap: { get: (k: string) => (k === 'hospitalCode' ? 'sai-clinic' : null) } }] } } },

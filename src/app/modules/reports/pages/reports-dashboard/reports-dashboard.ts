@@ -1,6 +1,7 @@
 import { Component, inject, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReportService } from '../../../../core/services/report.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { ReportStore } from '../../store/report.store';
 
@@ -14,6 +15,7 @@ export class ReportsDashboard implements OnInit {
   readonly store = inject(ReportStore);
   private reportService = inject(ReportService);
   private toastService = inject(ToastService);
+  private auth = inject(AuthService);
 
   readonly maxAppointmentCount = computed(() => {
     const trends = this.store.appointmentTrends();
@@ -36,15 +38,20 @@ export class ReportsDashboard implements OnInit {
     return Math.max(...docs.map((d) => d.revenueInPaisa));
   });
 
+  /** Revenue, bills and per-doctor billing need FINANCE_REPORTS; operations reports do not. */
+  get finance(): boolean {
+    return this.auth.can('FINANCE_REPORTS');
+  }
+
   ngOnInit(): void {
-    this.store.loadAll();
+    this.store.loadAll(this.finance);
   }
 
   refresh(): void {
-    this.store.loadAll();
+    this.store.loadAll(this.finance);
   }
 
-  formatPaisa(paisa: number | undefined): string {
+  formatPaisa(paisa: number | null | undefined): string {
     if (!paisa) return '₹0';
     return '₹' + (paisa / 100).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   }

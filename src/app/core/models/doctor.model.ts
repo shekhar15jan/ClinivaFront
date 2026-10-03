@@ -10,6 +10,16 @@ export interface Doctor {
   email?: string;
   profilePhotoUrl?: string;
   isActive: boolean;
+  /** The department the doctor works in; none means clinic-wide. */
+  departmentId?: string | null;
+  departmentName?: string | null;
+}
+
+/** The doctors list: search by name or specialization, and filters (any left out). */
+export interface DoctorFilter {
+  q?: string;
+  specialization?: string;
+  departmentId?: string;
 }
 
 export interface AvailabilityDto {

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Doctor, DoctorWithSlotsResponse, AvailabilityDto, UpdateAvailabilityRequest } from '../models/doctor.model';
+import { Doctor, DoctorFilter, DoctorWithSlotsResponse, AvailabilityDto, UpdateAvailabilityRequest } from '../models/doctor.model';
 import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -16,15 +16,25 @@ export class DoctorService {
   getDoctors(
     page = 0,
     size = 20,
+    filter: DoctorFilter = {},
   ): Observable<ApiResponse<PagedResponse<Doctor>>> {
+    let params = new HttpParams().set('page', page).set('size', size).set('sort', 'fullName,asc');
+    for (const [key, value] of Object.entries(filter)) {
+      if (value) params = params.set(key, value);
+    }
     return this.http
-      .get<ApiResponse<RawPagedResponse<Doctor>>>(`${this.apiUrl}?page=${page}&size=${size}`)
+      .get<ApiResponse<RawPagedResponse<Doctor>>>(this.apiUrl, { params })
       .pipe(
         map((response) => ({
           ...response,
           data: PagedResponse.from(response.data),
         })),
       );
+  }
+
+  /** The specializations the clinic's doctors have, for the filter. */
+  getSpecializations(): Observable<string[]> {
+    return this.http.get<ApiResponse<string[]>>(`${this.apiUrl}/specializations`).pipe(map((res) => res.data ?? []));
   }
 
   getDoctorsWithSlots(date: string): Observable<ApiResponse<DoctorWithSlotsResponse[]>> {

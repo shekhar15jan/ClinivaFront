@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { ReportsDashboard } from './reports-dashboard';
 import { ReportService } from '../../../../core/services/report.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse } from '../../../../core/models/common.model';
@@ -19,6 +21,7 @@ describe('ReportsDashboard', () => {
       providers: [
         { provide: ReportService, useValue: { getDashboardStats: vi.fn().mockReturnValue(of(mockStats)), getAppointmentTrends: vi.fn().mockReturnValue(of(mockTrends)), getRevenueReport: vi.fn().mockReturnValue(of(mockRevenue)), getDoctorPerformance: vi.fn().mockReturnValue(of(mockDoctors)), getBillsStatus: vi.fn().mockReturnValue(of(mockBills)), exportReportPdf: vi.fn().mockReturnValue(of(new Blob())) } },
         { provide: ToastService, useValue: { success: vi.fn(), error: vi.fn(), info: vi.fn() } },
+        { provide: AuthService, useValue: fakeAuth('ADMIN') },
       ],
     });
     return TestBed.runInInjectionContext(() => new ReportsDashboard());

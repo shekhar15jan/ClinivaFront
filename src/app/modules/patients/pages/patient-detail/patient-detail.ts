@@ -1,11 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { PatientService } from '../../../../core/services/patient.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
-import { Patient, VisitItem } from '../../../../core/models/patient.model';
+import { ClinicalAccess, Patient, VisitItem } from '../../../../core/models/patient.model';
 import { hospitalCodeFrom } from '../../../../core/utils/route.util';
 
 export const BLOOD_GROUPS = [
@@ -24,7 +25,7 @@ export const bloodGroupLabel = (code?: string): string => BLOOD_GROUPS.find(([c]
   selector: 'app-patient-detail',
   templateUrl: './patient-detail.html',
   styleUrl: './patient-detail.scss',
-  imports: [RouterLink, FormsModule, ConfirmDialogComponent],
+  imports: [RouterLink, FormsModule, ConfirmDialogComponent, DatePipe],
 })
 export class PatientDetail implements OnInit {
   private route = inject(ActivatedRoute);
@@ -38,6 +39,12 @@ export class PatientDetail implements OnInit {
 
   patientId = '';
   patient: Patient | null = null;
+  /** Department access for this patient (clinical staff only); null until known or when not clinical staff. */
+  access: ClinicalAccess | null = null;
+  emergencyOpen = false;
+  emergencyReason = '';
+  emergencyError = '';
+  openingEmergency = false;
   visits: VisitItem[] = [];
   visitsError = '';
   isLoading = false;
@@ -53,23 +60,26 @@ export class PatientDetail implements OnInit {
     return this.auth.currentUserValue?.role ?? '';
   }
 
-  /** The API lets the front desk edit patients and only administrators delete them. */
+  /** Editing patients needs PATIENT_EDIT; deleting them PATIENT_ADMIN. */
   get canEdit(): boolean {
-    return ['ADMIN', 'RECEPTIONIST'].includes(this.role);
+    return this.auth.can('PATIENT_EDIT');
   }
 
-  /** Clinical history is for clinical staff and administrators; the front desk works with registration details. */
+  /**
+   * Clinical history is for staff with clinical access, and (when the clinic uses department access) only for
+   * patients in their care; others work with registration details.
+   */
   get seesClinical(): boolean {
-    return this.role !== 'RECEPTIONIST';
+    return this.auth.can('CLINICAL_VIEW') && (this.access?.clinical ?? true);
   }
 
   get canDelete(): boolean {
-    return this.role === 'ADMIN';
+    return this.auth.can('PATIENT_ADMIN');
   }
 
   /** Visit history (which visits had a consultation, prescription and bill) is for all clinic staff. */
   get canSeeVisits(): boolean {
-    return ['ADMIN', 'DOCTOR', 'RECEPTIONIST', 'NURSE'].includes(this.role);
+    return this.auth.can('PATIENT_VIEW');
   }
 
   ngOnInit(): void {
@@ -93,6 +103,12 @@ export class PatientDetail implements OnInit {
         this.loadError = err?.status === 404 ? 'This patient could not be found.' : err?.error?.message || 'The patient could not be loaded.';
       },
     });
+    if (this.auth.can('CLINICAL_VIEW')) {
+      this.patientService.getClinicalAccess(id).subscribe({
+        next: (res) => (this.access = res.success ? res.data : null),
+        error: () => (this.access = null),
+      });
+    }
     if (this.canSeeVisits) {
       this.patientService.getPatientVisits(id).subscribe({
         next: (res) => {
@@ -103,6 +119,30 @@ export class PatientDetail implements OnInit {
         },
       });
     }
+  }
+
+  /** A real reason is required: it is what the reviewer reads. */
+  get emergencyReasonValid(): boolean {
+    return this.emergencyReason.trim().length >= 10;
+  }
+
+  openEmergencyAccess(): void {
+    if (!this.patientId || !this.emergencyReasonValid || this.openingEmergency) return;
+    this.openingEmergency = true;
+    this.emergencyError = '';
+    this.patientService.openEmergencyAccess(this.patientId, this.emergencyReason.trim()).subscribe({
+      next: () => {
+        this.openingEmergency = false;
+        this.emergencyOpen = false;
+        this.emergencyReason = '';
+        this.toast.warning('Emergency access opened. It is logged and will be reviewed.');
+        this.load(this.patientId);
+      },
+      error: (err) => {
+        this.openingEmergency = false;
+        this.emergencyError = err?.error?.message || 'Emergency access could not be opened.';
+      },
+    });
   }
 
   startEdit(): void {

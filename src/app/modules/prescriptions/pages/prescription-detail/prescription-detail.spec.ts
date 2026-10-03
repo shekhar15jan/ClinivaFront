@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { PrescriptionDetail } from './prescription-detail';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BillingService } from '../../../../core/services/billing.service';
@@ -37,7 +38,7 @@ describe('PrescriptionDetail', () => {
           },
         },
         { provide: BillingService, useValue: billing },
-        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: AuthService, useValue: fakeAuth(role) },
         { provide: Router, useValue: router },
         { provide: ToastService, useValue: toast },
         {

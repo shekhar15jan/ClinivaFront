@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Patient, PatientVisitResponse } from '../models/patient.model';
+import { ClinicalAccess, Patient, PatientVisitResponse } from '../models/patient.model';
 import { ApiResponse, PagedResponse, RawPagedResponse } from '../models/common.model';
 import { environment } from '../../../environments/environment';
 
@@ -42,6 +42,16 @@ export class PatientService {
 
   getPatientVisits(id: string): Observable<ApiResponse<PatientVisitResponse>> {
     return this.http.get<ApiResponse<PatientVisitResponse>>(`${this.apiUrl}/${id}/visits`);
+  }
+
+  /** Whether the signed-in clinician sees this patient's clinical record (department access). */
+  getClinicalAccess(id: string): Observable<ApiResponse<ClinicalAccess>> {
+    return this.http.get<ApiResponse<ClinicalAccess>>(`${this.apiUrl}/${id}/clinical-access`);
+  }
+
+  /** Opens the record of a patient outside the clinician's department, with a reason; it is logged and reviewed. */
+  openEmergencyAccess(id: string, reason: string): Observable<ApiResponse<ClinicalAccess>> {
+    return this.http.post<ApiResponse<ClinicalAccess>>(`${this.apiUrl}/${id}/emergency-access`, { reason });
   }
 
   /** The signed-in patient's own record (portal). */

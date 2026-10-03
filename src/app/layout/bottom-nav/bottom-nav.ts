@@ -55,11 +55,11 @@ export class BottomNav {
    */
   readonly navItems = computed(() => {
     if (this.isPatient()) return this.patientItems;
-    const role = this.authService.currentUserValue?.role ?? '';
+    const permissions = this.authService.currentUserValue?.permissions ?? [];
     const modules = this.license.activeModules();
     return this.staffItems.filter((item) => {
       const rule = STAFF_NAV.find((n) => n.route === item.route);
-      return !rule || canSee(rule, role, modules);
+      return !rule || canSee(rule, permissions, modules);
     });
   });
 }

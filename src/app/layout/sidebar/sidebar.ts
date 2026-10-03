@@ -40,6 +40,6 @@ export class Sidebar {
 
   isVisible(item: NavItem) {
     if (this.isPatient()) return true;
-    return canSee(item, this.userRole(), this.activeModules());
+    return canSee(item, this.authService.currentUserValue?.permissions ?? [], this.activeModules());
   }
 }

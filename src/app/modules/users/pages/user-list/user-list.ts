@@ -7,6 +7,11 @@ import { ToastService } from '../../../../shared/components/toast/toast.service'
 import { UserManagementService } from '../../../../core/services/user-management.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ManagedRole, ManagedUser } from '../../../../core/models/user-management.model';
+import { RoleService } from '../../../../core/services/role.service';
+import { DepartmentService } from '../../../../core/services/department.service';
+import { Department } from '../../../../core/models/department.model';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 /** A password nobody has to remember: staff sign in with an emailed code, and Reset password issues a new one. */
 export function generatePassword(length = 16): string {
@@ -69,6 +74,7 @@ export function generatePassword(length = 16): string {
                 <th class="px-4 py-3">Name</th>
                 <th class="px-4 py-3">Email</th>
                 <th class="px-4 py-3">Role</th>
+                <th class="px-4 py-3">Department</th>
                 <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3">Actions</th>
               </tr>
@@ -78,7 +84,8 @@ export function generatePassword(length = 16): string {
                 <tr class="border-t border-gray-100" [attr.data-email]="user.email">
                   <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ nameOf(user) }}</td>
                   <td class="px-4 py-3 text-sm text-gray-600">{{ user.email }}</td>
-                  <td class="px-4 py-3 text-sm text-gray-600">{{ user.roles }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-600">{{ roleNameOf(user) }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-600">{{ user.departmentName || (user.roles === 'PATIENT' ? '' : 'Clinic-wide') }}</td>
                   <td class="px-4 py-3">
                     <span
                       class="px-2.5 py-1 rounded-full text-xs font-medium"
@@ -148,8 +155,17 @@ export function generatePassword(length = 16): string {
               <div>
                 <label for="user-role" class="block text-sm font-medium text-gray-900 mb-1">Role *</label>
                 <select id="user-role" formControlName="role" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white disabled:bg-gray-50">
-                  @for (role of roles; track role.value) {
-                    <option [value]="role.value">{{ role.label }}</option>
+                  <optgroup label="Built-in roles">
+                    @for (role of roles; track role.value) {
+                      <option [value]="role.value">{{ role.label }}</option>
+                    }
+                  </optgroup>
+                  @if (customRoles.length) {
+                    <optgroup label="Your roles">
+                      @for (role of customRoles; track role.value) {
+                        <option [value]="role.value">{{ role.label }}</option>
+                      }
+                    </optgroup>
                   }
                 </select>
               </div>
@@ -160,6 +176,17 @@ export function generatePassword(length = 16): string {
                 </div>
               }
             </div>
+            @if (departments.length) {
+              <div>
+                <label for="user-department" class="block text-sm font-medium text-gray-900 mb-1">Department</label>
+                <select id="user-department" formControlName="departmentId" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white">
+                  <option value="">Clinic-wide (no department)</option>
+                  @for (d of departments; track d.id) {
+                    <option [value]="d.id">{{ d.name }}</option>
+                  }
+                </select>
+              </div>
+            }
             @if (formError) {
               <p class="text-sm text-red-600" id="user-form-error">{{ formError }}</p>
             }
@@ -208,13 +235,21 @@ export class UserListComponent implements OnInit {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
+  private roleService = inject(RoleService);
+  private departmentService = inject(DepartmentService);
 
   readonly roles: { value: ManagedRole; label: string }[] = [
-    { value: 'RECEPTIONIST', label: 'Receptionist' },
+    { value: 'RECEPTIONIST', label: 'Front desk' },
     { value: 'DOCTOR', label: 'Doctor' },
     { value: 'NURSE', label: 'Nurse' },
-    { value: 'ADMIN', label: 'Administrator' },
+    { value: 'PHARMACIST', label: 'Pharmacist' },
+    { value: 'ACCOUNTANT', label: 'Accountant' },
+    { value: 'HOSPITAL_ADMIN', label: 'Hospital admin' },
+    { value: 'ADMIN', label: 'Owner' },
   ];
+  /** The clinic's own roles, as `custom:<id>` choices. */
+  customRoles: { value: string; label: string; baseRole: ManagedRole }[] = [];
+  departments: Department[] = [];
 
   users: ManagedUser[] = [];
   totalElements = 0;
@@ -232,8 +267,9 @@ export class UserListComponent implements OnInit {
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email]],
-    role: ['RECEPTIONIST' as ManagedRole, Validators.required],
+    role: ['RECEPTIONIST' as string, Validators.required],
     phone: [''],
+    departmentId: [''],
   });
 
   toDeactivate: ManagedUser | null = null;
@@ -242,6 +278,43 @@ export class UserListComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    // Custom roles and departments are optional extras: a clinic without them still manages staff.
+    forkJoin({
+      roles: this.roleService.getOverview().pipe(catchError(() => of(null))),
+      departments: this.departmentService.getDepartments().pipe(catchError(() => of([] as Department[]))),
+    }).subscribe(({ roles, departments }) => {
+      this.customRoles = (roles?.customRoles ?? []).map((r) => ({ value: `custom:${r.id}`, label: r.name, baseRole: r.baseRole }));
+      this.departments = departments;
+    });
+  }
+
+  /** What the clinic calls the account's role. */
+  roleNameOf(user: ManagedUser): string {
+    return user.customRoleName || this.roles.find((r) => r.value === user.roles)?.label || user.roles;
+  }
+
+  /** The role choice as the API takes it: a built-in role, or a custom role with its base role. */
+  private roleChoice(value: string): { role: string; customRoleId: string | null } {
+    if (value.startsWith('custom:')) {
+      const custom = this.customRoles.find((r) => r.value === value);
+      return { role: custom?.baseRole ?? 'NURSE', customRoleId: value.slice('custom:'.length) };
+    }
+    return { role: value, customRoleId: null };
+  }
+
+  /** Places the account in its department after it is saved, when that changed. */
+  private saveDepartment(userId: string, before: string | null | undefined, after: string, done: () => void): void {
+    if ((before ?? '') === after || !this.departments.length) {
+      done();
+      return;
+    }
+    this.departmentService.assignStaff(userId, after || null).subscribe({
+      next: done,
+      error: (err) => {
+        done();
+        this.toast.error(err?.error?.message || 'The department could not be saved.');
+      },
+    });
   }
 
   load(): void {
@@ -278,7 +351,7 @@ export class UserListComponent implements OnInit {
   openForm(): void {
     this.editing = null;
     this.form.enable();
-    this.form.reset({ firstName: '', lastName: '', email: '', role: 'RECEPTIONIST', phone: '' });
+    this.form.reset({ firstName: '', lastName: '', email: '', role: 'RECEPTIONIST', phone: '', departmentId: '' });
     this.formError = '';
     this.showForm = true;
   }
@@ -290,8 +363,9 @@ export class UserListComponent implements OnInit {
       firstName: user.firstName ?? '',
       lastName: user.lastName ?? '',
       email: user.email,
-      role: user.roles as ManagedRole,
+      role: user.customRoleId ? `custom:${user.customRoleId}` : user.roles,
       phone: '',
+      departmentId: user.departmentId ?? '',
     });
     this.form.controls.email.disable();
     // Nobody changes their own role, so a clinic cannot lose its only administrator by accident.
@@ -312,14 +386,16 @@ export class UserListComponent implements OnInit {
     if (this.editing) {
       const editing = this.editing;
       this.service
-        .updateUser(editing.id, { firstName: value.firstName.trim(), lastName: value.lastName.trim(), role: value.role })
+        .updateUser(editing.id, { firstName: value.firstName.trim(), lastName: value.lastName.trim(), ...this.roleChoice(value.role) })
         .subscribe({
           next: (user) => {
-            this.isSaving = false;
-            this.showForm = false;
-            this.editing = null;
-            this.toast.success(`${user.email} updated`);
-            this.load();
+            this.saveDepartment(editing.id, editing.departmentId, value.departmentId, () => {
+              this.isSaving = false;
+              this.showForm = false;
+              this.editing = null;
+              this.toast.success(`${user.email} updated`);
+              this.load();
+            });
           },
           error: (err) => {
             this.isSaving = false;
@@ -333,16 +409,18 @@ export class UserListComponent implements OnInit {
         firstName: value.firstName.trim(),
         lastName: value.lastName.trim(),
         email: value.email.trim(),
-        role: value.role,
+        ...(this.roleChoice(value.role) as { role: ManagedRole; customRoleId: string | null }),
         phone: value.phone.trim() || undefined,
         password: generatePassword(),
       })
       .subscribe({
         next: (user) => {
-          this.isSaving = false;
-          this.showForm = false;
-          this.toast.success(`${user.email} added`);
-          this.load();
+          this.saveDepartment(user.id, null, value.departmentId, () => {
+            this.isSaving = false;
+            this.showForm = false;
+            this.toast.success(`${user.email} added`);
+            this.load();
+          });
         },
         error: (err) => {
           this.isSaving = false;

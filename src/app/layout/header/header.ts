@@ -25,10 +25,9 @@ export class Header implements OnInit, OnDestroy {
     return this.router.url.split('?')[0].split('/').filter(Boolean)[0] ?? '';
   }
 
-  /** "New Appointment" is offered to those who book (front desk, administrators) when the plan has appointments. */
+  /** "New Appointment" is offered to those who book (APPOINTMENT_MANAGE) when the plan has appointments. */
   get canBook(): boolean {
-    const role = this.auth.currentUserValue?.role;
-    return (role === 'ADMIN' || role === 'RECEPTIONIST') && this.license.activeModules().includes('APPOINTMENT');
+    return this.auth.can('APPOINTMENT_MANAGE') && this.license.activeModules().includes('APPOINTMENT');
   }
 
   newAppointment(): void {

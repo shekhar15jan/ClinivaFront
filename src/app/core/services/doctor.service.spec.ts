@@ -41,7 +41,7 @@ describe('DoctorService', () => {
         expect(res.data.content.length).toBe(1);
       });
 
-      const req = httpMock.expectOne(`${apiUrl}?page=0&size=20`);
+      const req = httpMock.expectOne((r) => r.url === apiUrl && r.params.get('page') === '0' && r.params.get('size') === '20');
       expect(req.request.method).toBe('GET');
       req.flush(mockResponse);
     });

@@ -1,9 +1,20 @@
+/** Clinic counts. The money (pendingBills, totalRevenueInPaisa) is null for staff without finance reports. */
 export interface DashboardStats {
   totalPatients: number;
   todayAppointments: number;
-  pendingBills: number;
-  totalRevenueInPaisa: number;
+  pendingBills: number | null;
+  totalRevenueInPaisa: number | null;
   activeDoctors: number;
+}
+
+/** A doctor's own numbers. */
+export interface MyPerformance {
+  todayAppointments: number;
+  consultationsThisMonth: number;
+  consultationsThisYear: number;
+  patientsThisYear: number;
+  billedThisMonthInPaisa: number;
+  billedThisYearInPaisa: number;
 }
 
 export interface AppointmentTrend {

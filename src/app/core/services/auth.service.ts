@@ -57,6 +57,23 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  /** Whether the signed-in user has this permission (e.g. 'BILLING'). The API checks it too. */
+  can(permission: string): boolean {
+    return this.currentUserValue?.permissions?.includes(permission) ?? false;
+  }
+
+  private static userFrom(rawUser: Record<string, unknown> | undefined): User {
+    const role = (rawUser?.['role'] as string) || '';
+    return {
+      id: (rawUser?.['id'] as string) || '',
+      email: (rawUser?.['email'] as string) || '',
+      role,
+      roleName: (rawUser?.['roleName'] as string) || role,
+      permissions: (rawUser?.['permissions'] as string[]) || [],
+      profile: rawUser?.['profile'] as Record<string, string> | undefined,
+    };
+  }
+
   login(email: string, password: string): Observable<ApiResponse<{ requiresOtp: boolean; message: string }>> {
     return this.http.post<ApiResponse<{ requiresOtp: boolean; message: string }>>(`${this.apiUrl}/auth/login`, { email, password });
   }
@@ -95,12 +112,7 @@ export class AuthService {
           const authResponse: AuthResponse = {
             token: (raw['token'] as string) || (raw['accessToken'] as string) || '',
             refreshToken: (raw['refreshToken'] as string) || '',
-            user: {
-              id: (rawUser?.['id'] as string) || '',
-              email: (rawUser?.['email'] as string) || '',
-              role: (rawUser?.['role'] as string) || '',
-              profile: rawUser?.['profile'] as Record<string, string> | undefined,
-            },
+            user: AuthService.userFrom(rawUser),
             tenant: {
               id: (rawTenant?.['id'] as string) || '',
               name: (rawTenant?.['name'] as string) || '',
@@ -158,12 +170,7 @@ export class AuthService {
     return {
       token: (raw['token'] as string) || (raw['accessToken'] as string) || '',
       refreshToken: (raw['refreshToken'] as string) || '',
-      user: {
-        id: (rawUser?.['id'] as string) || '',
-        email: (rawUser?.['email'] as string) || '',
-        role: (rawUser?.['role'] as string) || '',
-        profile: rawUser?.['profile'] as Record<string, string> | undefined,
-      },
+      user: AuthService.userFrom(rawUser),
       tenant: {
         id: (rawTenant?.['id'] as string) || '',
         name: (rawTenant?.['name'] as string) || '',

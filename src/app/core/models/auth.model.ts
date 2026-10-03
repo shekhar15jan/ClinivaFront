@@ -2,6 +2,10 @@ export interface User {
   id: string;
   email: string;
   role: string;
+  /** What the clinic calls the role: a custom role's name (e.g. "Senior nurse") or the built-in one. */
+  roleName?: string;
+  /** What the API lets this user do (e.g. BILLING, CLINICAL_VIEW); the screens offer only these. */
+  permissions?: string[];
   profile?: Record<string, string>;
   tenantId?: string;
   tenantCode?: string;

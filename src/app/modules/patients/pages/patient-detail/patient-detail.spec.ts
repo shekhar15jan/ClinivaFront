@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -25,21 +26,23 @@ describe('bloodGroupLabel', () => {
 describe('PatientDetail', () => {
   let service: Record<string, ReturnType<typeof vi.fn>>;
   let router: { navigate: ReturnType<typeof vi.fn> };
-  let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+  let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; warning: ReturnType<typeof vi.fn> };
 
   function create(role = 'ADMIN') {
     service = {
       getPatientById: vi.fn().mockReturnValue(of(ok(patient))),
+      getClinicalAccess: vi.fn().mockReturnValue(of(ok({ clinical: true, restricted: false, emergencyUntil: null }))),
+      openEmergencyAccess: vi.fn().mockReturnValue(of(ok({ clinical: true, restricted: false, emergencyUntil: '2026-10-03T22:00:00' }))),
       getPatientVisits: vi.fn().mockReturnValue(of(ok({ patientId: 'p1', patientName: 'Rahul', visits: [{ appointmentId: 'a1', appointmentDate: '2026-09-20', appointmentTime: '09:00:00', doctorName: 'Dr. Anita', status: 'COMPLETED' }] }))),
       updatePatient: vi.fn().mockImplementation((_id: string, body: Partial<Patient>) => of(ok({ ...patient, ...body }))),
       deletePatient: vi.fn().mockReturnValue(of(ok(null))),
     };
     router = { navigate: vi.fn() };
-    toast = { success: vi.fn(), error: vi.fn() };
+    toast = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         { provide: PatientService, useValue: service },
-        { provide: AuthService, useValue: { currentUserValue: { role } } },
+        { provide: AuthService, useValue: fakeAuth(role) },
         { provide: Router, useValue: router },
         { provide: ToastService, useValue: toast },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'p1' }), snapshot: { pathFromRoot: [{ paramMap: { get: (k: string) => (k === 'hospitalCode' ? 'sai-clinic' : null) } }] } } },
@@ -95,6 +98,37 @@ describe('PatientDetail', () => {
   it('offers a doctor neither edit nor delete', () => {
     const doctor = create('DOCTOR');
     expect([doctor.canEdit, doctor.canDelete]).toEqual([false, false]);
+  });
+
+  describe('department access', () => {
+    it('shows the record to a clinician whose department cares for the patient', () => {
+      const component = create('DOCTOR');
+      expect(service['getClinicalAccess']).toHaveBeenCalledWith('p1');
+      expect(component.seesClinical).toBe(true);
+    });
+
+    it('hides the history from another department, and opens it only with a real reason', () => {
+      const component = create('DOCTOR');
+      service['getClinicalAccess'].mockReturnValue(of(ok({ clinical: false, restricted: true, emergencyUntil: null })));
+      component.load('p1');
+      expect(component.access?.restricted).toBe(true);
+      expect(component.seesClinical).toBe(false);
+
+      component.emergencyReason = 'urgent';
+      expect(component.emergencyReasonValid).toBe(false);
+      component.openEmergencyAccess();
+      expect(service['openEmergencyAccess']).not.toHaveBeenCalled();
+
+      component.emergencyReason = 'Collapsed in the waiting area, on warfarin';
+      component.openEmergencyAccess();
+      expect(service['openEmergencyAccess']).toHaveBeenCalledWith('p1', 'Collapsed in the waiting area, on warfarin');
+      expect(toast.warning).toHaveBeenCalled();
+    });
+
+    it('does not ask staff without clinical access', () => {
+      create('RECEPTIONIST');
+      expect(service['getClinicalAccess']).not.toHaveBeenCalled();
+    });
   });
 
   describe('editing', () => {

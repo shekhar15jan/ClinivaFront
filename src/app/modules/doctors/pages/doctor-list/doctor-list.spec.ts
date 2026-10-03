@@ -1,4 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { DepartmentService } from '../../../../core/services/department.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { fakeAuth } from '../../../../testing/role-permissions';
 import { DoctorList } from './doctor-list';
 import { DoctorService } from '../../../../core/services/doctor.service';
 import { of, throwError } from 'rxjs';
@@ -30,7 +33,12 @@ describe('DoctorList', () => {
   function createComponent(overrides?: Partial<DoctorService>) {
     TestBed.configureTestingModule({
       providers: [
-        { provide: DoctorService, useValue: { getDoctors: vi.fn().mockReturnValue(of(mockResponse)), ...overrides } },
+        {
+          provide: DoctorService,
+          useValue: { getDoctors: vi.fn().mockReturnValue(of(mockResponse)), getSpecializations: vi.fn().mockReturnValue(of(['Cardiology'])), ...overrides },
+        },
+        { provide: DepartmentService, useValue: { getDepartments: vi.fn().mockReturnValue(of([])) } },
+        { provide: AuthService, useValue: fakeAuth('ADMIN') },
       ],
     });
     return TestBed.runInInjectionContext(() => new DoctorList());

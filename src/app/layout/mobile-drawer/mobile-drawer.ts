@@ -54,7 +54,7 @@ import { STAFF_NAV, canSee } from '../nav-items';
                   </div>
                   <div class="flex-1 overflow-hidden">
                     <p class="text-sm font-medium text-on-surface truncate">{{ user.profile?.['firstName'] || user.email }}</p>
-                    <p class="text-xs text-outline truncate">{{ user.role }}</p>
+                    <p class="text-xs text-outline truncate">{{ user.roleName || user.role }}</p>
                   </div>
                 </div>
                 <!-- Ends the session (it only went to a login address before, leaving the session alive on shared devices). -->
@@ -105,6 +105,6 @@ export class MobileDrawer {
   }
 
   isVisible(item: (typeof STAFF_NAV)[number]): boolean {
-    return canSee(item, this.authService.currentUserValue?.role ?? '', this.activeModules());
+    return canSee(item, this.authService.currentUserValue?.permissions ?? [], this.activeModules());
   }
 }

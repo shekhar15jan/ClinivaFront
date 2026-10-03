@@ -32,16 +32,40 @@
         <p class="text-label-sm text-outline uppercase tracking-wider">Total patients</p>
         <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2" id="stat-patients">{{ stats.totalPatients }}</p>
       </div>
-      <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant">
-        <p class="text-label-sm text-outline uppercase tracking-wider">Unpaid bills</p>
-        <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2" id="stat-bills">{{ stats.pendingBills }}</p>
-      </div>
+      @if (stats.pendingBills !== null) {
+        <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant">
+          <p class="text-label-sm text-outline uppercase tracking-wider">Unpaid bills</p>
+          <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2" id="stat-bills">{{ stats.pendingBills }}</p>
+        </div>
+      }
       <div class="bg-white rounded-xl shadow-card p-4 sm:p-5 border border-outline-variant">
         <p class="text-label-sm text-outline uppercase tracking-wider">Active doctors</p>
         <p class="text-headline-md sm:text-display-lg text-on-surface mt-1 sm:mt-2" id="stat-doctors">{{ stats.activeDoctors }}</p>
       </div>
     }
   </div>
+
+  @if (mine) {
+    <!-- A doctor's own numbers: their work and what their visits were billed, not the clinic's money. -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4" id="my-performance">
+      <div class="rounded-xl p-4 border border-blue-200 bg-blue-50">
+        <p class="text-label-sm text-blue-800 uppercase tracking-wider">Seen this month</p>
+        <p class="text-headline-md text-blue-950 mt-1" id="mine-month">{{ mine.consultationsThisMonth }}</p>
+      </div>
+      <div class="rounded-xl p-4 border border-emerald-200 bg-emerald-50">
+        <p class="text-label-sm text-emerald-800 uppercase tracking-wider">Patients this year</p>
+        <p class="text-headline-md text-emerald-950 mt-1" id="mine-patients">{{ mine.patientsThisYear }}</p>
+      </div>
+      <div class="rounded-xl p-4 border border-amber-200 bg-amber-50">
+        <p class="text-label-sm text-amber-900 uppercase tracking-wider">Billed this month</p>
+        <p class="text-headline-md text-amber-950 mt-1" id="mine-billed">₹{{ rupees(mine.billedThisMonthInPaisa) }}</p>
+      </div>
+      <div class="rounded-xl p-4 border border-violet-200 bg-violet-50">
+        <p class="text-label-sm text-violet-800 uppercase tracking-wider">Billed this year</p>
+        <p class="text-headline-md text-violet-950 mt-1">₹{{ rupees(mine.billedThisYearInPaisa) }}</p>
+      </div>
+    </div>
+  }
 
   <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
     <div class="xl:col-span-2 space-y-4 sm:space-y-6">
