@@ -126,7 +126,7 @@ test.describe('On a phone, real backend', () => {
     await drawer.getByRole('button', { name: 'Close menu' }).click();
 
     await screensOpen(doctor, problems, code,
-      ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'reports']);
+      ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines']);
     await doctor.goto(`${code}/prescriptions`);
     await expect(doctor.getByText(visit.patientName).filter({ visible: true }).first()).toBeVisible({ timeout: 15000 });
     await context.close();

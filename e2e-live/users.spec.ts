@@ -22,7 +22,7 @@ test.describe('User management, real backend', { tag: '@desktop' }, () => {
     await addStaffUser(page, admin.hospitalCode, { firstName: 'Meera', lastName: 'Nair', email, role: 'RECEPTIONIST' });
     const row = page.locator('tr', { hasText: email });
     await expect(row).toContainText('Meera Nair', { timeout: 15000 });
-    await expect(row).toContainText('RECEPTIONIST');
+    await expect(row).toContainText('Front desk');
     await expect(row).toContainText('Active');
 
     // The same email again is refused with a reason.

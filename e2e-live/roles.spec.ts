@@ -11,16 +11,23 @@ const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 const STAFF_SCREENS = [
   'dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'billing', 'payments',
   'medicines', 'reports', 'health-packages', 'contacts', 'reviews', 'users', 'audit-logs', 'settings',
+  'departments', 'roles', 'emergency-access',
 ] as const;
 type Screen = (typeof STAFF_SCREENS)[number];
 
-const ALLOWED: Record<'ADMIN' | 'DOCTOR' | 'NURSE' | 'RECEPTIONIST', Screen[]> = {
+const ROLES = ['ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'ACCOUNTANT', 'PHARMACIST'] as const;
+const ALLOWED: Record<(typeof ROLES)[number], Screen[]> = {
   ADMIN: [...STAFF_SCREENS],
-  DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'reports',
-    'health-packages'],
+  // Clinic reports are finance and operations; a doctor's own numbers are on the dashboard.
+  DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'health-packages'],
   // Nurses read the day's queue and the prescriptions they give; they do not book or prescribe.
   NURSE: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'health-packages'],
   RECEPTIONIST: ['dashboard', 'patients', 'doctors', 'appointments', 'billing', 'payments', 'medicines', 'health-packages'],
+  // Runs the hospital: no money, no clinical records, no staff security.
+  HOSPITAL_ADMIN: ['dashboard', 'patients', 'doctors', 'appointments', 'medicines', 'reports', 'health-packages',
+    'departments', 'contacts', 'reviews'],
+  ACCOUNTANT: ['dashboard', 'patients', 'doctors', 'billing', 'payments', 'medicines', 'reports', 'health-packages'],
+  PHARMACIST: ['dashboard', 'patients', 'doctors', 'prescriptions', 'medicines', 'health-packages'],
 };
 const PATIENT_SCREENS = ['patient/dashboard', 'patient/appointments', 'patient/prescriptions', 'patient/bills', 'patient/profile'];
 
@@ -57,7 +64,7 @@ async function refused(page: Page, code: string, route: string) {
   await expect(page, `${route} is not opened for this role`).not.toHaveURL(new RegExp(`/${code}/${route}$`), { timeout: 15000 });
 }
 
-for (const role of ['ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST'] as const) {
+for (const role of ROLES) {
   test(`${role.toLowerCase()}: offered exactly their screens, each works, the rest stay closed`, { tag: '@desktop' }, async ({ page, request, browser }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     let staff = page;

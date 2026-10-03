@@ -289,7 +289,8 @@ export async function addMedicine(page: Page, hospitalCode: string, name: string
 export async function addStaffUser(
   page: Page,
   hospitalCode: string,
-  user: { firstName: string; lastName: string; email: string; role: 'RECEPTIONIST' | 'DOCTOR' | 'NURSE' | 'ADMIN' },
+  // A built-in role by code, or a clinic's own role by its name ({ label }).
+  user: { firstName: string; lastName: string; email: string; role: string | { label: string } },
 ): Promise<void> {
   await page.goto(`${hospitalCode}/users`);
   await page.locator('#add-user').click();
@@ -297,6 +298,7 @@ export async function addStaffUser(
   await page.fill('#user-last-name', user.lastName);
   await page.fill('#user-email', user.email);
   await page.selectOption('#user-role', user.role);
+  if (typeof user.role !== 'string') await expect(page.locator('#user-role')).not.toHaveValue('RECEPTIONIST');
   const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/users$/.test(r.url()));
   await page.locator('#save-user').click();
   const response = await created;
