@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import {
   FormBuilder,
   FormGroup,
@@ -160,6 +161,8 @@ export class DoctorForm {
   private doctorService = inject(DoctorService);
   private router = inject(Router);
   private departmentService = inject(DepartmentService);
+  /** Departments are a plan module; without it the doctor screens do not mention them. */
+  private readonly hasDepartments = inject(EffectiveLicenseService).activeModules().includes('DEPARTMENT');
 
   doctorForm: FormGroup;
   departments: Department[] = [];
@@ -177,7 +180,9 @@ export class DoctorForm {
       consultationFee: [0, [Validators.required, Validators.min(1)]],
       departmentId: [''],
     });
-    this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
+    if (this.hasDepartments) {
+      this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
+    }
   }
 
   onSubmit() {

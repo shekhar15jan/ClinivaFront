@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -33,6 +34,7 @@ export class PatientDetail implements OnInit {
   private patientService = inject(PatientService);
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  private license = inject(EffectiveLicenseService);
 
   readonly bloodGroups = BLOOD_GROUPS;
   readonly bloodGroupLabel = bloodGroupLabel;
@@ -103,7 +105,7 @@ export class PatientDetail implements OnInit {
         this.loadError = err?.status === 404 ? 'This patient could not be found.' : err?.error?.message || 'The patient could not be loaded.';
       },
     });
-    if (this.auth.can('CLINICAL_VIEW')) {
+    if (this.auth.can('CLINICAL_VIEW') && this.license.activeModules().includes('DEPARTMENT')) {
       this.patientService.getClinicalAccess(id).subscribe({
         next: (res) => (this.access = res.success ? res.data : null),
         error: () => (this.access = null),

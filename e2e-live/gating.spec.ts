@@ -15,7 +15,9 @@ test.describe('What each clinic and role is offered, real backend', { tag: '@des
     for (const route of ['patients', 'doctors', 'appointments', 'users', 'settings']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is offered`).toHaveCount(1, { timeout: 15000 });
     }
-    for (const route of ['billing', 'payments', 'prescriptions', 'consultations', 'medicines', 'reports', 'health-packages', 'contacts', 'reviews']) {
+    // Departments, emergency access and custom roles are hospital modules, not in a clinic plan.
+    for (const route of ['billing', 'payments', 'prescriptions', 'consultations', 'medicines', 'reports', 'health-packages', 'contacts', 'reviews',
+      'departments', 'emergency-access', 'roles']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is not in the plan`).toHaveCount(0);
     }
 
@@ -24,9 +26,11 @@ test.describe('What each clinic and role is offered, real backend', { tag: '@des
     await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
     await expect(page.getByText(/not available in your current plan/i)).toBeVisible();
 
-    // Same for another module outside the plan.
-    await page.goto(`${admin.hospitalCode}/medicines`);
-    await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
+    // Same for other modules outside the plan.
+    for (const route of ['medicines', 'departments', 'roles']) {
+      await page.goto(`${admin.hospitalCode}/${route}`);
+      await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
+    }
   });
 
   test('a receptionist is offered the front desk and nothing the API would refuse', async ({ page, request, browser }) => {

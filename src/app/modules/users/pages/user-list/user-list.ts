@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -237,6 +238,7 @@ export class UserListComponent implements OnInit {
   private fb = inject(FormBuilder);
   private roleService = inject(RoleService);
   private departmentService = inject(DepartmentService);
+  private license = inject(EffectiveLicenseService);
 
   readonly roles: { value: ManagedRole; label: string }[] = [
     { value: 'RECEPTIONIST', label: 'Front desk' },
@@ -279,9 +281,12 @@ export class UserListComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     // Custom roles and departments are optional extras: a clinic without them still manages staff.
+    const modules = this.license.activeModules();
     forkJoin({
-      roles: this.roleService.getOverview().pipe(catchError(() => of(null))),
-      departments: this.departmentService.getDepartments().pipe(catchError(() => of([] as Department[]))),
+      roles: modules.includes('CUSTOM_ROLE') ? this.roleService.getOverview().pipe(catchError(() => of(null))) : of(null),
+      departments: modules.includes('DEPARTMENT')
+        ? this.departmentService.getDepartments().pipe(catchError(() => of([] as Department[])))
+        : of([] as Department[]),
     }).subscribe(({ roles, departments }) => {
       this.customRoles = (roles?.customRoles ?? []).map((r) => ({ value: `custom:${r.id}`, label: r.name, baseRole: r.baseRole }));
       this.departments = departments;

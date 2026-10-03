@@ -91,24 +91,25 @@ export async function provisionTenant(request: APIRequestContext, planCode = 'HM
   expect(hms, 'HMS product registered in CloudSuite').toBeTruthy();
   const planList = (await (await request.get(`${CLOUDSUITE}/platform/plans`, { headers, params: { productId: hms.id } })).json()).data;
   const plans: Record<string, string> = Object.fromEntries(planList.map((p: any) => [p.code, p.id]));
-  if (planCode === 'HMS_FULL' && !plans['HMS_FULL']) {
-    // A plan with every real HMS module, so one clinic can exercise the whole product.
-    const modules = (await (await request.get(`${CLOUDSUITE}/platform/products/${hms.id}/modules`, { headers })).json()).data;
-    const made = await request.post(`${CLOUDSUITE}/platform/plans`, {
-      headers,
-      data: {
-        code: 'HMS_FULL',
-        name: 'HMS Full (live tests)',
-        price: 1,
-        billingCycle: 'MONTHLY',
-        productId: hms.id,
-        modules: modules
-          .filter((m: any) => !String(m.code).startsWith('E2E_'))
-          .map((m: any) => ({ moduleId: m.id, isAddon: false })),
-      },
-    });
-    expect(made.ok(), 'create the HMS_FULL plan').toBeTruthy();
-    plans['HMS_FULL'] = (await made.json()).data.id;
+  if (planCode === 'HMS_FULL') {
+    // A plan with every real HMS module, so one clinic can exercise the whole product. Cliniva's catalog grows
+    // (new modules each step), so the platform re-reads it and the plan is brought up to date every time.
+    const synced = await request.post(`${CLOUDSUITE}/platform/products/${hms.id}/sync-modules`, { headers });
+    expect(synced.ok(), 'CloudSuite reads the Cliniva module catalog').toBeTruthy();
+    const modules = (await (await request.get(`${CLOUDSUITE}/platform/products/${hms.id}/modules`, { headers })).json()).data
+      .filter((m: any) => !String(m.code).startsWith('E2E_'))
+      .map((m: any) => ({ moduleId: m.id, isAddon: false }));
+    if (plans['HMS_FULL']) {
+      const updated = await request.put(`${CLOUDSUITE}/platform/plans/${plans['HMS_FULL']}`, { headers, data: { modules } });
+      expect(updated.ok(), `bring the HMS_FULL plan up to date (${updated.status()})`).toBeTruthy();
+    } else {
+      const made = await request.post(`${CLOUDSUITE}/platform/plans`, {
+        headers,
+        data: { code: 'HMS_FULL', name: 'HMS Full (live tests)', price: 1, billingCycle: 'MONTHLY', productId: hms.id, modules },
+      });
+      expect(made.ok(), 'create the HMS_FULL plan').toBeTruthy();
+      plans['HMS_FULL'] = (await made.json()).data.id;
+    }
   }
   expect(plans[planCode], `plan ${planCode}`).toBeTruthy();
 

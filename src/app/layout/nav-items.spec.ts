@@ -1,7 +1,7 @@
 import { STAFF_NAV, canSee } from './nav-items';
 import { ROLE_PERMISSIONS } from '../testing/role-permissions';
 
-const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS'];
+const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS', 'DEPARTMENT', 'CUSTOM_ROLE'];
 
 const labels = (role: string, modules: readonly string[]) =>
   STAFF_NAV.filter((i) => canSee(i, ROLE_PERMISSIONS[role] ?? [], modules)).map((i) => i.label);
@@ -23,10 +23,18 @@ describe('staff menu', () => {
     expect(labels('ADMIN', ALL_MODULES)).toHaveLength(STAFF_NAV.length);
   });
 
-  it('hides what the plan does not include, but always offers the dashboard and the core screens', () => {
-    expect(labels('ADMIN', [])).toEqual(['Dashboard', 'Departments', 'Emergency Access']);
-    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(
-      ['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Departments', 'Emergency Access']);
+  it('hides what the plan does not include, but always offers the dashboard', () => {
+    expect(labels('ADMIN', [])).toEqual(['Dashboard']);
+    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(['Dashboard', 'Patients', 'Doctors', 'Appointments']);
+  });
+
+  it('offers departments, emergency access and roles only when the plan includes those modules', () => {
+    const without = labels('ADMIN', ALL_MODULES.filter((m) => m !== 'DEPARTMENT' && m !== 'CUSTOM_ROLE'));
+    for (const label of ['Departments', 'Emergency Access', 'Roles']) {
+      expect(without).not.toContain(label);
+    }
+    expect(labels('ADMIN', ['DEPARTMENT'])).toEqual(['Dashboard', 'Departments', 'Emergency Access']);
+    expect(labels('ADMIN', ['CUSTOM_ROLE'])).toEqual(['Dashboard', 'Roles']);
   });
 
   it('offers a receptionist the front desk screens and nothing the API would refuse', () => {

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { mediaUrl } from '../../../../core/utils/media-url';
@@ -203,6 +204,7 @@ export class DoctorDetail implements OnInit {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private departmentService = inject(DepartmentService);
+  private readonly hasDepartments = inject(EffectiveLicenseService).activeModules().includes('DEPARTMENT');
   isUploading = false;
   departments: Department[] = [];
 
@@ -257,7 +259,7 @@ export class DoctorDetail implements OnInit {
     if (!id) return;
     this.doctorId = id;
     this.isLoading = true;
-    if (this.isAdmin) {
+    if (this.isAdmin && this.hasDepartments) {
       this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
     }
     this.doctorService.getDoctorById(id).subscribe({

@@ -1,5 +1,5 @@
 export interface NavItem {
-  /** The licensed module that has to be active for this link to be offered; CORE is in every plan. */
+  /** The plan module that has to be active for this link to be offered (the platform's subscription plans). */
   code: string;
   label: string;
   icon: string;
@@ -26,13 +26,13 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'MEDICINE', label: 'Pharmacy', icon: 'medication', route: 'medicines', perms: ['MEDICINE_VIEW'] },
   { code: 'REPORTS', label: 'Reports', icon: 'bar_chart', route: 'reports', perms: ['FINANCE_REPORTS', 'OPERATIONS_REPORTS'] },
   { code: 'HEALTH_PACKAGE', label: 'Health Packages', icon: 'card_giftcard', route: 'health-packages' },
-  { code: 'CORE', label: 'Departments', icon: 'domain', route: 'departments', perms: ['DEPARTMENT_MANAGE'] },
+  { code: 'DEPARTMENT', label: 'Departments', icon: 'domain', route: 'departments', perms: ['DEPARTMENT_MANAGE'] },
   { code: 'CONTACT', label: 'Contact Messages', icon: 'contact_mail', route: 'contacts', perms: ['WEBSITE_MANAGE'] },
   { code: 'REVIEW', label: 'Reviews', icon: 'star', route: 'reviews', perms: ['WEBSITE_MANAGE'] },
   { code: 'USER', label: 'Users', icon: 'group', route: 'users', perms: ['USER_MANAGE'] },
-  { code: 'USER', label: 'Roles', icon: 'admin_panel_settings', route: 'roles', perms: ['USER_MANAGE'] },
+  { code: 'CUSTOM_ROLE', label: 'Roles', icon: 'admin_panel_settings', route: 'roles', perms: ['USER_MANAGE'] },
   { code: 'AUDIT', label: 'Audit Log', icon: 'history', route: 'audit-logs', perms: ['AUDIT_VIEW'] },
-  { code: 'CORE', label: 'Emergency Access', icon: 'emergency', route: 'emergency-access', perms: ['AUDIT_VIEW'] },
+  { code: 'DEPARTMENT', label: 'Emergency Access', icon: 'emergency', route: 'emergency-access', perms: ['AUDIT_VIEW'] },
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Email Templates', icon: 'mail', route: 'settings/email-templates', perms: ['CLINIC_SETTINGS'] },
 ];
@@ -40,5 +40,5 @@ export const STAFF_NAV: NavItem[] = [
 /** Whether someone with these permissions should be offered `item`, given the modules the clinic's plan includes. */
 export function canSee(item: NavItem, permissions: readonly string[], activeModules: readonly string[]): boolean {
   if (item.perms && !item.perms.some((p) => permissions.includes(p))) return false;
-  return item.code === 'DASHBOARD' || item.code === 'CORE' || activeModules.includes(item.code);
+  return item.code === 'DASHBOARD' || activeModules.includes(item.code);
 }

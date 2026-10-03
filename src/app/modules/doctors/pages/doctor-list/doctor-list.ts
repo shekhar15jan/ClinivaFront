@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import { DoctorService } from '../../../../core/services/doctor.service';
 import { DepartmentService } from '../../../../core/services/department.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -210,6 +211,8 @@ import { PaginatorComponent } from '../../../../shared/components/paginator/pagi
 export class DoctorList implements OnInit, OnDestroy {
   private doctorService = inject(DoctorService);
   private departmentService = inject(DepartmentService);
+  /** Departments are a plan module; without it the doctor screens do not mention them. */
+  private readonly hasDepartments = inject(EffectiveLicenseService).activeModules().includes('DEPARTMENT');
   private auth = inject(AuthService);
 
   doctors: Doctor[] = [];
@@ -238,7 +241,9 @@ export class DoctorList implements OnInit, OnDestroy {
   ngOnInit() {
     this.load();
     this.doctorService.getSpecializations().subscribe({ next: (list) => (this.specializations = list), error: () => (this.specializations = []) });
-    this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
+    if (this.hasDepartments) {
+      this.departmentService.getDepartments().subscribe({ next: (list) => (this.departments = list), error: () => (this.departments = []) });
+    }
   }
 
   ngOnDestroy(): void {

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import { fakeAuth } from '../../../../testing/role-permissions';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -28,7 +29,7 @@ describe('PatientDetail', () => {
   let router: { navigate: ReturnType<typeof vi.fn> };
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; warning: ReturnType<typeof vi.fn> };
 
-  function create(role = 'ADMIN') {
+  function create(role = 'ADMIN', modules: string[] = ['PATIENT', 'DEPARTMENT']) {
     service = {
       getPatientById: vi.fn().mockReturnValue(of(ok(patient))),
       getClinicalAccess: vi.fn().mockReturnValue(of(ok({ clinical: true, restricted: false, emergencyUntil: null }))),
@@ -43,6 +44,7 @@ describe('PatientDetail', () => {
       providers: [
         { provide: PatientService, useValue: service },
         { provide: AuthService, useValue: fakeAuth(role) },
+        { provide: EffectiveLicenseService, useValue: { activeModules: () => modules } },
         { provide: Router, useValue: router },
         { provide: ToastService, useValue: toast },
         { provide: ActivatedRoute, useValue: { params: of({ id: 'p1' }), snapshot: { pathFromRoot: [{ paramMap: { get: (k: string) => (k === 'hospitalCode' ? 'sai-clinic' : null) } }] } } },
@@ -123,6 +125,12 @@ describe('PatientDetail', () => {
       component.openEmergencyAccess();
       expect(service['openEmergencyAccess']).toHaveBeenCalledWith('p1', 'Collapsed in the waiting area, on warfarin');
       expect(toast.warning).toHaveBeenCalled();
+    });
+
+    it('is not asked about when the plan has no departments module', () => {
+      const component = create('DOCTOR', ['PATIENT']);
+      expect(service['getClinicalAccess']).not.toHaveBeenCalled();
+      expect(component.seesClinical).toBe(true);
     });
 
     it('does not ask staff without clinical access', () => {
