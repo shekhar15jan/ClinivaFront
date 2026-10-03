@@ -8,7 +8,7 @@ import { registerPatient, signInAsNewAdmin } from './helpers';
  */
 test.describe('Navigation inside a clinic, real backend', { tag: '@desktop' }, () => {
   test('opening a patient, coming back, and the phone quick actions never leave the clinic', async ({ page, request }) => {
-    const admin = await signInAsNewAdmin(page, request, 'HMS_PRO');
+    const admin = await signInAsNewAdmin(page, request, 'CLINIC_PLUS');
     const stamp = Date.now().toString().slice(-6);
     const name = `Linked Patient ${stamp}`;
     await registerPatient(page, admin.hospitalCode, name, `96${stamp}03`.slice(0, 10));

@@ -4,7 +4,7 @@ import { signInAsNewAdmin } from './helpers';
 /** Registering and finding a patient, on real services, then proving another clinic cannot see them. */
 test.describe('Patients, real backend', { tag: '@desktop' }, () => {
   test('a clinic registers a patient, finds them again after a reload, and another clinic never sees them', async ({ browser, page, request }) => {
-    const admin = await signInAsNewAdmin(page, request, 'HMS_PRO');
+    const admin = await signInAsNewAdmin(page, request, 'CLINIC_PLUS');
     const stamp = Date.now().toString().slice(-6);
     const name = `Live Patient ${stamp}`;
     const phone = `9${stamp}${'0'.repeat(3)}`.slice(0, 10);
@@ -39,7 +39,7 @@ test.describe('Patients, real backend', { tag: '@desktop' }, () => {
     // Another clinic, signed in separately, has an empty list.
     const otherContext = await browser.newContext();
     const otherPage = await otherContext.newPage();
-    const other = await signInAsNewAdmin(otherPage, request, 'HMS_PRO');
+    const other = await signInAsNewAdmin(otherPage, request, 'CLINIC_PLUS');
     await otherPage.goto(`${other.hospitalCode}/patients`);
     await otherPage.waitForLoadState('networkidle');
     await expect(otherPage.locator('tbody tr', { hasText: name })).toHaveCount(0);

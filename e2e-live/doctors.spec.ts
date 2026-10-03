@@ -3,7 +3,7 @@ import { signInAsNewAdmin } from './helpers';
 
 test.describe('Doctors, real backend', () => {
   test('a clinic registers a doctor and sees them in the list after a reload', async ({ page, request }) => {
-    const admin = await signInAsNewAdmin(page, request, 'HMS_PRO');
+    const admin = await signInAsNewAdmin(page, request, 'CLINIC_PLUS');
     const stamp = Date.now().toString().slice(-6);
     const name = `Dr. Live ${stamp}`;
 

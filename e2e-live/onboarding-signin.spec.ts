@@ -9,7 +9,7 @@ import { CLINIC_LOGIN, countMails, nextMail, otpFrom, provisionTenant, temporary
  */
 test.describe('New clinic administrator', () => {
   test('is provisioned, must change the temporary password, signs in with OTP and sees only licensed modules', async ({ page, request }) => {
-    const tenant = await provisionTenant(request, 'HMS_STARTER');
+    const tenant = await provisionTenant(request, 'CLINIC_BASIC');
     const temporary = temporaryPasswordFrom(await nextMail(request, tenant.adminEmail, 'temporary password'));
     const chosen = `Live#${Date.now().toString().slice(-6)}Pw`;
 
@@ -61,25 +61,25 @@ test.describe('New clinic administrator', () => {
     await page.getByRole('button', { name: /Verify/ }).click();
     await page.waitForURL(new RegExp(`/${hospitalCode}/dashboard`), { timeout: 20000 });
 
-    // 6. A module in the Starter plan opens; one that is not licensed is turned away with a reason.
-    await page.goto(`${hospitalCode}/patients`);
-    await expect(page).toHaveURL(new RegExp(`/${hospitalCode}/patients`));
+    // 6. A module in the Clinic Basic plan opens; one that is not licensed is turned away with a reason.
     await page.goto(`${hospitalCode}/billing`);
+    await expect(page).toHaveURL(new RegExp(`/${hospitalCode}/billing`));
+    await page.goto(`${hospitalCode}/medicines`);
     await expect(page).toHaveURL(new RegExp(`/${hospitalCode}/dashboard`), { timeout: 15000 });
     await expect(page.getByText(/not available in your current plan/i)).toBeVisible({ timeout: 10000 });
 
-    // 7. After the operator upgrades the plan, billing opens for the same signed-in session.
+    // 7. After the operator upgrades to Clinic Plus, the pharmacy opens for the same signed-in session.
     await tenant.post(`/platform/tenants/${tenant.tenantUuid}/products/${tenant.productId}/subscription/upgrade`, {
-      newPlanId: tenant.plans['HMS_PRO'],
+      newPlanId: tenant.plans['CLINIC_PLUS'],
     });
     await expect
       .poll(
         async () => {
-          await page.goto(`${hospitalCode}/billing`);
+          await page.goto(`${hospitalCode}/medicines`);
           await page.waitForLoadState('networkidle');
-          return new URL(page.url()).pathname.endsWith('/billing');
+          return new URL(page.url()).pathname.endsWith('/medicines');
         },
-        { timeout: 45000, message: 'billing opens after the upgrade' },
+        { timeout: 45000, message: 'the pharmacy opens after the upgrade' },
       )
       .toBe(true);
   });

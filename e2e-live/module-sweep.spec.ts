@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { signInAsNewAdmin } from './helpers';
 
 /**
- * Every screen a Professional-plan clinic can reach, on real services. The bar is low on purpose and
+ * Every screen a clinic on the full plan can reach, on real services. The bar is low on purpose and
  * catches the most common breakage between this UI and its backend: a screen that renders while an
  * API call behind it fails, or that logs an error to the console.
  */
@@ -25,7 +25,7 @@ const LICENSED = [
   ['reviews', 'Reviews'],
 ] as const;
 
-test.describe('Professional-plan clinic, real backend', () => {
+test.describe('Full-plan clinic, real backend', () => {
   test('every licensed screen loads without a failing API call or console error', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const problems: string[] = [];

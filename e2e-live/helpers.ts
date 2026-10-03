@@ -80,7 +80,7 @@ export interface ProvisionedTenant {
 }
 
 /** Creates a tenant with an administrator in CloudSuite, the way an operator would. */
-export async function provisionTenant(request: APIRequestContext, planCode = 'HMS_STARTER'): Promise<ProvisionedTenant> {
+export async function provisionTenant(request: APIRequestContext, planCode = 'CLINIC_BASIC'): Promise<ProvisionedTenant> {
   const login = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email: 'admin@codeatcloud.in', password: 'admin' } });
   expect(login.ok(), 'CloudSuite operator sign-in').toBeTruthy();
   const token = (await login.json()).data.accessToken;
@@ -159,7 +159,7 @@ export interface SignedInAdmin extends ProvisionedTenant {
  * password change is done over the API (the onboarding spec drives that page); sign-in itself,
  * including the emailed OTP, goes through the browser.
  */
-export async function signInAsNewAdmin(page: Page, request: APIRequestContext, planCode = 'HMS_PRO'): Promise<SignedInAdmin> {
+export async function signInAsNewAdmin(page: Page, request: APIRequestContext, planCode = 'CLINIC_PLUS'): Promise<SignedInAdmin> {
   const tenant = await provisionTenant(request, planCode);
   const temporary = temporaryPasswordFrom(await nextMail(request, tenant.adminEmail, 'temporary password'));
   const password = `Live#${Date.now().toString().slice(-6)}Pw`;

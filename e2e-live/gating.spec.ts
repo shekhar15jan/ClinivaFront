@@ -7,27 +7,27 @@ const link = (page: import('@playwright/test').Page, hospitalCode: string, route
   page.locator(`app-sidebar a[href="${BASE_PATH}/${hospitalCode}/${route}"]`);
 
 test.describe('What each clinic and role is offered, real backend', { tag: '@desktop' }, () => {
-  test('a Starter clinic is offered only its plan, and a direct address for anything else is turned away', async ({ page, request }) => {
-    const admin = await signInAsNewAdmin(page, request, 'HMS_STARTER');
+  test('a Clinic Basic clinic is offered only its plan, and a direct address for anything else is turned away', async ({ page, request }) => {
+    const admin = await signInAsNewAdmin(page, request, 'CLINIC_BASIC');
     await page.setViewportSize({ width: 1400, height: 900 });
     await page.goto(`${admin.hospitalCode}/dashboard`);
 
-    for (const route of ['patients', 'doctors', 'appointments', 'users', 'settings']) {
+    for (const route of ['patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'billing', 'payments', 'contacts', 'reviews',
+      'users', 'settings']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is offered`).toHaveCount(1, { timeout: 15000 });
     }
-    // Departments, emergency access and custom roles are hospital modules, not in a clinic plan.
-    for (const route of ['billing', 'payments', 'prescriptions', 'consultations', 'medicines', 'reports', 'health-packages', 'contacts', 'reviews',
-      'departments', 'emergency-access', 'roles']) {
+    // Pharmacy, reports and packages come with Clinic Plus; departments, emergency access and custom roles are hospital modules.
+    for (const route of ['medicines', 'reports', 'health-packages', 'departments', 'emergency-access', 'roles']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is not in the plan`).toHaveCount(0);
     }
 
     // Typing the address of a module outside the plan is answered by a message and the dashboard.
-    await page.goto(`${admin.hospitalCode}/billing`);
+    await page.goto(`${admin.hospitalCode}/medicines`);
     await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
     await expect(page.getByText(/not available in your current plan/i)).toBeVisible();
 
     // Same for other modules outside the plan.
-    for (const route of ['medicines', 'departments', 'roles']) {
+    for (const route of ['reports', 'departments', 'roles']) {
       await page.goto(`${admin.hospitalCode}/${route}`);
       await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
     }

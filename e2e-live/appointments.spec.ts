@@ -8,7 +8,7 @@ import { registerDoctor, registerPatient, signInAsNewAdmin } from './helpers';
  */
 test.describe('Appointments, real backend', () => {
   test('a doctor with no hours has no slots; after the clinic sets a schedule a patient can be booked', async ({ page, request }) => {
-    const admin = await signInAsNewAdmin(page, request, 'HMS_PRO');
+    const admin = await signInAsNewAdmin(page, request, 'CLINIC_PLUS');
     const stamp = Date.now().toString().slice(-6);
     const doctorName = `Dr. Booking ${stamp}`;
     const patientName = `Booked Patient ${stamp}`;
