@@ -17,7 +17,7 @@ test.describe('What each clinic and role is offered, real backend', { tag: '@des
       await expect(link(page, admin.hospitalCode, route), `${route} is offered`).toHaveCount(1, { timeout: 15000 });
     }
     // Pharmacy, reports and packages come with Clinic Plus; departments, emergency access and custom roles are hospital modules.
-    for (const route of ['medicines', 'reports', 'health-packages', 'departments', 'emergency-access', 'roles']) {
+    for (const route of ['medicines', 'reports', 'health-packages', 'departments', 'emergency-access', 'roles', 'ipd']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is not in the plan`).toHaveCount(0);
     }
 
@@ -27,7 +27,7 @@ test.describe('What each clinic and role is offered, real backend', { tag: '@des
     await expect(page.getByText(/not available in your current plan/i)).toBeVisible();
 
     // Same for other modules outside the plan.
-    for (const route of ['reports', 'departments', 'roles']) {
+    for (const route of ['reports', 'departments', 'roles', 'ipd', 'ipd/admissions']) {
       await page.goto(`${admin.hospitalCode}/${route}`);
       await expect(page).toHaveURL(new RegExp(`/${admin.hospitalCode}/dashboard$`), { timeout: 15000 });
     }

@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { PatientService } from '../../../../core/services/patient.service';
+import { IpdService } from '../../../../core/services/ipd.service';
+import { AdmissionSummary } from '../../../../core/models/ipd.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -35,6 +37,7 @@ export class PatientDetail implements OnInit {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private license = inject(EffectiveLicenseService);
+  private ipd = inject(IpdService);
 
   readonly bloodGroups = BLOOD_GROUPS;
   readonly bloodGroupLabel = bloodGroupLabel;
@@ -48,6 +51,8 @@ export class PatientDetail implements OnInit {
   emergencyError = '';
   openingEmergency = false;
   visits: VisitItem[] = [];
+  /** Inpatient stays, newest first (clinics with beds only). */
+  stays: AdmissionSummary[] = [];
   visitsError = '';
   isLoading = false;
   loadError = '';
@@ -111,6 +116,9 @@ export class PatientDetail implements OnInit {
         error: () => (this.access = null),
       });
     }
+    if (this.hasBeds) {
+      this.ipd.forPatient(id).subscribe({ next: (list) => (this.stays = list), error: () => (this.stays = []) });
+    }
     if (this.canSeeVisits) {
       this.patientService.getPatientVisits(id).subscribe({
         next: (res) => {
@@ -121,6 +129,19 @@ export class PatientDetail implements OnInit {
         },
       });
     }
+  }
+
+  /** Beds & admissions is a plan module; the stays show for anyone who can see the bed board. */
+  get hasBeds(): boolean {
+    return this.auth.can('IPD_VIEW') && this.license.activeModules().includes('IPD');
+  }
+
+  get currentStay(): AdmissionSummary | null {
+    return this.stays.find((s) => s.status !== 'DISCHARGED') ?? null;
+  }
+
+  get canAdmit(): boolean {
+    return this.hasBeds && this.auth.can('IPD_MANAGE') && !this.currentStay;
   }
 
   /** A real reason is required: it is what the reviewer reads. */

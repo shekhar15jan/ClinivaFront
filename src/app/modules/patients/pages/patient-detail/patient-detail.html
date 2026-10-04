@@ -63,6 +63,34 @@
         }
       </div>
     }
+    @if (hasBeds) {
+      @if (currentStay; as s) {
+        <a [routerLink]="['../../ipd/admissions', s.id]" class="rounded-xl border border-blue-300 bg-blue-50 p-3 text-sm text-blue-900 flex items-center gap-2" id="current-stay">
+          <span class="material-symbols-outlined">hotel</span>
+          <span>In hospital: <b>{{ s.wardName }}, bed {{ s.bedNumber }}</b> · {{ s.admissionNumber }} · day {{ s.days }} · Dr {{ s.doctorName }}
+            @if (s.status === 'DISCHARGE_ADVISED') { · <b>discharge advised</b> }</span>
+          <span class="material-symbols-outlined ml-auto">chevron_right</span>
+        </a>
+      } @else if (canAdmit) {
+        <div class="flex">
+          <a [routerLink]="['../../ipd']" [queryParams]="{ patient: patientId }" id="admit-patient"
+            class="px-4 min-h-touch text-sm font-semibold text-white bg-blue-600 rounded-lg flex items-center gap-1">
+            <span class="material-symbols-outlined text-lg">bed</span> Admit
+          </a>
+        </div>
+      }
+      @if (stays.length) {
+        <div class="bg-white rounded-xl border border-outline-variant p-4" id="past-stays">
+          <h3 class="text-sm font-semibold text-on-surface mb-2">Stays in hospital</h3>
+          @for (s of stays; track s.id) {
+            <a [routerLink]="['../../ipd/admissions', s.id]" class="flex justify-between text-sm py-1.5 border-b border-dashed hover:bg-surface-container-low">
+              <span>{{ s.admissionNumber }} · {{ s.admittedAt | date: 'd MMM y' }}{{ s.dischargedAt ? ' to ' + (s.dischargedAt | date: 'd MMM y') : '' }} · Dr {{ s.doctorName }}</span>
+              <span class="text-slate-600">{{ s.days }} {{ s.days === 1 ? 'day' : 'days' }}</span>
+            </a>
+          }
+        </div>
+      }
+    }
     @if (access?.emergencyUntil) {
       <div class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex items-center gap-2" id="emergency-active">
         <span class="material-symbols-outlined text-base">emergency</span>

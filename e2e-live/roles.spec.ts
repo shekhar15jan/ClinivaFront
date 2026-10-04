@@ -11,7 +11,7 @@ const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 const STAFF_SCREENS = [
   'dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'billing', 'payments',
   'medicines', 'reports', 'health-packages', 'contacts', 'reviews', 'users', 'audit-logs', 'settings',
-  'departments', 'roles', 'emergency-access',
+  'departments', 'roles', 'emergency-access', 'ipd', 'ipd/admissions',
 ] as const;
 type Screen = (typeof STAFF_SCREENS)[number];
 
@@ -19,15 +19,19 @@ const ROLES = ['ADMIN', 'DOCTOR', 'NURSE', 'RECEPTIONIST', 'HOSPITAL_ADMIN', 'AC
 const ALLOWED: Record<(typeof ROLES)[number], Screen[]> = {
   ADMIN: [...STAFF_SCREENS],
   // Clinic reports are finance and operations; a doctor's own numbers are on the dashboard.
-  DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'health-packages'],
+  DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'health-packages',
+    'ipd', 'ipd/admissions'],
   // Nurses read the day's queue and the prescriptions they give; they do not book or prescribe.
-  NURSE: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'health-packages'],
-  RECEPTIONIST: ['dashboard', 'patients', 'doctors', 'appointments', 'billing', 'payments', 'medicines', 'health-packages'],
+  NURSE: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'health-packages', 'ipd',
+    'ipd/admissions'],
+  RECEPTIONIST: ['dashboard', 'patients', 'doctors', 'appointments', 'billing', 'payments', 'medicines', 'health-packages',
+    'ipd', 'ipd/admissions'],
   // Runs the hospital: no money, no clinical records, no staff security.
   HOSPITAL_ADMIN: ['dashboard', 'patients', 'doctors', 'appointments', 'medicines', 'reports', 'health-packages',
-    'departments', 'contacts', 'reviews'],
-  ACCOUNTANT: ['dashboard', 'patients', 'doctors', 'billing', 'payments', 'medicines', 'reports', 'health-packages'],
-  PHARMACIST: ['dashboard', 'patients', 'doctors', 'prescriptions', 'medicines', 'health-packages'],
+    'departments', 'contacts', 'reviews', 'ipd', 'ipd/admissions'],
+  ACCOUNTANT: ['dashboard', 'patients', 'doctors', 'billing', 'payments', 'medicines', 'reports', 'health-packages', 'ipd',
+    'ipd/admissions'],
+  PHARMACIST: ['dashboard', 'patients', 'doctors', 'prescriptions', 'medicines', 'health-packages', 'ipd', 'ipd/admissions'],
 };
 const PATIENT_SCREENS = ['patient/dashboard', 'patient/appointments', 'patient/prescriptions', 'patient/bills', 'patient/profile'];
 

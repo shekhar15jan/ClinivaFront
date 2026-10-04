@@ -13,6 +13,7 @@ const GROUP_COLOURS: Record<string, string> = {
   Billing: 'bg-amber-50 text-amber-900',
   Pharmacy: 'bg-emerald-50 text-emerald-800',
   Hospital: 'bg-cyan-50 text-cyan-800',
+  Inpatients: 'bg-indigo-50 text-indigo-800',
   Reports: 'bg-indigo-50 text-indigo-800',
   Security: 'bg-slate-100 text-slate-800',
   Owner: 'bg-slate-800 text-white',

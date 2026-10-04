@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { PatientService } from '../../../../core/services/patient.service';
+import { IpdService } from '../../../../core/services/ipd.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Patient } from '../../../../core/models/patient.model';
@@ -28,6 +29,7 @@ describe('PatientDetail', () => {
   let service: Record<string, ReturnType<typeof vi.fn>>;
   let router: { navigate: ReturnType<typeof vi.fn> };
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; warning: ReturnType<typeof vi.fn> };
+  let ipd: { forPatient: ReturnType<typeof vi.fn> };
 
   function create(role = 'ADMIN', modules: string[] = ['PATIENT', 'DEPARTMENT']) {
     service = {
@@ -39,10 +41,12 @@ describe('PatientDetail', () => {
       deletePatient: vi.fn().mockReturnValue(of(ok(null))),
     };
     router = { navigate: vi.fn() };
+    ipd = { forPatient: vi.fn().mockReturnValue(of([])) };
     toast = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         { provide: PatientService, useValue: service },
+        { provide: IpdService, useValue: ipd },
         { provide: AuthService, useValue: fakeAuth(role) },
         { provide: EffectiveLicenseService, useValue: { activeModules: () => modules } },
         { provide: Router, useValue: router },
@@ -54,6 +58,29 @@ describe('PatientDetail', () => {
     component.ngOnInit();
     return component;
   }
+
+  it('shows the current stay, or Admit, only where the clinic has beds', () => {
+    const stay = { id: 'ad1', admissionNumber: 'IP-2026-00001', status: 'ADMITTED', patientId: 'p1', patientName: 'Rahul Sharma',
+      patientCode: 'PAT-001', doctorId: 'd1', doctorName: 'Anita', bedId: 'b1', bedNumber: 'G-3', wardName: 'General',
+      admissionType: 'EMERGENCY', admittedAt: '2026-10-01T10:00:00', dischargedAt: null, days: 2 };
+    const noBeds = create('RECEPTIONIST', ['PATIENT']);
+    expect(ipd.forPatient).not.toHaveBeenCalled();
+    expect(noBeds.canAdmit).toBe(false);
+
+    TestBed.resetTestingModule();
+    const free = create('RECEPTIONIST', ['PATIENT', 'IPD']);
+    expect(free.canAdmit).toBe(true);
+
+    TestBed.resetTestingModule();
+    ipd.forPatient = vi.fn();
+    const component = (() => {
+      const c = create('NURSE', ['PATIENT', 'IPD']);
+      return c;
+    })();
+    component.stays = [stay as never];
+    expect(component.currentStay?.bedNumber).toBe('G-3');
+    expect(component.canAdmit).toBe(false);
+  });
 
   it('loads this patient by id, not by searching the first page of everyone', () => {
     const component = create();

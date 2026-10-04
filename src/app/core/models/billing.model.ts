@@ -2,7 +2,10 @@ export interface Bill {
   id: string;
   billNumber?: string;
   patient: { id: string; fullName: string; patientId?: string };
-  appointmentId: string;
+  /** Empty on an inpatient final bill. */
+  appointmentId: string | null;
+  /** The inpatient stay a final bill is for. */
+  admissionId?: string | null;
   prescriptionId?: string;
   consultationFeeInPaisa: number;
   medicineChargesInPaisa?: number;

@@ -63,6 +63,15 @@ export const routes: Routes = [
             path: 'audit-logs',
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
+          {
+            path: 'ipd',
+            children: [
+              { path: '', loadComponent: () => import('./modules/ipd/bed-board').then(m => m.BedBoardComponent) },
+              { path: 'admissions', loadComponent: () => import('./modules/ipd/admission-list').then(m => m.AdmissionListComponent) },
+              { path: 'admissions/:id', loadComponent: () => import('./modules/ipd/admission-detail').then(m => m.AdmissionDetailComponent) },
+              { path: 'wards', loadComponent: () => import('./modules/ipd/ward-setup').then(m => m.WardSetupComponent) },
+            ]
+          },
           { path: 'departments', loadComponent: () => import('./modules/departments/department-list').then(m => m.DepartmentListComponent) },
           { path: 'roles', loadComponent: () => import('./modules/roles/role-list').then(m => m.RoleListComponent) },
           {

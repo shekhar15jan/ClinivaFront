@@ -1,7 +1,7 @@
 import { STAFF_NAV, canSee } from './nav-items';
 import { ROLE_PERMISSIONS } from '../testing/role-permissions';
 
-const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS', 'DEPARTMENT', 'CUSTOM_ROLE'];
+const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS', 'DEPARTMENT', 'CUSTOM_ROLE', 'IPD'];
 
 const labels = (role: string, modules: readonly string[]) =>
   STAFF_NAV.filter((i) => canSee(i, ROLE_PERMISSIONS[role] ?? [], modules)).map((i) => i.label);
@@ -34,6 +34,10 @@ describe('staff menu', () => {
       expect(without).not.toContain(label);
     }
     expect(labels('ADMIN', ['DEPARTMENT'])).toEqual(['Dashboard', 'Departments', 'Emergency Access']);
+    // Beds and admissions come with a plan for clinics with beds.
+    expect(labels('ADMIN', ['IPD'])).toEqual(['Dashboard', 'Beds', 'Admissions']);
+    expect(labels('PHARMACIST', ['IPD'])).toEqual(['Dashboard', 'Beds', 'Admissions']);
+    expect(labels('PATIENT', ['IPD'])).toEqual(['Dashboard']);
     expect(labels('ADMIN', ['CUSTOM_ROLE'])).toEqual(['Dashboard', 'Roles']);
   });
 

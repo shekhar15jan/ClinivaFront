@@ -37,6 +37,8 @@ export class BottomNav {
     { code: 'DASHBOARD', label: 'Home', icon: 'home', route: 'dashboard', exact: true },
     { code: 'APPOINTMENT', label: 'Schedule', icon: 'calendar_today', route: 'appointments' },
     { code: 'PATIENT', label: 'Patients', icon: 'groups', route: 'patients' },
+    // The ward nurse's and the doctor's round start from the bed board.
+    { code: 'IPD', label: 'Beds', icon: 'bed', route: 'ipd' },
     { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings' },
   ];
 
