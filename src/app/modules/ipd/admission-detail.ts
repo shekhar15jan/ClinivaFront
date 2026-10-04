@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IpdService } from '../../core/services/ipd.service';
 import { AuthService } from '../../core/services/auth.service';
+import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {
@@ -94,6 +95,9 @@ type Panel = 'move' | 'charge' | 'advance' | 'summary' | 'bill' | 'refund' | 'di
           }
           @if (open && a.billId && canVoid) {
             <button type="button" id="action-cancel-bill" (click)="confirmCancelBill = true" class="act bg-slate-500"><span class="material-symbols-outlined text-lg">undo</span> Cancel final bill</button>
+          }
+          @if (a.clinical && hasNursing) {
+            <a [routerLink]="['../../../nursing', a.id]" id="action-chart" class="act bg-cyan-700"><span class="material-symbols-outlined text-lg">clinical_notes</span> Nursing chart</a>
           }
           @if (a.clinical && a.finalDiagnosis) {
             <button type="button" id="action-print" (click)="print()" class="act bg-indigo-600"><span class="material-symbols-outlined text-lg">print</span> Discharge summary</button>
@@ -320,6 +324,7 @@ export class AdmissionDetailComponent implements OnInit {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
+  private license = inject(EffectiveLicenseService);
 
   a: AdmissionView | null = null;
   error = '';
@@ -353,6 +358,11 @@ export class AdmissionDetailComponent implements OnInit {
 
   get open(): boolean {
     return !!this.a && this.a.status !== 'DISCHARGED';
+  }
+
+  /** The nursing chart is its own plan module. */
+  get hasNursing(): boolean {
+    return this.license.activeModules().includes('NURSING');
   }
 
   get canManage(): boolean {

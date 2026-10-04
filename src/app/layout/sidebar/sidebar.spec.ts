@@ -32,9 +32,9 @@ describe('Sidebar', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have 22 staff nav items (with Departments, Roles, Emergency Access, Beds and Admissions)', () => {
+  it('should have 23 staff nav items (with Departments, Roles, Emergency Access, Beds, Admissions and Ward round)', () => {
     const { component } = setup();
-    expect(component.staffNavItems.length).toBe(22);
+    expect(component.staffNavItems.length).toBe(23);
   });
 
   it('should have 5 patient nav items', () => {

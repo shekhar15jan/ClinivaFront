@@ -64,6 +64,13 @@ export const routes: Routes = [
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
           {
+            path: 'nursing',
+            children: [
+              { path: '', loadComponent: () => import('./modules/nursing/ward-round').then(m => m.WardRoundComponent) },
+              { path: ':admissionId', loadComponent: () => import('./modules/nursing/nursing-chart').then(m => m.NursingChartComponent) },
+            ]
+          },
+          {
             path: 'ipd',
             children: [
               { path: '', loadComponent: () => import('./modules/ipd/bed-board').then(m => m.BedBoardComponent) },

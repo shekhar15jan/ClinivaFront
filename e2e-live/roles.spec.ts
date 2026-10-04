@@ -11,7 +11,7 @@ const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 const STAFF_SCREENS = [
   'dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'billing', 'payments',
   'medicines', 'reports', 'health-packages', 'contacts', 'reviews', 'users', 'audit-logs', 'settings',
-  'departments', 'roles', 'emergency-access', 'ipd', 'ipd/admissions',
+  'departments', 'roles', 'emergency-access', 'ipd', 'ipd/admissions', 'nursing',
 ] as const;
 type Screen = (typeof STAFF_SCREENS)[number];
 
@@ -20,10 +20,10 @@ const ALLOWED: Record<(typeof ROLES)[number], Screen[]> = {
   ADMIN: [...STAFF_SCREENS],
   // Clinic reports are finance and operations; a doctor's own numbers are on the dashboard.
   DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'health-packages',
-    'ipd', 'ipd/admissions'],
+    'ipd', 'ipd/admissions', 'nursing'],
   // Nurses read the day's queue and the prescriptions they give; they do not book or prescribe.
   NURSE: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'health-packages', 'ipd',
-    'ipd/admissions'],
+    'ipd/admissions', 'nursing'],
   RECEPTIONIST: ['dashboard', 'patients', 'doctors', 'appointments', 'billing', 'payments', 'medicines', 'health-packages',
     'ipd', 'ipd/admissions'],
   // Runs the hospital: no money, no clinical records, no staff security.

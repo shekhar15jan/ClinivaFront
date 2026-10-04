@@ -118,7 +118,7 @@ test.describe('On a phone, real backend', () => {
     const doctor = await context.newPage();
     const problems = watch(doctor);
     const code = await signInWithOtp(doctor, request, visit.doctorEmail);
-    await expect(bottomBar(doctor).getByRole('link')).toHaveText([/Home/, /Schedule/, /Patients/, /Beds/]);
+    await expect(bottomBar(doctor).getByRole('link')).toHaveText([/Home/, /Schedule/, /Patients/, /Round/, /Beds/]);
     await doctor.getByRole('button', { name: 'Open menu' }).click();
     const drawer = doctor.locator('app-mobile-drawer');
     await expect(drawer.getByRole('link', { name: /Consultations/ })).toBeVisible();
@@ -144,7 +144,7 @@ test.describe('On a phone, real backend', () => {
     const nurse = await context.newPage();
     const problems = watch(nurse);
     const code = await signInWithOtp(nurse, request, email);
-    await expect(bottomBar(nurse).getByRole('link')).toHaveText([/Home/, /Schedule/, /Patients/, /Beds/]);
+    await expect(bottomBar(nurse).getByRole('link')).toHaveText([/Home/, /Schedule/, /Patients/, /Round/, /Beds/]);
     await nurse.getByRole('button', { name: 'Open menu' }).click();
     const drawer = nurse.locator('app-mobile-drawer');
     await expect(drawer.getByRole('link', { name: /Prescriptions/ })).toBeVisible();

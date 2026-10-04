@@ -38,6 +38,7 @@ export class BottomNav {
     { code: 'APPOINTMENT', label: 'Schedule', icon: 'calendar_today', route: 'appointments' },
     { code: 'PATIENT', label: 'Patients', icon: 'groups', route: 'patients' },
     // The ward nurse's and the doctor's round start from the bed board.
+    { code: 'NURSING', label: 'Round', icon: 'clinical_notes', route: 'nursing' },
     { code: 'IPD', label: 'Beds', icon: 'bed', route: 'ipd' },
     { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings' },
   ];
@@ -59,9 +60,12 @@ export class BottomNav {
     if (this.isPatient()) return this.patientItems;
     const permissions = this.authService.currentUserValue?.permissions ?? [];
     const modules = this.license.activeModules();
-    return this.staffItems.filter((item) => {
-      const rule = STAFF_NAV.find((n) => n.route === item.route);
-      return !rule || canSee(rule, permissions, modules);
-    });
+    // Five tabs fit a phone; anything further is in the menu drawer.
+    return this.staffItems
+      .filter((item) => {
+        const rule = STAFF_NAV.find((n) => n.route === item.route);
+        return !rule || canSee(rule, permissions, modules);
+      })
+      .slice(0, 5);
   });
 }

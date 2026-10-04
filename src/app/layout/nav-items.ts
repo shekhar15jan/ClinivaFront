@@ -21,6 +21,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'APPOINTMENT', label: 'Appointments', icon: 'event', route: 'appointments', perms: ['APPOINTMENT_VIEW'] },
   { code: 'IPD', label: 'Beds', icon: 'bed', route: 'ipd', perms: ['IPD_VIEW'] },
   { code: 'IPD', label: 'Admissions', icon: 'hotel', route: 'ipd/admissions', perms: ['IPD_VIEW'] },
+  { code: 'NURSING', label: 'Ward round', icon: 'clinical_notes', route: 'nursing', perms: ['NURSING_RECORD', 'MEDICATION_ORDER'] },
   { code: 'CONSULTATION', label: 'Consultations', icon: 'stethoscope', route: 'consultations', perms: ['CLINICAL_VIEW'] },
   { code: 'PRESCRIPTION', label: 'Prescriptions', icon: 'receipt_long', route: 'prescriptions', perms: ['PRESCRIPTION_VIEW'] },
   { code: 'BILLING', label: 'Billing', icon: 'request_quote', route: 'billing', perms: ['BILLING'] },
