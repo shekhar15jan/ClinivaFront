@@ -80,6 +80,15 @@ export const routes: Routes = [
               { path: ':id', loadComponent: () => import('./modules/lab/lab-order').then(m => m.LabOrderComponent) },
             ]
           },
+          {
+            path: 'radiology',
+            children: [
+              { path: '', loadComponent: () => import('./modules/radiology/radiology-worklist').then(m => m.RadiologyWorklistComponent) },
+              { path: 'new', loadComponent: () => import('./modules/radiology/radiology-new-order').then(m => m.RadiologyNewOrderComponent) },
+              { path: 'studies', loadComponent: () => import('./modules/radiology/radiology-catalog').then(m => m.RadiologyCatalogComponent) },
+              { path: ':id', loadComponent: () => import('./modules/radiology/radiology-order').then(m => m.RadiologyOrderComponent) },
+            ]
+          },
           { path: 'stock', loadComponent: () => import('./modules/stock/stock-page').then(m => m.StockPageComponent) },
           {
             path: 'nursing',

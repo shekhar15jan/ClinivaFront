@@ -187,6 +187,10 @@ export class PatientDetail implements OnInit {
     });
   }
 
+  get canOrderImaging(): boolean {
+    return this.auth.can('IMAGING_ORDER') && this.license.activeModules().includes('RADIOLOGY');
+  }
+
   get canOrderLab(): boolean {
     return this.auth.can('LAB_ORDER') && this.license.activeModules().includes('LAB');
   }

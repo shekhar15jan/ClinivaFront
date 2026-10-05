@@ -84,6 +84,10 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
             <button type="button" id="action-insurance" (click)="openPanel('insurance')" class="act bg-violet-700">
               <span class="material-symbols-outlined text-lg">health_and_safety</span> Insurance{{ claims.length ? ' (' + claims.length + ')' : '' }}</button>
           }
+          @if (open && canOrderImaging && !a.billId) {
+            <a [routerLink]="['../../../radiology/new']" [queryParams]="{ patient: a.patientId, admission: a.id }" id="action-imaging" class="act bg-violet-700">
+              <span class="material-symbols-outlined text-lg">radiology</span> Order imaging</a>
+          }
           @if (open && canOrderLab && !a.billId) {
             <a [routerLink]="['../../../lab/new']" [queryParams]="{ patient: a.patientId, admission: a.id }" id="action-lab" class="act bg-sky-700">
               <span class="material-symbols-outlined text-lg">biotech</span> Order tests</a>
@@ -457,6 +461,10 @@ export class AdmissionDetailComponent implements OnInit {
   /** Clinics that keep pharmacy stock issue medicines to the stay from it. */
   get hasStock(): boolean {
     return this.license.activeModules().includes('PHARMACY_STOCK');
+  }
+
+  get canOrderImaging(): boolean {
+    return this.license.activeModules().includes('RADIOLOGY') && this.auth.can('IMAGING_ORDER');
   }
 
   get canOrderLab(): boolean {

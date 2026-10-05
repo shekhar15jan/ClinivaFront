@@ -1,7 +1,7 @@
 import { STAFF_NAV, canSee } from './nav-items';
 import { ROLE_PERMISSIONS } from '../testing/role-permissions';
 
-const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS', 'DEPARTMENT', 'CUSTOM_ROLE', 'IPD', 'NURSING', 'PHARMACY_STOCK', 'LAB', 'INSURANCE', 'ABDM'];
+const ALL_MODULES = ['DASHBOARD', 'PATIENT', 'DOCTOR', 'APPOINTMENT', 'CONSULTATION', 'PRESCRIPTION', 'BILLING', 'PAYMENT', 'MEDICINE', 'REPORTS', 'HEALTH_PACKAGE', 'CONTACT', 'REVIEW', 'USER', 'AUDIT', 'SETTINGS', 'DEPARTMENT', 'CUSTOM_ROLE', 'IPD', 'NURSING', 'PHARMACY_STOCK', 'LAB', 'INSURANCE', 'ABDM', 'RADIOLOGY'];
 
 const labels = (role: string, modules: readonly string[]) =>
   STAFF_NAV.filter((i) => canSee(i, ROLE_PERMISSIONS[role] ?? [], modules)).map((i) => i.label);
