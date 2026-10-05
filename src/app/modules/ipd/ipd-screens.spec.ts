@@ -7,6 +7,8 @@ import { IpdService } from '../../core/services/ipd.service';
 import { PatientService } from '../../core/services/patient.service';
 import { DoctorService } from '../../core/services/doctor.service';
 import { AuthService } from '../../core/services/auth.service';
+import { StockService } from '../../core/services/stock.service';
+import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { AdmissionView, BedBoard, rupees } from '../../core/models/ipd.model';
 import { BedBoardComponent } from './bed-board';
@@ -129,7 +131,15 @@ describe('BedBoardComponent', () => {
 describe('AdmissionDetailComponent', () => {
   let ipd: Record<string, ReturnType<typeof vi.fn>>;
 
+  let stock: Record<string, ReturnType<typeof vi.fn>>;
+
   function create(role: string, a: AdmissionView) {
+    stock = {
+      issues: vi.fn().mockReturnValue(of([{ chargeId: 'c1', medicineId: 'm1', medicineName: 'Amoxicillin', issued: 10, returned: 0,
+        unitPriceInPaisa: 500, issuedAt: '2026-10-04T10:00:00', issuedBy: 'Pharma' }])),
+      overview: vi.fn().mockReturnValue(of([])),
+      issue: vi.fn().mockReturnValue(of([])),
+    };
     ipd = {
       get: vi.fn().mockReturnValue(of(a)),
       board: vi.fn().mockReturnValue(of(board)),
@@ -143,6 +153,8 @@ describe('AdmissionDetailComponent', () => {
         { provide: AuthService, useValue: fakeAuth(role) },
         { provide: ToastService, useValue: { success: vi.fn(), error: vi.fn() } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'ad1' } } } },
+        { provide: StockService, useValue: stock },
+        { provide: EffectiveLicenseService, useValue: { activeModules: () => ['IPD', 'PHARMACY_STOCK'] } },
       ],
     });
     const c = TestBed.runInInjectionContext(() => new AdmissionDetailComponent());
@@ -190,6 +202,22 @@ describe('AdmissionDetailComponent', () => {
     expect(desk.panelReady).toBe(true);
     desk.save();
     expect(ipd['discharge']).toHaveBeenCalledWith('ad1', 'Insurance claim pending');
+  });
+
+  it('the pharmacist issues from stock; a pharmacy charge is returned, not removed', () => {
+    const nurse = create('NURSE', admission());
+    expect(nurse.canIssue).toBe(false);
+    expect(nurse.issueFor('c1')?.medicineName).toBe('Amoxicillin');
+    TestBed.resetTestingModule();
+    const pharmacist = create('PHARMACIST', admission());
+    expect(pharmacist.canIssue).toBe(true);
+    pharmacist.openPanel('issue');
+    expect(pharmacist.panelReady).toBe(false);
+    pharmacist.issueMedicine = 'm1';
+    pharmacist.issueQuantity = 4;
+    pharmacist.save();
+    expect(stock['issue']).toHaveBeenCalledWith('ad1', 'm1', 4);
+    expect(ipd['get']).toHaveBeenCalledTimes(2);
   });
 
   it('a move offers only free beds', () => {

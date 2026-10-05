@@ -27,6 +27,7 @@ const LICENSED = [
   ['ipd/admissions', 'Admissions'],
   ['ipd/wards', 'Wards and beds'],
   ['nursing', 'Ward round'],
+  ['stock', 'Pharmacy stock'],
 ] as const;
 
 test.describe('Full-plan clinic, real backend', () => {

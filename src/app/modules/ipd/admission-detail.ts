@@ -5,6 +5,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IpdService } from '../../core/services/ipd.service';
 import { AuthService } from '../../core/services/auth.service';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
+import { StockService } from '../../core/services/stock.service';
+import { IssueView, StockLine } from '../../core/models/stock.model';
+import { switchMap, tap } from 'rxjs';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {
@@ -23,7 +26,7 @@ import {
   rupees,
 } from '../../core/models/ipd.model';
 
-type Panel = 'move' | 'charge' | 'advance' | 'summary' | 'bill' | 'refund' | 'discharge' | null;
+type Panel = 'move' | 'charge' | 'issue' | 'advance' | 'summary' | 'bill' | 'refund' | 'discharge' | null;
 
 /**
  * One inpatient stay, run from here: the ward moves the patient and adds charges, the billing desk takes advances
@@ -73,6 +76,9 @@ type Panel = 'move' | 'charge' | 'advance' | 'summary' | 'bill' | 'refund' | 'di
           @if (open && canManage && !a.billId) {
             <button type="button" id="action-move" (click)="openPanel('move')" class="act bg-blue-600"><span class="material-symbols-outlined text-lg">swap_horiz</span> Move bed</button>
             <button type="button" id="action-charge" (click)="openPanel('charge')" class="act bg-teal-600"><span class="material-symbols-outlined text-lg">add_card</span> Add charge</button>
+          }
+          @if (open && canIssue && !a.billId) {
+            <button type="button" id="action-issue" (click)="openPanel('issue')" class="act bg-emerald-700"><span class="material-symbols-outlined text-lg">medication</span> Issue medicine</button>
           }
           @if (open && canBill && !a.billId) {
             <button type="button" id="action-advance" (click)="openPanel('advance')" class="act bg-emerald-600"><span class="material-symbols-outlined text-lg">payments</span> Take advance</button>
@@ -152,6 +158,21 @@ type Panel = 'move' | 'charge' | 'advance' | 'summary' | 'bill' | 'refund' | 'di
                 </div>
                 <input [(ngModel)]="moneyReference" name="moneyReference" maxlength="100" aria-label="Reference" placeholder="Reference (UPI or card slip no.)"
                   class="w-full border border-outline-variant rounded-lg p-2.5 text-sm" />
+              }
+              @case ('issue') {
+                <h2 class="font-semibold">Issue medicine from stock</h2>
+                <div class="flex gap-2 flex-wrap items-center">
+                  <select id="issue-medicine" [(ngModel)]="issueMedicine" name="issueMedicine" aria-label="Medicine"
+                    class="flex-1 min-w-[200px] border border-outline-variant rounded-lg p-2.5 text-sm">
+                    <option value="">Choose a medicine</option>
+                    @for (l of stockLines; track l.medicineId) {
+                      <option [value]="l.medicineId" [disabled]="l.onHand - l.expiredQuantity <= 0">{{ l.medicineName }} · {{ l.onHand - l.expiredQuantity }} in stock · {{ money(l.priceInPaisa) }}</option>
+                    }
+                  </select>
+                  <input id="issue-quantity" type="number" min="1" [(ngModel)]="issueQuantity" name="issueQuantity" aria-label="Quantity" inputmode="numeric"
+                    class="w-24 border border-outline-variant rounded-lg p-2.5 text-sm" />
+                </div>
+                <p class="text-sm text-slate-700">Taken earliest expiry first and added to the stay's bill.</p>
               }
               @case ('refund') {
                 <h2 class="font-semibold">Give back {{ money(-a.account.balanceInPaisa) }}</h2>
@@ -277,7 +298,11 @@ type Panel = 'move' | 'charge' | 'advance' | 'summary' | 'bill' | 'refund' | 'di
                 <span><span class="material-symbols-outlined text-base align-middle text-teal-700">{{ categoryIcon(c) }}</span>
                   {{ c.description }}{{ c.quantity > 1 ? ' × ' + c.quantity : '' }} <span class="text-xs text-slate-600">{{ c.chargedOn | date: 'd MMM' }}</span></span>
                 <span class="flex items-center gap-1">{{ money(c.amountInPaisa) }}
-                  @if (open && canManage && !a.billId) {
+                  @if (issueFor(c.id); as issue) {
+                    @if (open && canIssue && !a.billId) {
+                      <button type="button" (click)="giveBack(issue)" [attr.aria-label]="'Return ' + c.description" class="px-2 py-0.5 rounded border border-outline-variant text-xs">Return</button>
+                    }
+                  } @else if (open && canManage && !a.billId) {
                     <button type="button" (click)="removeCharge(c)" [attr.aria-label]="'Remove ' + c.description" class="p-1 text-status-red">
                       <span class="material-symbols-outlined text-base">close</span></button>
                   }
@@ -325,8 +350,14 @@ export class AdmissionDetailComponent implements OnInit {
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private license = inject(EffectiveLicenseService);
+  private stock = inject(StockService);
 
   a: AdmissionView | null = null;
+  /** What the pharmacy issued to this stay (clinics that keep stock). */
+  issues: IssueView[] = [];
+  stockLines: StockLine[] = [];
+  issueMedicine = '';
+  issueQuantity = 1;
   error = '';
   panel: Panel = null;
   panelError = '';
@@ -363,6 +394,19 @@ export class AdmissionDetailComponent implements OnInit {
   /** The nursing chart is its own plan module. */
   get hasNursing(): boolean {
     return this.license.activeModules().includes('NURSING');
+  }
+
+  /** Clinics that keep pharmacy stock issue medicines to the stay from it. */
+  get hasStock(): boolean {
+    return this.license.activeModules().includes('PHARMACY_STOCK');
+  }
+
+  get canIssue(): boolean {
+    return this.hasStock && this.auth.can('STOCK_ISSUE');
+  }
+
+  issueFor(chargeId: string): IssueView | undefined {
+    return this.issues.find((i) => i.chargeId === chargeId);
   }
 
   get canManage(): boolean {
@@ -436,6 +480,8 @@ export class AdmissionDetailComponent implements OnInit {
         return !!this.moveTo;
       case 'charge':
         return this.chargeDescription.trim().length >= 2 && this.chargeQuantity >= 1 && (this.chargePrice ?? -1) >= 0;
+      case 'issue':
+        return !!this.issueMedicine && this.issueQuantity >= 1;
       case 'advance':
       case 'refund':
         return (this.moneyRupees ?? 0) > 0;
@@ -452,6 +498,7 @@ export class AdmissionDetailComponent implements OnInit {
     return {
       move: 'Move',
       charge: 'Add charge',
+      issue: 'Issue',
       advance: 'Save advance',
       refund: 'Save refund',
       summary: 'Save and advise discharge',
@@ -470,6 +517,9 @@ export class AdmissionDetailComponent implements OnInit {
       next: (a) => (this.a = a),
       error: (err) => (this.error = err?.error?.message || 'The admission could not be loaded.'),
     });
+    if (this.hasStock) {
+      this.stock.issues(id).subscribe({ next: (list) => (this.issues = list), error: () => (this.issues = []) });
+    }
   }
 
   openPanel(panel: Panel): void {
@@ -500,6 +550,11 @@ export class AdmissionDetailComponent implements OnInit {
       this.followUpDate = a.followUpDate ?? '';
       this.dischargeType = a.dischargeType ?? 'NORMAL';
     }
+    if (panel === 'issue') {
+      this.issueMedicine = '';
+      this.issueQuantity = 1;
+      this.stock.overview().subscribe({ next: (lines) => (this.stockLines = lines) });
+    }
     if (panel === 'bill') this.discountRupees = null;
     if (panel === 'discharge') this.duesNote = '';
   }
@@ -510,6 +565,11 @@ export class AdmissionDetailComponent implements OnInit {
     const money = { amountInPaisa: Math.round((this.moneyRupees ?? 0) * 100), paymentMethod: this.moneyMethod, reference: this.moneyReference.trim() || null };
     const call = {
       move: () => this.ipd.transfer(id, this.moveTo, this.moveReason.trim()),
+      issue: () =>
+        this.stock.issue(id, this.issueMedicine, this.issueQuantity).pipe(
+          tap((list) => (this.issues = list)),
+          switchMap(() => this.ipd.get(id)),
+        ),
       charge: () =>
         this.ipd.addCharge(id, {
           category: this.chargeCategory,
@@ -546,6 +606,28 @@ export class AdmissionDetailComponent implements OnInit {
         this.panelError = err?.error?.message || 'That did not work. Try again.';
       },
     });
+  }
+
+  /** Unused medicine back to the pharmacy; the stay's charge goes down with it. */
+  giveBack(issue: IssueView): void {
+    const outstanding = issue.issued - issue.returned;
+    const answer = window.prompt(`How many ${issue.medicineName} come back? (up to ${outstanding})`, `${outstanding}`);
+    const quantity = Number(answer);
+    if (!answer || !Number.isInteger(quantity) || quantity < 1) return;
+    const id = this.a!.id;
+    this.stock
+      .giveBack(id, issue.chargeId, quantity)
+      .pipe(
+        tap((list) => (this.issues = list)),
+        switchMap(() => this.ipd.get(id)),
+      )
+      .subscribe({
+        next: (a) => {
+          this.a = a;
+          this.toast.success(`${quantity} ${issue.medicineName} returned to stock`);
+        },
+        error: (err) => this.toast.error(err?.error?.message || 'The return was not recorded.'),
+      });
   }
 
   removeCharge(c: ChargeView): void {
