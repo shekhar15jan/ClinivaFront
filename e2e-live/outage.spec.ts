@@ -5,6 +5,7 @@ import { registerPatient, signInAsNewAdmin, signInWithOtp } from './helpers';
 const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
 const CLOUDSUITE_CONTAINER = process.env.CLOUDSUITE_CONTAINER || 'codeatcloud-local-cloudsuite-1';
 const CLINIVA_CONTAINER = process.env.CLINIVA_CONTAINER || 'codeatcloud-local-cliniva-1';
+const CLOUDSUITE_HEALTH = process.env.CLOUDSUITE_HEALTH || 'http://localhost:8081/actuator/health';
 
 /**
  * The platform being down must not stop patient care. CloudSuite is stopped and Cliniva restarted (so nothing is left
@@ -40,5 +41,10 @@ test('with CloudSuite down, a clinic keeps working from its own copy of the lice
     expect(Date.now() - started, 'no screen waits on the platform').toBeLessThan(60000);
   } finally {
     execSync(`docker start ${CLOUDSUITE_CONTAINER}`, { stdio: 'ignore' });
+    // The next tests make their clinics through the platform: wait until it is back, not only started.
+    await expect
+      .poll(async () => (await request.get(`${CLOUDSUITE_HEALTH}`).catch(() => null))?.ok() ?? false,
+        { timeout: 240000, intervals: [3000], message: 'CloudSuite is back up' })
+      .toBe(true);
   }
 });

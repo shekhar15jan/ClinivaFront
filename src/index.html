@@ -5,10 +5,11 @@
     <title>Cliniva HMS</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.razorpay.com https://lh3.googleusercontent.com https://api.codeatcloud.com http://localhost:8080; connect-src 'self' https://api.codeatcloud.com https://api.razorpay.com https://lumberjack.razorpay.com http://localhost:8081 http://localhost:8080; frame-src https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.razorpay.com https://lh3.googleusercontent.com https://api.codeatcloud.com http://localhost:8080; connect-src 'self' https://api.codeatcloud.com https://api.razorpay.com https://lumberjack.razorpay.com http://localhost:8081 http://localhost:8080; frame-src https://api.razorpay.com https://checkout.razorpay.com; object-src 'none'" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,0&display=swap" rel="stylesheet" />
+    <!-- Icons: served with the app (see fonts/material-symbols.css), fetched straight away. -->
+    <link rel="preload" href="fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin />
+    <link href="fonts/material-symbols.css" rel="stylesheet" />
   </head>
   <body>
     <app-root></app-root>

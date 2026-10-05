@@ -14,6 +14,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:4201',
     headless: true,
+    // SLOWMO=600 (milliseconds per action) with --headed, to watch a run.
+    launchOptions: { slowMo: Number(process.env.SLOWMO || 0) },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },

@@ -1,0 +1,31 @@
+/*
+ * Material Symbols Outlined, served with the app instead of from Google Fonts: only the axes the app uses (weight 400,
+ * grade 0, size 24, outlined and filled), about 460 KB instead of 4 MB, and no request to a third party.
+ * "block": the icon names are never shown as words while the font loads. To refresh the file, request
+ * https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0 with a
+ * modern browser's User-Agent and download the woff2 it names.
+ */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('material-symbols-outlined.woff2') format('woff2');
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
