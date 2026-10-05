@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { PatientService } from '../../../../core/services/patient.service';
 import { IpdService } from '../../../../core/services/ipd.service';
+import { AbdmService } from '../../../../core/services/abdm.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Patient } from '../../../../core/models/patient.model';
@@ -30,6 +31,7 @@ describe('PatientDetail', () => {
   let router: { navigate: ReturnType<typeof vi.fn> };
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; warning: ReturnType<typeof vi.fn> };
   let ipd: { forPatient: ReturnType<typeof vi.fn> };
+  let abdm: Record<string, ReturnType<typeof vi.fn>>;
 
   function create(role = 'ADMIN', modules: string[] = ['PATIENT', 'DEPARTMENT']) {
     service = {
@@ -42,11 +44,13 @@ describe('PatientDetail', () => {
     };
     router = { navigate: vi.fn() };
     ipd = { forPatient: vi.fn().mockReturnValue(of([])) };
+    abdm = { records: vi.fn().mockReturnValue(of([])), setAbha: vi.fn().mockReturnValue(of({ abhaNumber: '91-1234-5678-9012', abhaAddress: 'rahul@abdm' })) };
     toast = { success: vi.fn(), error: vi.fn(), warning: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         { provide: PatientService, useValue: service },
         { provide: IpdService, useValue: ipd },
+        { provide: AbdmService, useValue: abdm },
         { provide: AuthService, useValue: fakeAuth(role) },
         { provide: EffectiveLicenseService, useValue: { activeModules: () => modules } },
         { provide: Router, useValue: router },
@@ -80,6 +84,25 @@ describe('PatientDetail', () => {
     component.stays = [stay as never];
     expect(component.currentStay?.bedNumber).toBe('G-3');
     expect(component.canAdmit).toBe(false);
+  });
+
+  it('ABHA is recorded where the clinic has ABDM, and the records are listed for clinical staff', () => {
+    const none = create('RECEPTIONIST', ['PATIENT']);
+    expect(none.hasAbdm).toBe(false);
+    expect(abdm['records']).not.toHaveBeenCalled();
+    TestBed.resetTestingModule();
+    const desk = create('RECEPTIONIST', ['PATIENT', 'ABDM']);
+    expect(desk.canEditAbha).toBe(true);
+    expect(abdm['records']).not.toHaveBeenCalled();
+    desk.startAbha();
+    desk.abhaNumber = '91123456789012';
+    desk.abhaAddress = 'rahul@abdm';
+    desk.saveAbha();
+    expect(abdm['setAbha']).toHaveBeenCalledWith('p1', '91123456789012', 'rahul@abdm');
+    expect(desk.patient?.abhaNumber).toBe('91-1234-5678-9012');
+    TestBed.resetTestingModule();
+    create('DOCTOR', ['PATIENT', 'ABDM']);
+    expect(abdm['records']).toHaveBeenCalledWith('p1');
   });
 
   it('loads this patient by id, not by searching the first page of everyone', () => {

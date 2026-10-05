@@ -63,6 +63,7 @@ export const routes: Routes = [
             path: 'audit-logs',
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
+          { path: 'abdm', loadComponent: () => import('./modules/abdm/abdm-setup').then(m => m.AbdmSetupComponent) },
           {
             path: 'insurance',
             children: [

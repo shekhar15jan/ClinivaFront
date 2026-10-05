@@ -28,6 +28,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'PAYMENT', label: 'Payments', icon: 'payments', route: 'payments', perms: ['BILLING'] },
   { code: 'MEDICINE', label: 'Pharmacy', icon: 'medication', route: 'medicines', perms: ['MEDICINE_VIEW'] },
   { code: 'PHARMACY_STOCK', label: 'Stock', icon: 'inventory_2', route: 'stock', perms: ['MEDICINE_VIEW'] },
+  { code: 'ABDM', label: 'ABDM', icon: 'verified_user', route: 'abdm', perms: ['CLINIC_SETTINGS', 'DOCTOR_MANAGE'] },
   { code: 'INSURANCE', label: 'Insurance', icon: 'health_and_safety', route: 'insurance', perms: ['INSURANCE_DESK'] },
   { code: 'LAB', label: 'Lab', icon: 'biotech', route: 'lab', perms: ['LAB_ORDER', 'LAB_PROCESS', 'LAB_VERIFY', 'LAB_MANAGE', 'BILLING'] },
   { code: 'REPORTS', label: 'Reports', icon: 'bar_chart', route: 'reports', perms: ['FINANCE_REPORTS', 'OPERATIONS_REPORTS'] },

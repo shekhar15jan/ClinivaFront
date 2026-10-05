@@ -63,6 +63,31 @@
         }
       </div>
     }
+    @if (hasAbdm) {
+      <div class="bg-white rounded-xl border border-outline-variant p-4" id="abha">
+        <div class="flex justify-between items-center gap-2 flex-wrap">
+          <h3 class="text-sm font-semibold text-on-surface">ABHA (ABDM)</h3>
+          @if (canEditAbha && !editingAbha) { <button type="button" id="edit-abha" (click)="startAbha()" class="text-sm underline">{{ patient.abhaNumber || patient.abhaAddress ? 'Edit' : 'Add ABHA' }}</button> }
+        </div>
+        @if (editingAbha) {
+          <div class="flex gap-2 flex-wrap mt-2">
+            <input id="abha-number" [(ngModel)]="abhaNumber" maxlength="20" placeholder="ABHA number (14 digits)" aria-label="ABHA number" class="border border-outline-variant rounded-lg p-2 text-sm" />
+            <input id="abha-address" [(ngModel)]="abhaAddress" maxlength="100" placeholder="name@abdm" aria-label="ABHA address" class="border border-outline-variant rounded-lg p-2 text-sm" />
+            <button type="button" id="save-abha" (click)="saveAbha()" class="px-4 py-2 rounded-lg bg-primary text-white text-sm">Save</button>
+            <button type="button" (click)="editingAbha = false" class="px-4 py-2 rounded-lg border border-outline-variant text-sm">Cancel</button>
+          </div>
+          @if (abhaError) { <p class="text-sm text-status-red mt-1" id="abha-error">{{ abhaError }}</p> }
+        } @else {
+          <p class="text-sm text-slate-700 mt-1" id="abha-value">{{ patient.abhaNumber || 'No ABHA number' }}{{ patient.abhaAddress ? ' · ' + patient.abhaAddress : '' }}</p>
+        }
+        @if (records.length) {
+          <h4 class="text-sm font-semibold mt-3 mb-1">Health records (shareable)</h4>
+          @for (r of records; track r.id) {
+            <button type="button" (click)="openRecord(r)" class="block text-sm underline text-left" [attr.data-record]="r.kind">{{ r.title }} · {{ r.date | date: 'd MMM y' }}</button>
+          }
+        }
+      </div>
+    }
     @if (canOrderLab) {
       <div class="flex">
         <a [routerLink]="['../../lab/new']" [queryParams]="{ patient: patientId }" id="order-lab"

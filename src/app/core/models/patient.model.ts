@@ -21,6 +21,9 @@ export interface Patient {
   bloodGroup?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
+  /** ABDM identifiers. */
+  abhaNumber?: string | null;
+  abhaAddress?: string | null;
   medicalHistory?: string;
   isDeleted?: boolean;
   createdAt?: string;

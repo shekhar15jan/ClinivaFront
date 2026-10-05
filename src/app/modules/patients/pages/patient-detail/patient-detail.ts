@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { PatientService } from '../../../../core/services/patient.service';
 import { IpdService } from '../../../../core/services/ipd.service';
+import { AbdmService, RecordRef } from '../../../../core/services/abdm.service';
 import { AdmissionSummary } from '../../../../core/models/ipd.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
@@ -38,6 +39,14 @@ export class PatientDetail implements OnInit {
   private toast = inject(ToastService);
   private license = inject(EffectiveLicenseService);
   private ipd = inject(IpdService);
+  private abdm = inject(AbdmService);
+
+  /** ABDM: the patient's ABHA and the records that can be shared (clinics with the module). */
+  editingAbha = false;
+  abhaNumber = '';
+  abhaAddress = '';
+  abhaError = '';
+  records: RecordRef[] = [];
 
   readonly bloodGroups = BLOOD_GROUPS;
   readonly bloodGroupLabel = bloodGroupLabel;
@@ -116,6 +125,9 @@ export class PatientDetail implements OnInit {
         error: () => (this.access = null),
       });
     }
+    if (this.hasAbdm && this.auth.can('CLINICAL_VIEW')) {
+      this.abdm.records(id).subscribe({ next: (r) => (this.records = r), error: () => (this.records = []) });
+    }
     if (this.hasBeds) {
       this.ipd.forPatient(id).subscribe({ next: (list) => (this.stays = list), error: () => (this.stays = []) });
     }
@@ -138,6 +150,41 @@ export class PatientDetail implements OnInit {
 
   get currentStay(): AdmissionSummary | null {
     return this.stays.find((s) => s.status !== 'DISCHARGED') ?? null;
+  }
+
+  get hasAbdm(): boolean {
+    return this.license.activeModules().includes('ABDM');
+  }
+
+  get canEditAbha(): boolean {
+    return this.hasAbdm && this.auth.can('PATIENT_EDIT');
+  }
+
+  startAbha(): void {
+    this.editingAbha = true;
+    this.abhaNumber = this.patient?.abhaNumber ?? '';
+    this.abhaAddress = this.patient?.abhaAddress ?? '';
+    this.abhaError = '';
+  }
+
+  saveAbha(): void {
+    this.abdm.setAbha(this.patientId, this.abhaNumber.trim() || null, this.abhaAddress.trim() || null).subscribe({
+      next: (r) => {
+        if (this.patient) {
+          this.patient = { ...this.patient, abhaNumber: r.abhaNumber || null, abhaAddress: r.abhaAddress || null };
+        }
+        this.editingAbha = false;
+        this.toast.success('ABHA saved');
+      },
+      error: (err) => (this.abhaError = err?.error?.message || 'Not saved.'),
+    });
+  }
+
+  openRecord(r: RecordRef): void {
+    this.abdm.document(r.kind, r.id).subscribe({
+      next: (blob) => window.open(URL.createObjectURL(blob), '_blank'),
+      error: () => this.toast.error('The record could not be opened.'),
+    });
   }
 
   get canOrderLab(): boolean {
