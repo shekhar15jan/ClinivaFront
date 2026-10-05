@@ -87,7 +87,7 @@
               }
               @if (bill.additionalChargesInPaisa) {
                 <tr>
-                  <td class="py-4 text-sm font-medium text-on-surface">{{ bill.labOrderId ? 'Lab tests' : bill.imagingOrderId ? 'Imaging' : bill.admissionId ? 'Beds and other charges' : 'Additional charges' }}</td>
+                  <td class="py-4 text-sm font-medium text-on-surface">{{ bill.labOrderId ? 'Lab tests' : bill.imagingOrderId ? 'Imaging' : bill.surgeryId ? 'Surgery' : bill.admissionId ? 'Beds and other charges' : 'Additional charges' }}</td>
                   <td class="py-4 text-sm text-outline text-right">&nbsp;</td>
                   <td class="py-4 text-sm text-outline text-right">&nbsp;</td>
                   <td class="py-4 text-sm text-on-surface font-medium text-right">{{ (bill.additionalChargesInPaisa / 100) | number: '1.2-2' }}</td>
@@ -119,7 +119,7 @@
           }
           @if (bill.additionalChargesInPaisa) {
             <div class="flex justify-between text-sm text-outline">
-              <span>{{ bill.labOrderId ? 'Lab tests' : bill.imagingOrderId ? 'Imaging' : bill.admissionId ? 'Beds and other charges' : 'Additional charges' }}</span>
+              <span>{{ bill.labOrderId ? 'Lab tests' : bill.imagingOrderId ? 'Imaging' : bill.surgeryId ? 'Surgery' : bill.admissionId ? 'Beds and other charges' : 'Additional charges' }}</span>
               <span>₹{{ (bill.additionalChargesInPaisa / 100) | number: '1.2-2' }}</span>
             </div>
           }

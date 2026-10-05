@@ -104,6 +104,14 @@
         </a>
       </div>
     }
+    @if (canBookSurgery) {
+      <div class="flex">
+        <a [routerLink]="['../../ot/new']" [queryParams]="{ patient: patientId }" id="book-surgery"
+          class="px-4 min-h-touch text-sm font-semibold text-white bg-teal-700 rounded-lg flex items-center gap-1">
+          <span class="material-symbols-outlined text-lg">surgical</span> Book surgery
+        </a>
+      </div>
+    }
     @if (hasBeds) {
       @if (currentStay; as s) {
         <a [routerLink]="['../../ipd/admissions', s.id]" class="rounded-xl border border-blue-300 bg-blue-50 p-3 text-sm text-blue-900 flex items-center gap-2" id="current-stay">

@@ -12,7 +12,7 @@ const STAFF_SCREENS = [
   'dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'billing', 'payments',
   'medicines', 'reports', 'health-packages', 'contacts', 'reviews', 'users', 'audit-logs', 'settings',
   'departments', 'roles', 'emergency-access', 'ipd', 'ipd/admissions', 'nursing', 'stock', 'lab', 'insurance', 'abdm',
-  'radiology',
+  'radiology', 'ot', 'analytics',
 ] as const;
 type Screen = (typeof STAFF_SCREENS)[number];
 
@@ -21,17 +21,17 @@ const ALLOWED: Record<(typeof ROLES)[number], Screen[]> = {
   ADMIN: [...STAFF_SCREENS],
   // Clinic reports are finance and operations; a doctor's own numbers are on the dashboard.
   DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'health-packages',
-    'ipd', 'ipd/admissions', 'nursing', 'stock', 'lab', 'radiology'],
+    'ipd', 'ipd/admissions', 'nursing', 'stock', 'lab', 'radiology', 'ot'],
   // Nurses read the day's queue and the prescriptions they give; they do not book or prescribe.
   NURSE: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'health-packages', 'ipd',
-    'ipd/admissions', 'nursing'],
+    'ipd/admissions', 'nursing', 'ot'],
   RECEPTIONIST: ['dashboard', 'patients', 'doctors', 'appointments', 'billing', 'payments', 'medicines', 'health-packages',
-    'ipd', 'ipd/admissions', 'stock', 'lab', 'insurance', 'radiology'],
+    'ipd', 'ipd/admissions', 'stock', 'lab', 'insurance', 'radiology', 'ot'],
   // Runs the hospital: no money, no clinical records, no staff security.
   HOSPITAL_ADMIN: ['dashboard', 'patients', 'doctors', 'appointments', 'medicines', 'reports', 'health-packages',
-    'departments', 'contacts', 'reviews', 'ipd', 'ipd/admissions', 'stock', 'lab', 'abdm', 'radiology'],
+    'departments', 'contacts', 'reviews', 'ipd', 'ipd/admissions', 'stock', 'lab', 'abdm', 'radiology', 'ot', 'analytics'],
   ACCOUNTANT: ['dashboard', 'patients', 'doctors', 'billing', 'payments', 'medicines', 'reports', 'health-packages', 'ipd',
-    'ipd/admissions', 'stock', 'lab', 'insurance', 'radiology'],
+    'ipd/admissions', 'stock', 'lab', 'insurance', 'radiology', 'ot', 'analytics'],
   PHARMACIST: ['dashboard', 'patients', 'doctors', 'prescriptions', 'medicines', 'health-packages', 'ipd', 'ipd/admissions', 'stock'],
   // Collects samples and enters results; sees patients' names, not their records.
   LAB_TECHNICIAN: ['dashboard', 'patients', 'doctors', 'health-packages', 'lab'],

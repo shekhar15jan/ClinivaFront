@@ -17,7 +17,7 @@ test.describe('What each clinic and role is offered, real backend', { tag: '@des
       await expect(link(page, admin.hospitalCode, route), `${route} is offered`).toHaveCount(1, { timeout: 15000 });
     }
     // Pharmacy, reports and packages come with Clinic Plus; departments, emergency access and custom roles are hospital modules.
-    for (const route of ['medicines', 'reports', 'health-packages', 'departments', 'emergency-access', 'roles', 'ipd', 'nursing', 'stock', 'lab', 'insurance', 'abdm', 'radiology']) {
+    for (const route of ['medicines', 'reports', 'health-packages', 'departments', 'emergency-access', 'roles', 'ipd', 'nursing', 'stock', 'lab', 'insurance', 'abdm', 'radiology', 'ot', 'analytics']) {
       await expect(link(page, admin.hospitalCode, route), `${route} is not in the plan`).toHaveCount(0);
     }
 

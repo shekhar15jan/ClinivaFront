@@ -80,6 +80,15 @@ export const routes: Routes = [
               { path: ':id', loadComponent: () => import('./modules/lab/lab-order').then(m => m.LabOrderComponent) },
             ]
           },
+          { path: 'analytics', loadComponent: () => import('./modules/analytics/analytics-page').then(m => m.AnalyticsPageComponent) },
+          {
+            path: 'ot',
+            children: [
+              { path: '', loadComponent: () => import('./modules/ot/ot-board').then(m => m.OtBoardComponent) },
+              { path: 'new', loadComponent: () => import('./modules/ot/ot-book').then(m => m.OtBookComponent) },
+              { path: ':id', loadComponent: () => import('./modules/ot/ot-surgery').then(m => m.OtSurgeryComponent) },
+            ]
+          },
           {
             path: 'radiology',
             children: [

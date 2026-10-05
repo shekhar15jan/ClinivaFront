@@ -10,6 +10,8 @@ export interface Bill {
   labOrderId?: string | null;
   /** The imaging order an outpatient's radiology bill is for. */
   imagingOrderId?: string | null;
+  /** The day-case surgery this bill is for. */
+  surgeryId?: string | null;
   prescriptionId?: string;
   consultationFeeInPaisa: number;
   medicineChargesInPaisa?: number;

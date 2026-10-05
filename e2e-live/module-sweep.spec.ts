@@ -33,6 +33,8 @@ const LICENSED = [
   ['insurance', 'Insurance'],
   ['abdm', 'ABDM'],
   ['radiology', 'Radiology'],
+  ['ot', 'Operation theatre'],
+  ['analytics', 'Analytics'],
 ] as const;
 
 test.describe('Full-plan clinic, real backend', () => {
