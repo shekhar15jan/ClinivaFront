@@ -64,6 +64,13 @@ export const routes: Routes = [
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
           {
+            path: 'insurance',
+            children: [
+              { path: '', loadComponent: () => import('./modules/insurance/insurance-desk').then(m => m.InsuranceDeskComponent) },
+              { path: ':id', loadComponent: () => import('./modules/insurance/claim-detail').then(m => m.ClaimDetailComponent) },
+            ]
+          },
+          {
             path: 'lab',
             children: [
               { path: '', loadComponent: () => import('./modules/lab/lab-worklist').then(m => m.LabWorklistComponent) },

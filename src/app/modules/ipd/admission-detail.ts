@@ -7,7 +7,10 @@ import { AuthService } from '../../core/services/auth.service';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { StockService } from '../../core/services/stock.service';
 import { IssueView, StockLine } from '../../core/models/stock.model';
-import { switchMap, tap } from 'rxjs';
+import { InsuranceService } from '../../core/services/insurance.service';
+import { ClaimSummary, Payer, Policy } from '../../core/models/insurance.model';
+import { Router } from '@angular/router';
+import { map, switchMap, tap } from 'rxjs';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {
@@ -26,7 +29,7 @@ import {
   rupees,
 } from '../../core/models/ipd.model';
 
-type Panel = 'move' | 'charge' | 'issue' | 'advance' | 'summary' | 'bill' | 'refund' | 'discharge' | null;
+type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' | 'bill' | 'refund' | 'discharge' | null;
 
 /**
  * One inpatient stay, run from here: the ward moves the patient and adds charges, the billing desk takes advances
@@ -76,6 +79,10 @@ type Panel = 'move' | 'charge' | 'issue' | 'advance' | 'summary' | 'bill' | 'ref
           @if (open && canManage && !a.billId) {
             <button type="button" id="action-move" (click)="openPanel('move')" class="act bg-blue-600"><span class="material-symbols-outlined text-lg">swap_horiz</span> Move bed</button>
             <button type="button" id="action-charge" (click)="openPanel('charge')" class="act bg-teal-600"><span class="material-symbols-outlined text-lg">add_card</span> Add charge</button>
+          }
+          @if (canInsure) {
+            <button type="button" id="action-insurance" (click)="openPanel('insurance')" class="act bg-violet-700">
+              <span class="material-symbols-outlined text-lg">health_and_safety</span> Insurance{{ claims.length ? ' (' + claims.length + ')' : '' }}</button>
           }
           @if (open && canOrderLab && !a.billId) {
             <a [routerLink]="['../../../lab/new']" [queryParams]="{ patient: a.patientId, admission: a.id }" id="action-lab" class="act bg-sky-700">
@@ -162,6 +169,38 @@ type Panel = 'move' | 'charge' | 'issue' | 'advance' | 'summary' | 'bill' | 'ref
                 </div>
                 <input [(ngModel)]="moneyReference" name="moneyReference" maxlength="100" aria-label="Reference" placeholder="Reference (UPI or card slip no.)"
                   class="w-full border border-outline-variant rounded-lg p-2.5 text-sm" />
+              }
+              @case ('insurance') {
+                <h2 class="font-semibold">Insurance</h2>
+                @for (cl of claims; track cl.id) {
+                  <a [routerLink]="['../../../insurance', cl.id]" class="block text-sm underline" [attr.data-claim]="cl.claimNumber">{{ cl.claimNumber }} · {{ cl.payerName }} · {{ cl.status.toLowerCase().replace('_', ' ') }}</a>
+                }
+                <label class="block text-sm font-medium">Policy
+                  <select id="claim-policy" [(ngModel)]="policyId" name="policyId" class="mt-1 w-full border border-outline-variant rounded-lg p-2.5 text-sm">
+                    <option value="">New policy…</option>
+                    @for (p of policies; track p.id) { <option [value]="p.id">{{ p.payerName }} · {{ p.policyNumber }}{{ p.tpaName ? ' (' + p.tpaName + ')' : '' }}</option> }
+                  </select></label>
+                @if (!policyId) {
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 rounded-lg bg-slate-50 p-2" id="new-policy">
+                    <select [(ngModel)]="newPolicy.payerId" name="payerId" aria-label="Insurer or scheme" class="border border-outline-variant rounded-lg p-2 text-sm">
+                      <option value="">Insurer or scheme</option>
+                      @for (p of insurers; track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+                    </select>
+                    <select [(ngModel)]="newPolicy.tpaId" name="tpaId" aria-label="TPA" class="border border-outline-variant rounded-lg p-2 text-sm">
+                      <option value="">No TPA</option>
+                      @for (p of tpas; track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+                    </select>
+                    <input [(ngModel)]="newPolicy.policyNumber" name="policyNumber" maxlength="60" aria-label="Policy or card number" placeholder="Policy / card number" class="border border-outline-variant rounded-lg p-2 text-sm" />
+                    <input [(ngModel)]="newPolicy.memberId" name="memberId" maxlength="60" aria-label="Member ID" placeholder="Member ID (optional)" class="border border-outline-variant rounded-lg p-2 text-sm" />
+                    <label class="text-xs text-slate-600">Valid to <input type="date" [(ngModel)]="newPolicy.validTo" name="validTo" class="border border-outline-variant rounded-lg p-2 text-sm" /></label>
+                    @if (payers.length === 0) { <p class="text-xs text-slate-600">Add payers on the Insurance screen first (one tap adds PM-JAY and common insurers).</p> }
+                  </div>
+                }
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input [(ngModel)]="packageCode" name="packageCode" maxlength="40" aria-label="Package code" placeholder="Package code (PM-JAY)" class="border border-outline-variant rounded-lg p-2 text-sm" />
+                  <input [(ngModel)]="packageName" name="packageName" maxlength="200" aria-label="Package name" placeholder="Package name" class="border border-outline-variant rounded-lg p-2 text-sm" />
+                  <input id="claim-requested" type="number" min="0" [(ngModel)]="requestedRupees" name="requested" aria-label="Estimate in rupees" placeholder="Estimate ₹" class="border border-outline-variant rounded-lg p-2 text-sm" />
+                </div>
               }
               @case ('issue') {
                 <h2 class="font-semibold">Issue medicine from stock</h2>
@@ -262,6 +301,9 @@ type Panel = 'move' | 'charge' | 'issue' | 'advance' | 'summary' | 'bill' | 'ref
               @if (a.account.taxInPaisa) { <div class="flex justify-between"><dt>GST</dt><dd>{{ money(a.account.taxInPaisa) }}</dd></div> }
               <div class="flex justify-between font-semibold border-t pt-1"><dt>Total</dt><dd id="account-total">{{ money(a.account.totalInPaisa) }}</dd></div>
               <div class="flex justify-between"><dt>Advances</dt><dd>{{ money(a.account.depositsInPaisa) }}</dd></div>
+              @if (a.account.insuranceExpectedInPaisa) {
+                <div class="flex justify-between text-violet-800" id="account-insurance"><dt>Insurance (expected)</dt><dd>{{ money(a.account.insuranceExpectedInPaisa) }}</dd></div>
+              }
               @if (a.account.refundsInPaisa) { <div class="flex justify-between"><dt>Refunded</dt><dd>{{ money(a.account.refundsInPaisa) }}</dd></div> }
             </dl>
             <div class="mt-3 rounded-lg p-3 font-semibold text-sm" [class]="balanceClass" id="account-balance">{{ balanceLabel }}</div>
@@ -355,6 +397,18 @@ export class AdmissionDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private license = inject(EffectiveLicenseService);
   private stock = inject(StockService);
+  private insurance = inject(InsuranceService);
+  private router = inject(Router);
+
+  /** The stay's claims and the patient's policies (clinics with the insurance desk). */
+  claims: ClaimSummary[] = [];
+  policies: Policy[] = [];
+  payers: Payer[] = [];
+  policyId = '';
+  newPolicy = { payerId: '', tpaId: '', policyNumber: '', memberId: '', validTo: '' };
+  packageCode = '';
+  packageName = '';
+  requestedRupees: number | null = null;
 
   a: AdmissionView | null = null;
   /** What the pharmacy issued to this stay (clinics that keep stock). */
@@ -407,6 +461,18 @@ export class AdmissionDetailComponent implements OnInit {
 
   get canOrderLab(): boolean {
     return this.license.activeModules().includes('LAB') && this.auth.can('LAB_ORDER');
+  }
+
+  get canInsure(): boolean {
+    return this.license.activeModules().includes('INSURANCE') && this.auth.can('INSURANCE_DESK');
+  }
+
+  get insurers(): Payer[] {
+    return this.payers.filter((p) => p.kind !== 'TPA');
+  }
+
+  get tpas(): Payer[] {
+    return this.payers.filter((p) => p.kind === 'TPA');
   }
 
   get canIssue(): boolean {
@@ -488,6 +554,8 @@ export class AdmissionDetailComponent implements OnInit {
         return !!this.moveTo;
       case 'charge':
         return this.chargeDescription.trim().length >= 2 && this.chargeQuantity >= 1 && (this.chargePrice ?? -1) >= 0;
+      case 'insurance':
+        return !!this.policyId || (!!this.newPolicy.payerId && this.newPolicy.policyNumber.trim().length >= 3);
       case 'issue':
         return !!this.issueMedicine && this.issueQuantity >= 1;
       case 'advance':
@@ -507,6 +575,7 @@ export class AdmissionDetailComponent implements OnInit {
       move: 'Move',
       charge: 'Add charge',
       issue: 'Issue',
+      insurance: 'Open claim',
       advance: 'Save advance',
       refund: 'Save refund',
       summary: 'Save and advise discharge',
@@ -525,6 +594,9 @@ export class AdmissionDetailComponent implements OnInit {
       next: (a) => (this.a = a),
       error: (err) => (this.error = err?.error?.message || 'The admission could not be loaded.'),
     });
+    if (this.canInsure) {
+      this.insurance.forAdmission(id).subscribe({ next: (list) => (this.claims = list), error: () => (this.claims = []) });
+    }
     if (this.hasStock) {
       this.stock.issues(id).subscribe({ next: (list) => (this.issues = list), error: () => (this.issues = []) });
     }
@@ -558,6 +630,15 @@ export class AdmissionDetailComponent implements OnInit {
       this.followUpDate = a.followUpDate ?? '';
       this.dischargeType = a.dischargeType ?? 'NORMAL';
     }
+    if (panel === 'insurance') {
+      this.policyId = '';
+      this.newPolicy = { payerId: '', tpaId: '', policyNumber: '', memberId: '', validTo: '' };
+      this.packageCode = '';
+      this.packageName = '';
+      this.requestedRupees = null;
+      this.insurance.policies(a.patientId).subscribe({ next: (p) => { this.policies = p; this.policyId = p[0]?.id ?? ''; } });
+      this.insurance.payers().subscribe({ next: (p) => (this.payers = p) });
+    }
     if (panel === 'issue') {
       this.issueMedicine = '';
       this.issueQuantity = 1;
@@ -569,6 +650,10 @@ export class AdmissionDetailComponent implements OnInit {
 
   save(): void {
     if (!this.a || this.busy || !this.panelReady) return;
+    if (this.panel === 'insurance') {
+      this.openClaim();
+      return;
+    }
     const id = this.a.id;
     const money = { amountInPaisa: Math.round((this.moneyRupees ?? 0) * 100), paymentMethod: this.moneyMethod, reference: this.moneyReference.trim() || null };
     const call = {
@@ -614,6 +699,39 @@ export class AdmissionDetailComponent implements OnInit {
         this.panelError = err?.error?.message || 'That did not work. Try again.';
       },
     });
+  }
+
+  private openClaim(): void {
+    const a = this.a!;
+    const requested = this.requestedRupees === null ? null : Math.round(this.requestedRupees * 100);
+    const policy$ = this.policyId
+      ? this.insurance.policies(a.patientId).pipe(map(() => this.policyId))
+      : this.insurance
+          .addPolicy({
+            patientId: a.patientId,
+            payerId: this.newPolicy.payerId,
+            tpaId: this.newPolicy.tpaId || null,
+            policyNumber: this.newPolicy.policyNumber.trim(),
+            memberId: this.newPolicy.memberId.trim() || null,
+            validFrom: null,
+            validTo: this.newPolicy.validTo || null,
+            sumInsuredInPaisa: null,
+          })
+          .pipe(map((p) => p.id));
+    this.busy = true;
+    policy$
+      .pipe(switchMap((policyId) => this.insurance.open(a.id, policyId, this.packageCode.trim() || null, this.packageName.trim() || null, requested)))
+      .subscribe({
+        next: (claim) => {
+          this.busy = false;
+          this.toast.success(`${claim.claimNumber} opened`);
+          this.router.navigate(['../../../insurance', claim.id], { relativeTo: this.route });
+        },
+        error: (err) => {
+          this.busy = false;
+          this.panelError = err?.error?.message || 'The claim was not opened.';
+        },
+      });
   }
 
   /** Unused medicine back to the pharmacy; the stay's charge goes down with it. */

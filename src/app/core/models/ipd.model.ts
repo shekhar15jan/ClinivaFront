@@ -202,6 +202,8 @@ export interface Account {
   refundsInPaisa: number;
   paidOnBillInPaisa: number;
   balanceInPaisa: number;
+  /** Approved or claimed from the insurer and not yet received; already off the balance. */
+  insuranceExpectedInPaisa: number;
 }
 
 export interface AdmissionSummary {

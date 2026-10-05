@@ -8,6 +8,7 @@ import { PatientService } from '../../core/services/patient.service';
 import { DoctorService } from '../../core/services/doctor.service';
 import { AuthService } from '../../core/services/auth.service';
 import { StockService } from '../../core/services/stock.service';
+import { InsuranceService } from '../../core/services/insurance.service';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { AdmissionView, BedBoard, rupees } from '../../core/models/ipd.model';
@@ -154,6 +155,8 @@ describe('AdmissionDetailComponent', () => {
         { provide: ToastService, useValue: { success: vi.fn(), error: vi.fn() } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'ad1' } } } },
         { provide: StockService, useValue: stock },
+        { provide: InsuranceService, useValue: { forAdmission: vi.fn().mockReturnValue(of([])) } },
+        { provide: Router, useValue: { navigate: vi.fn() } },
         { provide: EffectiveLicenseService, useValue: { activeModules: () => ['IPD', 'PHARMACY_STOCK'] } },
       ],
     });
