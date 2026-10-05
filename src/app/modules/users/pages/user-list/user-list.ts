@@ -245,6 +245,7 @@ export class UserListComponent implements OnInit {
     { value: 'DOCTOR', label: 'Doctor' },
     { value: 'NURSE', label: 'Nurse' },
     { value: 'PHARMACIST', label: 'Pharmacist' },
+    { value: 'LAB_TECHNICIAN', label: 'Lab technician' },
     { value: 'ACCOUNTANT', label: 'Accountant' },
     { value: 'HOSPITAL_ADMIN', label: 'Hospital admin' },
     { value: 'ADMIN', label: 'Owner' },

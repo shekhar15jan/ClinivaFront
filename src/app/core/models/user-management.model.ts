@@ -14,7 +14,7 @@ export interface ManagedUser {
   departmentName?: string | null;
 }
 
-export type ManagedRole = 'ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'NURSE' | 'RECEPTIONIST' | 'ACCOUNTANT' | 'PHARMACIST';
+export type ManagedRole = 'ADMIN' | 'HOSPITAL_ADMIN' | 'DOCTOR' | 'NURSE' | 'RECEPTIONIST' | 'ACCOUNTANT' | 'PHARMACIST' | 'LAB_TECHNICIAN';
 
 export interface CreateManagedUserRequest {
   email: string;

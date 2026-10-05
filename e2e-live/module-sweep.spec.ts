@@ -28,6 +28,8 @@ const LICENSED = [
   ['ipd/wards', 'Wards and beds'],
   ['nursing', 'Ward round'],
   ['stock', 'Pharmacy stock'],
+  ['lab', 'Lab'],
+  ['lab/tests', 'Lab test catalog'],
 ] as const;
 
 test.describe('Full-plan clinic, real backend', () => {

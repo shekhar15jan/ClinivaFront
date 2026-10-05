@@ -63,6 +63,15 @@ export const routes: Routes = [
             path: 'audit-logs',
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
+          {
+            path: 'lab',
+            children: [
+              { path: '', loadComponent: () => import('./modules/lab/lab-worklist').then(m => m.LabWorklistComponent) },
+              { path: 'new', loadComponent: () => import('./modules/lab/lab-new-order').then(m => m.LabNewOrderComponent) },
+              { path: 'tests', loadComponent: () => import('./modules/lab/lab-catalog').then(m => m.LabCatalogComponent) },
+              { path: ':id', loadComponent: () => import('./modules/lab/lab-order').then(m => m.LabOrderComponent) },
+            ]
+          },
           { path: 'stock', loadComponent: () => import('./modules/stock/stock-page').then(m => m.StockPageComponent) },
           {
             path: 'nursing',

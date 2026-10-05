@@ -140,6 +140,10 @@ export class PatientDetail implements OnInit {
     return this.stays.find((s) => s.status !== 'DISCHARGED') ?? null;
   }
 
+  get canOrderLab(): boolean {
+    return this.auth.can('LAB_ORDER') && this.license.activeModules().includes('LAB');
+  }
+
   get canAdmit(): boolean {
     return this.hasBeds && this.auth.can('IPD_MANAGE') && !this.currentStay;
   }

@@ -77,6 +77,10 @@ type Panel = 'move' | 'charge' | 'issue' | 'advance' | 'summary' | 'bill' | 'ref
             <button type="button" id="action-move" (click)="openPanel('move')" class="act bg-blue-600"><span class="material-symbols-outlined text-lg">swap_horiz</span> Move bed</button>
             <button type="button" id="action-charge" (click)="openPanel('charge')" class="act bg-teal-600"><span class="material-symbols-outlined text-lg">add_card</span> Add charge</button>
           }
+          @if (open && canOrderLab && !a.billId) {
+            <a [routerLink]="['../../../lab/new']" [queryParams]="{ patient: a.patientId, admission: a.id }" id="action-lab" class="act bg-sky-700">
+              <span class="material-symbols-outlined text-lg">biotech</span> Order tests</a>
+          }
           @if (open && canIssue && !a.billId) {
             <button type="button" id="action-issue" (click)="openPanel('issue')" class="act bg-emerald-700"><span class="material-symbols-outlined text-lg">medication</span> Issue medicine</button>
           }
@@ -399,6 +403,10 @@ export class AdmissionDetailComponent implements OnInit {
   /** Clinics that keep pharmacy stock issue medicines to the stay from it. */
   get hasStock(): boolean {
     return this.license.activeModules().includes('PHARMACY_STOCK');
+  }
+
+  get canOrderLab(): boolean {
+    return this.license.activeModules().includes('LAB') && this.auth.can('LAB_ORDER');
   }
 
   get canIssue(): boolean {

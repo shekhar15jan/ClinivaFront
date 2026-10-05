@@ -6,6 +6,8 @@ export interface Bill {
   appointmentId: string | null;
   /** The inpatient stay a final bill is for. */
   admissionId?: string | null;
+  /** The lab order an outpatient's lab bill is for. */
+  labOrderId?: string | null;
   prescriptionId?: string;
   consultationFeeInPaisa: number;
   medicineChargesInPaisa?: number;
