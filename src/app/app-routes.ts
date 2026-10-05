@@ -80,6 +80,15 @@ export const routes: Routes = [
               { path: ':id', loadComponent: () => import('./modules/lab/lab-order').then(m => m.LabOrderComponent) },
             ]
           },
+          {
+            path: 'payouts',
+            children: [
+              { path: '', loadComponent: () => import('./modules/payouts/payouts-page').then(m => m.PayoutsPageComponent) },
+              { path: ':id', loadComponent: () => import('./modules/payouts/payout-statement').then(m => m.PayoutStatementComponent) },
+            ]
+          },
+          { path: 'hr-link', loadComponent: () => import('./modules/hr-link/hr-link-page').then(m => m.HrLinkPageComponent) },
+          { path: 'my-payouts', loadComponent: () => import('./modules/payouts/my-payouts').then(m => m.MyPayoutsComponent) },
           { path: 'analytics', loadComponent: () => import('./modules/analytics/analytics-page').then(m => m.AnalyticsPageComponent) },
           {
             path: 'ot',

@@ -26,6 +26,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'PRESCRIPTION', label: 'Prescriptions', icon: 'receipt_long', route: 'prescriptions', perms: ['PRESCRIPTION_VIEW'] },
   { code: 'BILLING', label: 'Billing', icon: 'request_quote', route: 'billing', perms: ['BILLING'] },
   { code: 'PAYMENT', label: 'Payments', icon: 'payments', route: 'payments', perms: ['BILLING'] },
+  { code: 'PAYOUT', label: 'Doctor payouts', icon: 'account_balance_wallet', route: 'payouts', perms: ['PAYOUT_MANAGE'] },
   { code: 'MEDICINE', label: 'Pharmacy', icon: 'medication', route: 'medicines', perms: ['MEDICINE_VIEW'] },
   { code: 'PHARMACY_STOCK', label: 'Stock', icon: 'inventory_2', route: 'stock', perms: ['MEDICINE_VIEW'] },
   { code: 'ABDM', label: 'ABDM', icon: 'verified_user', route: 'abdm', perms: ['CLINIC_SETTINGS', 'DOCTOR_MANAGE'] },
@@ -34,6 +35,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'OT', label: 'Theatre', icon: 'surgical', route: 'ot', perms: ['OT_SCHEDULE', 'OT_RECORD', 'OT_MANAGE', 'BILLING'] },
   { code: 'RADIOLOGY', label: 'Radiology', icon: 'radiology', route: 'radiology',
     perms: ['IMAGING_ORDER', 'IMAGING_PERFORM', 'IMAGING_REPORT', 'IMAGING_MANAGE', 'BILLING'] },
+  { code: 'PAYOUT', label: 'My payouts', icon: 'savings', route: 'my-payouts', perms: ['PAYOUT_OWN'] },
   { code: 'ANALYTICS', label: 'Analytics', icon: 'insights', route: 'analytics', perms: ['OPERATIONS_REPORTS', 'FINANCE_REPORTS'] },
   { code: 'REPORTS', label: 'Reports', icon: 'bar_chart', route: 'reports', perms: ['FINANCE_REPORTS', 'OPERATIONS_REPORTS'] },
   { code: 'HEALTH_PACKAGE', label: 'Health Packages', icon: 'card_giftcard', route: 'health-packages' },
@@ -44,6 +46,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'CUSTOM_ROLE', label: 'Roles', icon: 'admin_panel_settings', route: 'roles', perms: ['USER_MANAGE'] },
   { code: 'AUDIT', label: 'Audit Log', icon: 'history', route: 'audit-logs', perms: ['AUDIT_VIEW'] },
   { code: 'DEPARTMENT', label: 'Emergency Access', icon: 'emergency', route: 'emergency-access', perms: ['AUDIT_VIEW'] },
+  { code: 'HR_LINK', label: 'HR & Payroll link', icon: 'sync_alt', route: 'hr-link', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Email Templates', icon: 'mail', route: 'settings/email-templates', perms: ['CLINIC_SETTINGS'] },
 ];

@@ -12,7 +12,7 @@ const STAFF_SCREENS = [
   'dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'billing', 'payments',
   'medicines', 'reports', 'health-packages', 'contacts', 'reviews', 'users', 'audit-logs', 'settings',
   'departments', 'roles', 'emergency-access', 'ipd', 'ipd/admissions', 'nursing', 'stock', 'lab', 'insurance', 'abdm',
-  'radiology', 'ot', 'analytics',
+  'radiology', 'ot', 'analytics', 'payouts', 'my-payouts', 'hr-link',
 ] as const;
 type Screen = (typeof STAFF_SCREENS)[number];
 
@@ -21,7 +21,7 @@ const ALLOWED: Record<(typeof ROLES)[number], Screen[]> = {
   ADMIN: [...STAFF_SCREENS],
   // Clinic reports are finance and operations; a doctor's own numbers are on the dashboard.
   DOCTOR: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'medicines', 'health-packages',
-    'ipd', 'ipd/admissions', 'nursing', 'stock', 'lab', 'radiology', 'ot'],
+    'ipd', 'ipd/admissions', 'nursing', 'stock', 'lab', 'radiology', 'ot', 'my-payouts'],
   // Nurses read the day's queue and the prescriptions they give; they do not book or prescribe.
   NURSE: ['dashboard', 'patients', 'doctors', 'appointments', 'consultations', 'prescriptions', 'health-packages', 'ipd',
     'ipd/admissions', 'nursing', 'ot'],
@@ -31,7 +31,7 @@ const ALLOWED: Record<(typeof ROLES)[number], Screen[]> = {
   HOSPITAL_ADMIN: ['dashboard', 'patients', 'doctors', 'appointments', 'medicines', 'reports', 'health-packages',
     'departments', 'contacts', 'reviews', 'ipd', 'ipd/admissions', 'stock', 'lab', 'abdm', 'radiology', 'ot', 'analytics'],
   ACCOUNTANT: ['dashboard', 'patients', 'doctors', 'billing', 'payments', 'medicines', 'reports', 'health-packages', 'ipd',
-    'ipd/admissions', 'stock', 'lab', 'insurance', 'radiology', 'ot', 'analytics'],
+    'ipd/admissions', 'stock', 'lab', 'insurance', 'radiology', 'ot', 'analytics', 'payouts'],
   PHARMACIST: ['dashboard', 'patients', 'doctors', 'prescriptions', 'medicines', 'health-packages', 'ipd', 'ipd/admissions', 'stock'],
   // Collects samples and enters results; sees patients' names, not their records.
   LAB_TECHNICIAN: ['dashboard', 'patients', 'doctors', 'health-packages', 'lab'],
