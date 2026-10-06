@@ -97,6 +97,18 @@ export interface NewDataRequest {
   source?: DataRequestSource;
 }
 
+export interface DuePatient { patientId: string; patientCode: string; name: string; lastActivity: string; keepUntil: string }
+export interface RetentionPolicy { retentionYears: number; autoAnonymise: boolean; dueShown: number; due: DuePatient[] }
+export interface PatientRetention {
+  lastActivity: string;
+  keepUntil: string;
+  hasRecords: boolean;
+  legalHold: boolean;
+  legalHoldReason: string | null;
+  anonymisedAt: string | null;
+  eligible: boolean;
+}
+
 /** The clinic's privacy notice and officer, and patients' consents (DPDP, GDPR and similar laws). */
 @Injectable({ providedIn: 'root' })
 export class PrivacyService {
@@ -149,6 +161,30 @@ export class PrivacyService {
   updateRequest(id: string, body: { status: DataRequestStatus; response?: string | null; patientId?: string | null }):
     Observable<DataRequest> {
     return this.http.put<ApiResponse<DataRequest>>(`${this.api}/requests/${id}`, body).pipe(map((r) => r.data));
+  }
+
+  retention(): Observable<RetentionPolicy> {
+    return this.http.get<ApiResponse<RetentionPolicy>>(`${this.api}/retention`).pipe(map((r) => r.data));
+  }
+
+  saveRetention(retentionYears: number, autoAnonymise: boolean): Observable<RetentionPolicy> {
+    return this.http.put<ApiResponse<RetentionPolicy>>(`${this.api}/retention`, { retentionYears, autoAnonymise }).pipe(map((r) => r.data));
+  }
+
+  runRetention(): Observable<{ anonymised: number }> {
+    return this.http.post<ApiResponse<{ anonymised: number }>>(`${this.api}/retention/run`, {}).pipe(map((r) => r.data));
+  }
+
+  patientRetention(patientId: string): Observable<PatientRetention> {
+    return this.http.get<ApiResponse<PatientRetention>>(`${this.api}/patients/${patientId}/retention`).pipe(map((r) => r.data));
+  }
+
+  setHold(patientId: string, hold: boolean, reason: string | null): Observable<PatientRetention> {
+    return this.http.put<ApiResponse<PatientRetention>>(`${this.api}/patients/${patientId}/hold`, { hold, reason }).pipe(map((r) => r.data));
+  }
+
+  anonymise(patientId: string, reason: string | null): Observable<PatientRetention> {
+    return this.http.post<ApiResponse<PatientRetention>>(`${this.api}/patients/${patientId}/anonymise`, { reason }).pipe(map((r) => r.data));
   }
 
   /** Saves a patient's data as a JSON file; `patientId` null is the signed-in patient's own. */

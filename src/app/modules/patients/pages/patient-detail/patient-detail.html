@@ -64,6 +64,9 @@
       </div>
     }
     <app-patient-consents [patientId]="patient.id" [canEdit]="canEdit" [canExport]="canExportData"></app-patient-consents>
+    @if (canExportData) {
+      <app-patient-retention [patientId]="patient.id" (anonymised)="load(patient.id)"></app-patient-retention>
+    }
     @if (hasAbdm) {
       <div class="bg-white rounded-xl border border-outline-variant p-4" id="abha">
         <div class="flex justify-between items-center gap-2 flex-wrap">

@@ -33,6 +33,9 @@ export class LoginEmail implements OnInit {
   set passwordChangeRequired(value: boolean) { this._passwordChangeRequired.set(value); }
 
   // Backed by a signal: the app is zoneless, so a plain field changed in an HTTP callback never re-renders.
+  /** Signed out after a while without activity (automatic logoff); said, so it is not taken for an error. */
+  readonly signedOutIdle = signal<boolean>(false);
+
   private readonly _passwordChanged = signal<boolean>(false);
   get passwordChanged(): boolean { return this._passwordChanged(); }
   set passwordChanged(value: boolean) { this._passwordChanged.set(value); }
@@ -53,6 +56,7 @@ export class LoginEmail implements OnInit {
       this.email = this.authService.pendingEmail;
     }
     this.passwordChanged = this.route.snapshot?.queryParams?.['passwordChanged'] === '1';
+    this.signedOutIdle.set(this.route.snapshot?.queryParams?.['reason'] === 'idle');
   }
 
   goToChangePassword(): void {

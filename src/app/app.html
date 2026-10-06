@@ -1,4 +1,11 @@
 <app-toast></app-toast>
 <app-loading-spinner></app-loading-spinner>
 <app-fab></app-fab>
+@if (idle.secondsLeft() !== null) {
+  <div class="fixed inset-x-0 top-0 z-[100] flex flex-wrap items-center justify-center gap-3 bg-amber-100 px-4 py-3 text-sm text-amber-950 shadow"
+    role="alertdialog" aria-live="assertive" id="idle-warning">
+    <span>No activity for a while: signing out in {{ idle.secondsLeft() }} seconds to protect patient records.</span>
+    <button type="button" id="idle-stay" (click)="idle.touch()" class="px-4 min-h-touch rounded-lg bg-amber-700 text-white font-semibold">Stay signed in</button>
+  </div>
+}
 <router-outlet></router-outlet>

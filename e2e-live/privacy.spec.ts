@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { signInAsNewAdmin, signInWithOtp } from './helpers';
+import { countMails, signInAsNewAdmin, signInWithOtp } from './helpers';
 
 /**
  * Privacy and consent on the real backend: the administrator names the privacy officer and publishes the clinic's
@@ -148,6 +148,97 @@ test.describe('Privacy and consent, real backend', () => {
       await page.goto(`${code}/patients/${patientId}`);
       const [staffCopy] = await Promise.all([page.waitForEvent('download'), page.locator('#consents-export').click()]);
       expect(staffCopy.suggestedFilename()).toBe(`patient-data-${patientId}.json`);
+    });
+
+  test('retention: the period is set, a record is held and released, and an erasure request anonymises the patient @desktop',
+    async ({ page, request }) => {
+      const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
+      const code = admin.hospitalCode;
+      const stamp = Date.now().toString().slice(-6);
+
+      await page.goto(`${code}/privacy`);
+      await expect(page.locator('#retention-years')).toHaveValue('10');
+      await page.fill('#retention-years', '2');
+      await page.locator('#retention-save').click();
+      await expect(page.getByText('Keep records at least 3 years')).toBeVisible();
+      await page.fill('#retention-years', '8');
+      await page.locator('#retention-save').click();
+      await expect(page.getByText('Retention saved')).toBeVisible();
+      await expect(page.locator('#retention-due')).toContainText('No patient is past the retention period');
+
+      // A registration with no medical records, whose owner asks for erasure.
+      const email = `privacy.erase${stamp}@live-portal.test`;
+      await page.goto(`${code}/patients`);
+      await page.getByRole('button', { name: /Add Patient/ }).click();
+      await page.fill('#patientFullName', `Erase Me ${stamp}`);
+      await page.fill('#patientDob', '1991-03-14');
+      await page.selectOption('#patientGender', 'FEMALE');
+      await page.fill('#patientPhone', `96${stamp}44`.slice(0, 10));
+      await page.fill('#patientEmail', email);
+      await page.check('#patientNoticeGiven');
+      const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/patients$/.test(r.url()));
+      await page.getByRole('button', { name: /Save Patient/ }).click();
+      const id = (await (await created).json()).data.id;
+
+      await page.goto(`${code}/patients/${id}`);
+      const panel = page.locator('#patient-retention');
+      await expect(panel.locator('#retention-keep-until')).toContainText('No medical or billing records yet');
+      await page.fill('#retention-hold-reason', 'Insurance claim 117');
+      await panel.locator('#retention-hold').click();
+      await expect(panel.locator('#retention-keep-until')).toContainText('On legal hold: Insurance claim 117');
+      await expect(panel.locator('#retention-anonymise'), 'no erasure while held').toHaveCount(0);
+      await panel.locator('#retention-release').click();
+      await expect(page.getByText('Legal hold lifted')).toBeVisible();
+
+      await panel.locator('#retention-anonymise').click();
+      await page.fill('#retention-anonymise-reason', 'Erasure request by the patient');
+      await panel.locator('#retention-anonymise-confirm').click();
+      await expect(panel.locator('#retention-anonymised')).toBeVisible();
+      await expect(page.locator('main')).toContainText('Anonymised patient');
+      await expect(page.locator('main')).not.toContainText(`Erase Me ${stamp}`);
+
+      // The portal login is gone with the name: asking for a code sends nothing.
+      const api = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
+      const before = await countMails(request, email, 'otp');
+      const sent = await request.post(`${api}/auth/send-otp`, { data: { email, tenantCode: code } });
+      expect(sent.status()).toBe(200);
+      expect(await countMails(request, email, 'otp'), 'no sign-in code for an anonymised patient').toBe(before);
+    });
+
+  test('a breach found four days ago is overdue for the regulator, and closes only once contained and reported @desktop',
+    async ({ page, request }) => {
+      const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
+      await page.goto(`${admin.hospitalCode}/privacy`);
+      const stamp = Date.now().toString().slice(-6);
+      const fourDaysAgo = new Date(Date.now() - 4 * 24 * 3600 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+      await page.locator('#incident-new').click();
+      await page.fill('#incident-title', `Laptop stolen ${stamp}`);
+      await page.selectOption('#incident-category', 'LOST_OR_STOLEN_DEVICE');
+      await page.selectOption('#incident-severity', 'HIGH');
+      await page.fill('#incident-discovered', fourDaysAgo);
+      await page.fill('#incident-affected', '120');
+      await page.fill('#incident-data', 'Names, phone numbers, diagnoses');
+      await page.locator('#incident-save').click();
+      await expect(page.getByText('Breach recorded')).toBeVisible();
+
+      const row = page.locator('#incident-list [data-incident]').filter({ hasText: `Laptop stolen ${stamp}` });
+      const id = await row.getAttribute('data-incident');
+      await expect(row.locator(`[data-regulator="${id}"]`)).toContainText('OVERDUE');
+
+      await row.locator(`[data-close="${id}"]`).click();
+      await expect(page.getByText('Record when the breach was contained before closing it.')).toBeVisible();
+      await row.locator(`[data-contained="${id}"]`).click();
+      await expect(row).toContainText('contained');
+      await page.fill(`[data-reference="${id}"]`, 'DPB-2026-0042');
+      await row.locator(`[data-told-regulator="${id}"]`).click();
+      await expect(row.locator(`[data-regulator="${id}"]`)).toContainText('DPB-2026-0042');
+      await row.locator(`[data-close="${id}"]`).click();
+      await expect(page.getByText(/regulator and the people affected were told/)).toBeVisible();
+      await row.locator(`[data-told-people="${id}"]`).click();
+      await row.locator(`[data-close="${id}"]`).click();
+      await expect(row).toContainText('closed');
+      await expect(row.locator(`[data-close="${id}"]`)).toHaveCount(0);
     });
 
   test('privacy settings are checked by the API, and an unknown clinic has no notice @desktop', async ({ page, request }) => {
