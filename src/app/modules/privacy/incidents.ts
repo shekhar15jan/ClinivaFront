@@ -69,7 +69,8 @@ export function nowLocal(): string {
       </div>
       <p class="text-xs text-slate-600 mb-3">Record every breach. Tell the regulator within 72 hours of finding it (India's Data Protection Board,
         EU and UK authorities, SDAIA, the UAE Data Office) and the people affected without delay, at the latest 60 days (HIPAA).
-        Singapore: assess within 30 days, then tell the PDPC within 3 days.</p>
+        Singapore: assess within 30 days, then tell the PDPC within 3 days.
+        India: a cyber incident (hacking, ransomware, unauthorised access) also goes to CERT-In within 6 hours.</p>
 
       @if (adding) {
         <div class="rounded-lg bg-slate-50 p-3 mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm" id="incident-form">

@@ -108,8 +108,16 @@
       }
     </div>
 
-    <button class="hidden sm:block p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors">
-      <span class="material-symbols-outlined text-[24px]">help</span>
-    </button>
+    <!-- Who is signed in, and as what: always in view, on a phone too. -->
+    @if (currentUser(); as user) {
+      <div class="flex items-center gap-2 pl-2 sm:pl-3 border-l border-outline-variant min-w-0" id="header-user">
+        <div class="w-9 h-9 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold" aria-hidden="true">
+          {{ initialsOf(user) }}</div>
+        <div class="min-w-0 max-w-[7.5rem] sm:max-w-[14rem] leading-tight">
+          <p class="text-sm font-semibold text-on-surface truncate" id="header-user-name">{{ nameOf(user) }}</p>
+          <p class="text-xs text-slate-600 truncate" id="header-user-designation">{{ designationOf(user) }}</p>
+        </div>
+      </div>
+    }
   </div>
 </div>

@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NavItem, STAFF_NAV, canSee } from '../nav-items';
+import { designation, displayName, initials } from '../../core/utils/user-display';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,6 +15,9 @@ export class Sidebar {
   private effectiveLicense = inject(EffectiveLicenseService);
   private router = inject(Router);
   protected authService = inject(AuthService);
+  protected readonly nameOf = displayName;
+  protected readonly designationOf = designation;
+  protected readonly initialsOf = initials;
 
   onLogout(): void {
     this.authService.logout();

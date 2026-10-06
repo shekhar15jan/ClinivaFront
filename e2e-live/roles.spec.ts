@@ -71,6 +71,10 @@ async function refused(page: Page, code: string, route: string) {
   await expect(page, `${route} is not opened for this role`).not.toHaveURL(new RegExp(`/${code}/${route}$`), { timeout: 15000 });
 }
 
+/** How each built-in role is titled in the top bar. */
+const TITLE: Record<string, string> = { ADMIN: 'Owner', HOSPITAL_ADMIN: 'Hospital admin', DOCTOR: 'Doctor', NURSE: 'Nurse',
+  RECEPTIONIST: 'Front desk', ACCOUNTANT: 'Accountant', PHARMACIST: 'Pharmacist', LAB_TECHNICIAN: 'Lab technician' };
+
 for (const role of ROLES) {
   test(`${role.toLowerCase()}: offered exactly their screens, each works, the rest stay closed`, { tag: '@desktop' }, async ({ page, request, browser }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
@@ -79,6 +83,8 @@ for (const role of ROLES) {
     if (role !== 'ADMIN') {
       const email = `${role.toLowerCase()}${Date.now().toString().slice(-6)}@live-staff.test`;
       await addStaffUser(page, admin.hospitalCode, { firstName: 'Role', lastName: role.replace(/_/g, ' '), email, role });
+      // The owner's window (every menu) is done; blank it so the only menu on screen is this role's.
+      await page.goto('about:blank');
       context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
       staff = await context.newPage();
       await signInWithOtp(staff, request, email);
@@ -87,6 +93,10 @@ for (const role of ROLES) {
     const { problems, state } = watch(staff);
 
     await expect(menuLink(staff, code, 'dashboard')).toHaveCount(1, { timeout: 15000 });
+    // Who is signed in, and as what, is in the top bar.
+    await expect(staff.locator('#header-user-designation')).toHaveText(TITLE[role]);
+    if (role !== 'ADMIN') await expect(staff.locator('#header-user-name')).toHaveText(`Role ${role.replace(/_/g, ' ')}`);
+    else await expect(staff.locator('#header-user-name')).not.toBeEmpty();
     for (const screen of STAFF_SCREENS) {
       const offered = ALLOWED[role].includes(screen);
       await expect(menuLink(staff, code, screen), `${screen} ${offered ? 'is' : 'is not'} in the ${role} menu`)

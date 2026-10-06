@@ -165,6 +165,8 @@ async function signedIn(role: Role, browser: Browser, request: APIRequestContext
   if (role === 'ADMIN') return OWNER_PAGE;
   const email = `rbac.${role.toLowerCase()}${Date.now().toString().slice(-6)}@live-staff.test`;
   await addStaffUser(OWNER_PAGE, SEED.code, { firstName: 'Rbac', lastName: role.replace(/_/g, ' '), email, role });
+  // The owner's window (every menu) is done for now; blank it so the only menu on screen is this role's.
+  await OWNER_PAGE.goto('about:blank');
   const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const page = await context.newPage();
   await signInWithOtp(page, request, email);

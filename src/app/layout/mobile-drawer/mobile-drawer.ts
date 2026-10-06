@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { AuthService } from '../../core/services/auth.service';
 import { STAFF_NAV, canSee } from '../nav-items';
+import { designation, displayName, initials } from '../../core/utils/user-display';
 
 @Component({
   selector: 'app-mobile-drawer',
@@ -50,11 +51,11 @@ import { STAFF_NAV, canSee } from '../nav-items';
               <div class="p-4 border-t border-outline-variant">
                 <div class="flex items-center gap-3 mb-3">
                   <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold uppercase">
-                    {{ ((user.profile?.['firstName']?.charAt(0) ?? '') + (user.profile?.['lastName']?.charAt(0) ?? '')) || '?' }}
+                    {{ initialsOf(user) }}
                   </div>
                   <div class="flex-1 overflow-hidden">
-                    <p class="text-sm font-medium text-on-surface truncate">{{ user.profile?.['firstName'] || user.email }}</p>
-                    <p class="text-xs text-outline truncate">{{ user.roleName || user.role }}</p>
+                    <p class="text-sm font-medium text-on-surface truncate">{{ nameOf(user) }}</p>
+                    <p class="text-xs text-slate-600 truncate">{{ designationOf(user) }}</p>
                   </div>
                 </div>
                 <!-- Ends the session (it only went to a login address before, leaving the session alive on shared devices). -->
@@ -86,6 +87,9 @@ import { STAFF_NAV, canSee } from '../nav-items';
   imports: [RouterLink, RouterLinkActive],
 })
 export class MobileDrawer {
+  protected readonly nameOf = displayName;
+  protected readonly designationOf = designation;
+  protected readonly initialsOf = initials;
   private effectiveLicense = inject(EffectiveLicenseService);
   protected authService = inject(AuthService);
   private router = inject(Router);

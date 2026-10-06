@@ -5,6 +5,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
 import { Notification } from '../../core/models/notification.model';
 import { Subject, interval, takeUntil, startWith, switchMap } from 'rxjs';
+import { designation, displayName, initials } from '../../core/utils/user-display';
 
 @Component({
   selector: 'app-header',
@@ -18,6 +19,12 @@ export class Header implements OnInit, OnDestroy {
   private router = inject(Router);
   private auth = inject(AuthService);
   private license = inject(EffectiveLicenseService);
+
+  /** The signed-in person, shown with their title at the right of the bar. */
+  readonly currentUser = this.auth.currentUser;
+  readonly nameOf = displayName;
+  readonly designationOf = designation;
+  readonly initialsOf = initials;
 
 
   /** The clinic in the address (/:hospitalCode/...). */
