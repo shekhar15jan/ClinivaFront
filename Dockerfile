@@ -6,7 +6,9 @@ COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build -- --configuration production
 
-FROM nginx:alpine
+FROM nginx:1.30-alpine
+# Security fixes released since the base image was built.
+RUN apk upgrade --no-cache
 COPY --from=build /app/dist/ClinivaFront/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

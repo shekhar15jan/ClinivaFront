@@ -164,7 +164,7 @@ test.beforeAll(async ({ browser, request }) => {
 async function signedIn(role: Role, browser: Browser, request: APIRequestContext): Promise<Page> {
   if (role === 'ADMIN') return OWNER_PAGE;
   const email = `rbac.${role.toLowerCase()}${Date.now().toString().slice(-6)}@live-staff.test`;
-  await addStaffUser(OWNER_PAGE, SEED.code, { firstName: 'Rbac', lastName: role, email, role });
+  await addStaffUser(OWNER_PAGE, SEED.code, { firstName: 'Rbac', lastName: role.replace(/_/g, ' '), email, role });
   const context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
   const page = await context.newPage();
   await signInWithOtp(page, request, email);

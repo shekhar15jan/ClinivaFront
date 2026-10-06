@@ -21,7 +21,7 @@ test.describe('Online payments (Razorpay) settings, real backend', () => {
     const saved = page.waitForResponse((r) => r.request().method() === 'PUT' && /\/hms\/settings$/.test(r.url()));
     await page.getByRole('button', { name: 'Save Settings' }).click();
     const response = await saved;
-    expect(response.ok(), `settings saved (${response.status()})`).toBeTruthy();
+    expect(response.ok(), `settings saved (${response.status()}: ${(await response.text()).slice(0, 200)})`).toBeTruthy();
     expect(await response.text(), 'the secret is not echoed back').not.toContain(secret);
 
     const loaded = page.waitForResponse((r) => r.request().method() === 'GET' && /\/hms\/settings(\?|$)/.test(r.url()));

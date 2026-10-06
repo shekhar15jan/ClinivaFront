@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ReportsDashboard } from './reports-dashboard';
+import { ReportsDashboard, csvCell } from './reports-dashboard';
 import { ReportService } from '../../../../core/services/report.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -65,5 +65,15 @@ describe('ReportsDashboard', () => {
     const component = createComponent();
     const dash = component.donutDash(30, 50);
     expect(dash).toBeTruthy();
+  });
+});
+
+describe('csvCell', () => {
+  it('quotes amounts with commas and shows formulas as text', () => {
+    expect(csvCell('₹1,250.00')).toBe('"₹1,250.00"');
+    expect(csvCell('=HYPERLINK("http://evil")')).toBe('"\'=HYPERLINK(""http://evil"")"');
+    expect(csvCell('@SUM(A1)')).toBe("'@SUM(A1)");
+    expect(csvCell('-1+2')).toBe("'-1+2");
+    expect(csvCell('Dr. Rao')).toBe('Dr. Rao');
   });
 });

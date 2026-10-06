@@ -78,7 +78,7 @@ for (const role of ROLES) {
     let context;
     if (role !== 'ADMIN') {
       const email = `${role.toLowerCase()}${Date.now().toString().slice(-6)}@live-staff.test`;
-      await addStaffUser(page, admin.hospitalCode, { firstName: 'Role', lastName: role, email, role });
+      await addStaffUser(page, admin.hospitalCode, { firstName: 'Role', lastName: role.replace(/_/g, ' '), email, role });
       context = await browser.newContext({ viewport: { width: 1400, height: 900 } });
       staff = await context.newPage();
       await signInWithOtp(staff, request, email);

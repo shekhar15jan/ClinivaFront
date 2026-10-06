@@ -101,7 +101,7 @@ export class ReportsDashboard implements OnInit {
       rows.push(['Voided', String(bills.voidedCount)]);
     }
 
-    const csvContent = rows.map((r) => r.join(',')).join('\n');
+    const csvContent = rows.map((r) => r.map(csvCell).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -134,4 +134,16 @@ export class ReportsDashboard implements OnInit {
       },
     });
   }
+}
+
+/**
+ * One CSV cell: quoted when it holds a comma, quote or line break (amounts like "₹1,250.00" do), and never read as a
+ * formula by a spreadsheet: text starting with = + - @ gets a leading apostrophe.
+ */
+export function csvCell(value: string): string {
+  let s = value ?? '';
+  if (/^[=+\-@\t\r]/.test(s)) {
+    s = `'${s}`;
+  }
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }

@@ -50,8 +50,10 @@ export class GenericLogin implements OnInit, OnDestroy {
 
   private redirectBasedOnRole(user: User, hospitalCode?: string): void {
     const queryParams = this.route.snapshot.queryParams;
-    if (queryParams["returnUrl"]) {
-      this.router.navigateByUrl(queryParams["returnUrl"]);
+    const returnUrl = queryParams["returnUrl"];
+    // Only a path inside this app: never another site ("//evil.example", "https://...") or a script URL.
+    if (typeof returnUrl === 'string' && /^\/(?![/\\])/.test(returnUrl)) {
+      this.router.navigateByUrl(returnUrl);
       return;
     }
     // Every screen lives under the clinic code. A bare "/dashboard" was read as a clinic called
