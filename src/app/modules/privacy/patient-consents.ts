@@ -17,7 +17,13 @@ const METHOD_LABEL: Record<ConsentMethod, string> = { PORTAL: 'in the portal', I
   imports: [DatePipe, FormsModule],
   template: `
     <section class="bg-white rounded-xl border border-outline-variant p-4" id="patient-consents">
-      <h2 class="font-semibold text-on-surface mb-1">{{ self ? 'Your choices' : 'Privacy and consent' }}</h2>
+      <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
+        <h2 class="font-semibold text-on-surface">{{ self ? 'Your choices' : 'Privacy and consent' }}</h2>
+        @if (canExport) {
+          <button type="button" id="consents-export" (click)="download()" class="px-3 min-h-touch rounded-lg border border-outline-variant text-sm">
+            <span class="material-symbols-outlined text-[18px] align-middle">download</span> {{ self ? 'Download my data' : 'Download all data' }}</button>
+        }
+      </div>
       @if (data(); as d) {
         @if (d.minor) {
           <p class="text-xs text-indigo-900 bg-indigo-50 rounded-lg p-2 mb-2" id="consents-minor">
@@ -83,6 +89,8 @@ export class PatientConsentsComponent implements OnChanges {
   /** The patient; left out, the signed-in patient's own choices. */
   @Input() patientId: string | null = null;
   @Input() canEdit = false;
+  /** A copy of everything held about the patient, as a file (the privacy officer, or the patient themselves). */
+  @Input() canExport = false;
 
   readonly data = signal<PatientConsents | null>(null);
   method: ConsentMethod = 'IN_PERSON';
@@ -97,6 +105,13 @@ export class PatientConsentsComponent implements OnChanges {
     this.privacy.consents(this.patientId).subscribe({
       next: (d) => this.data.set(d),
       error: () => this.data.set(null),
+    });
+  }
+
+  download(): void {
+    this.privacy.downloadExport(this.patientId).subscribe({
+      next: () => this.toast.success('Download started'),
+      error: () => this.toast.error('The data could not be downloaded.'),
     });
   }
 

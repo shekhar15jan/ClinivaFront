@@ -58,6 +58,45 @@ export interface PatientConsents {
   history: Consent[];
 }
 
+export type DataRequestType = 'ACCESS' | 'CORRECTION' | 'ERASURE' | 'OBJECTION' | 'GRIEVANCE' | 'NOMINATION' | 'OTHER';
+export type DataRequestStatus = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'REFUSED';
+export type DataRequestSource = 'PORTAL' | 'DESK' | 'EMAIL' | 'POST';
+
+export const REQUEST_TYPES: { code: DataRequestType; label: string }[] = [
+  { code: 'ACCESS', label: 'See or get a copy of my data' },
+  { code: 'CORRECTION', label: 'Correct something wrong' },
+  { code: 'ERASURE', label: 'Delete data no longer needed' },
+  { code: 'OBJECTION', label: 'Stop a use of my data' },
+  { code: 'GRIEVANCE', label: 'A complaint about my data' },
+  { code: 'NOMINATION', label: 'Name someone to act for me' },
+  { code: 'OTHER', label: 'Something else' },
+];
+
+export interface DataRequest {
+  id: string;
+  patientId: string | null;
+  type: DataRequestType;
+  source: DataRequestSource;
+  requesterName: string;
+  requesterContact: string | null;
+  details: string | null;
+  status: DataRequestStatus;
+  response: string | null;
+  receivedAt: string;
+  dueAt: string;
+  closedAt: string | null;
+  overdue: boolean;
+}
+
+export interface NewDataRequest {
+  type: DataRequestType;
+  details?: string | null;
+  patientId?: string | null;
+  requesterName?: string | null;
+  requesterContact?: string | null;
+  source?: DataRequestSource;
+}
+
 /** The clinic's privacy notice and officer, and patients' consents (DPDP, GDPR and similar laws). */
 @Injectable({ providedIn: 'root' })
 export class PrivacyService {
@@ -94,6 +133,36 @@ export class PrivacyService {
 
   record(patientId: string | null, request: ConsentRequest): Observable<PatientConsents> {
     return this.http.post<ApiResponse<PatientConsents>>(this.consentsUrl(patientId), request).pipe(map((r) => r.data));
+  }
+
+  /** Requests about data: all the clinic's (the privacy officer), or the signed-in patient's own (`mine`). */
+  requests(mine: boolean, openOnly = false): Observable<DataRequest[]> {
+    const url = mine ? `${this.api}/me/requests` : `${this.api}/requests?openOnly=${openOnly}`;
+    return this.http.get<ApiResponse<DataRequest[]>>(url).pipe(map((r) => r.data));
+  }
+
+  makeRequest(mine: boolean, request: NewDataRequest): Observable<DataRequest> {
+    return this.http.post<ApiResponse<DataRequest>>(mine ? `${this.api}/me/requests` : `${this.api}/requests`, request)
+      .pipe(map((r) => r.data));
+  }
+
+  updateRequest(id: string, body: { status: DataRequestStatus; response?: string | null; patientId?: string | null }):
+    Observable<DataRequest> {
+    return this.http.put<ApiResponse<DataRequest>>(`${this.api}/requests/${id}`, body).pipe(map((r) => r.data));
+  }
+
+  /** Saves a patient's data as a JSON file; `patientId` null is the signed-in patient's own. */
+  downloadExport(patientId: string | null): Observable<void> {
+    const url = patientId ? `${this.api}/patients/${patientId}/export` : `${this.api}/me/export`;
+    return this.http.get(url, { responseType: 'blob' }).pipe(map((blob) => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = patientId ? `patient-data-${patientId}.json` : 'my-health-data.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }));
   }
 
   private consentsUrl(patientId: string | null): string {

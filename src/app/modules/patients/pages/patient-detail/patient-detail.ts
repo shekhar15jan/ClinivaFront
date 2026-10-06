@@ -77,6 +77,11 @@ export class PatientDetail implements OnInit {
     return this.auth.currentUserValue?.role ?? '';
   }
 
+  /** A copy of all the patient's data is handed over by the privacy officer. */
+  get canExportData(): boolean {
+    return this.auth.can('PRIVACY_MANAGE');
+  }
+
   /** Editing patients needs PATIENT_EDIT; deleting them PATIENT_ADMIN. */
   get canEdit(): boolean {
     return this.auth.can('PATIENT_EDIT');

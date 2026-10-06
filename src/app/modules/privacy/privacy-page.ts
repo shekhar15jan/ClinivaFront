@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrivacyNotice, PrivacyService, PrivacySettings } from '../../core/services/privacy.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { DataRequestsComponent } from './data-requests';
 
 /**
  * The clinic's privacy set-up: who patients contact about their data (the DPDP grievance officer, the GDPR data
@@ -12,11 +13,12 @@ import { ToastService } from '../../shared/components/toast/toast.service';
 @Component({
   selector: 'app-privacy-page',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, DataRequestsComponent],
   template: `
     <div class="p-4 sm:p-6 max-w-4xl">
       <h1 class="text-2xl font-semibold text-on-surface">Privacy</h1>
       <p class="text-sm text-slate-600 mt-1 mb-3">What patients are told about their data, who they contact, and when a guardian decides for them.</p>
+      <app-data-requests></app-data-requests>
       @if (s(); as s) {
         <div class="bg-white rounded-xl border border-outline-variant p-4 space-y-3 mb-4" id="privacy-officer">
           <h2 class="font-semibold">Privacy officer</h2>
