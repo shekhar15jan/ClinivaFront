@@ -34,12 +34,12 @@ describe('Sidebar', () => {
 
   it('should have 27 staff nav items (with the hospital modules)', () => {
     const { component } = setup();
-    expect(component.staffNavItems.length).toBe(33);
+    expect(component.staffNavItems.length).toBe(34);
   });
 
-  it('should have 5 patient nav items', () => {
+  it('should have 6 patient nav items', () => {
     const { component } = setup();
-    expect(component.patientNavItems.length).toBe(5);
+    expect(component.patientNavItems.length).toBe(6);
   });
 
   it('should return activeModules from license service', () => {

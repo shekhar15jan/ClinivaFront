@@ -107,6 +107,7 @@ test.describe('Security and bad input, real backend', () => {
       await page.fill('#patientDob', '1990-05-17');
       await page.selectOption('#patientGender', 'FEMALE');
       await page.fill('#patientPhone', phone);
+      await page.check('#patientNoticeGiven');
       const save = page.getByRole('button', { name: /Save Patient/ });
       // The form may refuse it itself (Save stays disabled); otherwise the server must refuse it.
       if (await save.isDisabled()) {

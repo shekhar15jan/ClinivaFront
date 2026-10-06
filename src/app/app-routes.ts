@@ -88,6 +88,7 @@ export const routes: Routes = [
             ]
           },
           { path: 'hr-link', loadComponent: () => import('./modules/hr-link/hr-link-page').then(m => m.HrLinkPageComponent) },
+          { path: 'privacy', loadComponent: () => import('./modules/privacy/privacy-page').then(m => m.PrivacyPageComponent) },
           { path: 'my-payouts', loadComponent: () => import('./modules/payouts/my-payouts').then(m => m.MyPayoutsComponent) },
           { path: 'analytics', loadComponent: () => import('./modules/analytics/analytics-page').then(m => m.AnalyticsPageComponent) },
           {

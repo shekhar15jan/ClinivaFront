@@ -1,4 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { PrivacyService, PublicPrivacy } from '../../../../core/services/privacy.service';
+import { TenantContextService } from '../../../../core/services/tenant-context.service';
+
 import { fakeAuth } from '../../../../testing/role-permissions';
 import { PatientList } from './patient-list';
 import { PatientService } from '../../../../core/services/patient.service';
@@ -9,6 +12,13 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse, PagedResponse } from '../../../../core/models/common.model';
 import { Patient } from '../../../../core/models/patient.model';
+
+const privacyInfo: PublicPrivacy = {
+  clinicName: 'City Clinic', consentAge: 18, officer: { name: null, email: null, phone: null },
+  notice: { version: 0, body: 'Notice', publishedAt: null, builtIn: true },
+  purposes: [{ code: 'CARE', label: 'Care', core: true }, { code: 'REMINDERS', label: 'Reminders', core: false },
+    { code: 'RESEARCH', label: 'Research', core: false }],
+};
 
 describe('PatientList', () => {
   const mockPatient: Patient = {
@@ -30,6 +40,8 @@ describe('PatientList', () => {
         { provide: ActivatedRoute, useValue: { queryParamMap: of(convertToParamMap(query)) } },
         { provide: PatientService, useValue: { getPatients: vi.fn().mockReturnValue(of(mockPaged)), searchPatients: vi.fn().mockReturnValue(of(mockPaged)), createPatient: vi.fn().mockReturnValue(of({ success: true, data: mockPatient, message: 'created', timestamp: '', requestId: 'r1' })), ...overrides } },
         FormBuilder,
+        { provide: PrivacyService, useValue: { publicView: vi.fn().mockReturnValue(of(privacyInfo)) } },
+        { provide: TenantContextService, useValue: { tenantCode: () => 'CITY' } },
       ],
     });
     return TestBed.runInInjectionContext(() => new PatientList());
@@ -85,10 +97,58 @@ describe('PatientList', () => {
   it('should submit and create patient', () => {
     const component = createComponent();
     component.showAddModal = true;
-    component.addForm.patchValue({ fullName: 'Test', dateOfBirth: '2000-01-01', gender: 'MALE', phone: '9876543210' });
+    component.addForm.patchValue({ fullName: 'Test', dateOfBirth: '2000-01-01', gender: 'MALE', phone: '9876543210', noticeGiven: true });
     component.onSubmitAdd();
     expect(component.isSubmitting).toBe(false);
     expect(component.showAddModal).toBe(false);
+  });
+
+  describe('privacy and consent', () => {
+    const create = vi.fn().mockReturnValue(of({ success: true, data: mockPatient, message: 'created', timestamp: '', requestId: 'r1' }));
+    beforeEach(() => create.mockClear());
+    const open = () => {
+      const component = createComponent({ createPatient: create });
+      component.toggleAddModal();
+      return component;
+    };
+
+    it('is not saved until the patient was given the privacy notice', () => {
+      const component = open();
+      component.addForm.patchValue({ fullName: 'Test', dateOfBirth: '1990-01-01', gender: 'MALE', phone: '9876543210' });
+      expect(component.addForm.invalid).toBe(true);
+      component.onSubmitAdd();
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it('records every purpose asked about, yes or no, with nothing pre-ticked', () => {
+      const component = open();
+      expect(component.optionalPurposes.map((p) => p.code)).toEqual(['REMINDERS', 'RESEARCH']);
+      expect(component.addForm.value.REMINDERS).toBe(false);
+      component.addForm.patchValue({ fullName: 'Test', dateOfBirth: '1990-01-01', gender: 'MALE', phone: '9876543210',
+        noticeGiven: true, RESEARCH: true });
+      component.onSubmitAdd();
+      const sent = create.mock.calls[0][0] as { consents: { purpose: string; granted: boolean; givenBy: string }[]; noticeGiven?: boolean };
+      expect(sent.consents).toEqual([
+        { purpose: 'CARE', granted: true, givenBy: 'SELF' },
+        { purpose: 'REMINDERS', granted: false, givenBy: 'SELF' },
+        { purpose: 'RESEARCH', granted: true, givenBy: 'SELF' },
+      ]);
+      expect(sent.noticeGiven).toBeUndefined();
+    });
+
+    it('asks for a named guardian when the patient is under the consent age', () => {
+      const component = open();
+      const tenYearsAgo = `${new Date().getFullYear() - 10}-01-01`;
+      component.addForm.patchValue({ fullName: 'Little One', dateOfBirth: tenYearsAgo, gender: 'FEMALE', phone: '9876543210', noticeGiven: true });
+      expect(component.minor).toBe(true);
+      expect(component.guardianMissing).toBe(true);
+      component.onSubmitAdd();
+      expect(create).not.toHaveBeenCalled();
+      component.addForm.patchValue({ guardianName: 'Sunita Rao', guardianRelation: 'Mother' });
+      component.onSubmitAdd();
+      const sent = create.mock.calls[0][0] as { consents: { givenBy: string; guardianName: string }[] };
+      expect(sent.consents.every((c) => c.givenBy === 'GUARDIAN' && c.guardianName === 'Sunita Rao')).toBe(true);
+    });
   });
 
   it('should handle create patient error', () => {

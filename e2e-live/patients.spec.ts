@@ -22,6 +22,8 @@ test.describe('Patients, real backend', { tag: '@desktop' }, () => {
     await expect(save, 'a 5-digit phone number is refused').toBeDisabled();
     await page.fill('#patientPhone', phone);
     await page.fill('#patientEmail', `patient${stamp}@example.test`);
+    await expect(save, 'not without the privacy notice given').toBeDisabled();
+    await page.check('#patientNoticeGiven');
     await expect(save).toBeEnabled();
 
     const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/patients$/.test(r.url()));

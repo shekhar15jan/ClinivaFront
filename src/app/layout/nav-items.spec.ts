@@ -25,7 +25,7 @@ describe('staff menu', () => {
 
   it('hides what the plan does not include, but always offers the dashboard', () => {
     expect(labels('ADMIN', [])).toEqual(['Dashboard']);
-    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(['Dashboard', 'Patients', 'Doctors', 'Appointments']);
+    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Privacy']);
   });
 
   it('offers departments, emergency access and roles only when the plan includes those modules', () => {

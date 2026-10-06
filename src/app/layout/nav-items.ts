@@ -44,6 +44,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'REVIEW', label: 'Reviews', icon: 'star', route: 'reviews', perms: ['WEBSITE_MANAGE'] },
   { code: 'USER', label: 'Users', icon: 'group', route: 'users', perms: ['USER_MANAGE'] },
   { code: 'CUSTOM_ROLE', label: 'Roles', icon: 'admin_panel_settings', route: 'roles', perms: ['USER_MANAGE'] },
+  { code: 'PATIENT', label: 'Privacy', icon: 'shield_person', route: 'privacy', perms: ['PRIVACY_MANAGE'] },
   { code: 'AUDIT', label: 'Audit Log', icon: 'history', route: 'audit-logs', perms: ['AUDIT_VIEW'] },
   { code: 'DEPARTMENT', label: 'Emergency Access', icon: 'emergency', route: 'emergency-access', perms: ['AUDIT_VIEW'] },
   { code: 'HR_LINK', label: 'HR & Payroll link', icon: 'sync_alt', route: 'hr-link', perms: ['CLINIC_SETTINGS'] },

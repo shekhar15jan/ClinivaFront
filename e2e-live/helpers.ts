@@ -213,6 +213,8 @@ export async function registerPatient(page: Page, hospitalCode: string, name: st
   await page.fill('#patientPhone', phone);
   // With an email the clinic also creates the patient's login for the portal.
   if (email) await page.fill('#patientEmail', email);
+  // The privacy notice was given; the optional purposes stay as the patient leaves them (unticked).
+  await page.check('#patientNoticeGiven');
   const created = page.waitForResponse((r) => r.request().method() === 'POST' && /\/hms\/patients$/.test(r.url()));
   await page.getByRole('button', { name: /Save Patient/ }).click();
   expect((await created).ok(), 'patient created').toBeTruthy();

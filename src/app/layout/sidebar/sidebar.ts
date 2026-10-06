@@ -32,6 +32,7 @@ export class Sidebar {
     { code: 'PRESCRIPTION', label: 'My Prescriptions', icon: 'receipt_long', route: 'patient/prescriptions' },
     { code: 'BILLING', label: 'My Bills', icon: 'payments', route: 'patient/bills' },
     { code: 'SETTINGS', label: 'My Profile', icon: 'person', route: 'patient/profile' },
+    { code: 'SETTINGS', label: 'Privacy', icon: 'shield_person', route: 'patient/privacy' },
   ];
 
   readonly navItems = computed(() =>

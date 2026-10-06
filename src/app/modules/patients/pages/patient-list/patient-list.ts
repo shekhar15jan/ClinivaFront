@@ -10,6 +10,8 @@ import { PatientService } from '../../../../core/services/patient.service';
 import { Patient } from '../../../../core/models/patient.model';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ConsentRequest, PrivacyService, PublicPrivacy, isMinor } from '../../../../core/services/privacy.service';
+import { TenantContextService } from '../../../../core/services/tenant-context.service';
 
 const PAGE_SIZE = 20;
 
@@ -24,6 +26,12 @@ export class PatientList implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
+  private privacy = inject(PrivacyService);
+  private tenantContext = inject(TenantContextService);
+
+  /** The clinic's notice and consent age, shown in the form; the purposes are asked one by one, none pre-ticked. */
+  privacyInfo: PublicPrivacy | null = null;
+  showNotice = false;
 
   /** The page on screen. Paging and search run on the server: a clinic can have tens of thousands of patients. */
   patients: Patient[] = [];
@@ -50,7 +58,29 @@ export class PatientList implements OnInit, OnDestroy {
       gender: ['MALE', Validators.required],
       phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       email: ['', Validators.email],
+      noticeGiven: [false, Validators.requiredTrue],
+      REMINDERS: [false],
+      ABDM_SHARING: [false],
+      MARKETING: [false],
+      RESEARCH: [false],
+      guardianName: [''],
+      guardianRelation: [''],
     });
+  }
+
+  /** A child below the clinic's consent age: a parent or guardian gives the consents, named here. */
+  get minor(): boolean {
+    return isMinor(this.addForm.value.dateOfBirth, this.privacyInfo?.consentAge ?? 18);
+  }
+
+  get guardianMissing(): boolean {
+    const v = this.addForm.value;
+    return this.minor && (!v.guardianName?.trim() || !v.guardianRelation?.trim());
+  }
+
+  /** The optional purposes, in the clinic's order; care is covered by the notice. */
+  get optionalPurposes() {
+    return (this.privacyInfo?.purposes ?? []).filter((p) => !p.core);
   }
 
   ngOnInit(): void {
@@ -121,8 +151,14 @@ export class PatientList implements OnInit, OnDestroy {
 
   toggleAddModal() {
     this.showAddModal = !this.showAddModal;
+    const code = this.tenantContext.tenantCode();
+    if (this.showAddModal && !this.privacyInfo && code) {
+      this.privacy.publicView(code).subscribe({ next: (p) => (this.privacyInfo = p) });
+    }
     if (!this.showAddModal) {
-      this.addForm.reset({ gender: 'MALE' });
+      this.addForm.reset({ gender: 'MALE', noticeGiven: false, REMINDERS: false, ABDM_SHARING: false, MARKETING: false,
+        RESEARCH: false, guardianName: '', guardianRelation: '' });
+      this.showNotice = false;
     }
   }
 
@@ -172,12 +208,21 @@ export class PatientList implements OnInit, OnDestroy {
   }
 
   onSubmitAdd() {
-    if (this.addForm.invalid) return;
+    if (this.addForm.invalid || this.guardianMissing) return;
     this.isSubmitting = true;
-    const formVal = this.addForm.value;
+    const { noticeGiven, REMINDERS, ABDM_SHARING, MARKETING, RESEARCH, guardianName, guardianRelation, ...formVal } = this.addForm.value;
     const birthYear = new Date(formVal.dateOfBirth).getFullYear();
     const age = new Date().getFullYear() - birthYear;
-    const newPatient: Partial<Patient> = { ...formVal, age };
+    const by = this.minor
+      ? { givenBy: 'GUARDIAN' as const, guardianName: guardianName.trim(), guardianRelation: guardianRelation.trim() }
+      : { givenBy: 'SELF' as const };
+    const choices: Record<string, boolean> = { REMINDERS, ABDM_SHARING, MARKETING, RESEARCH };
+    // Every purpose the patient was asked about is recorded, yes or no, with the notice they were given.
+    const consents: ConsentRequest[] = [
+      { purpose: 'CARE', granted: !!noticeGiven, ...by },
+      ...this.optionalPurposes.map((p) => ({ purpose: p.code, granted: !!choices[p.code], ...by })),
+    ];
+    const newPatient = { ...formVal, age, consents } as Partial<Patient>;
     this.patientService.createPatient(newPatient).subscribe({
       next: () => {
         this.isSubmitting = false;

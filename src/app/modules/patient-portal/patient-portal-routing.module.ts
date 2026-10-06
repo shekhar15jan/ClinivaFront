@@ -12,6 +12,7 @@ const routes: Routes = [
   { path: 'prescriptions', component: MyPrescriptions },
   { path: 'bills', component: MyBills },
   { path: 'profile', component: MyProfile },
+  { path: 'privacy', loadComponent: () => import('./pages/my-privacy/my-privacy').then((m) => m.MyPrivacy) },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];
 

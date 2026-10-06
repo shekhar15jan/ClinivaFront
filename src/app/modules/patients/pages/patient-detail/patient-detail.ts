@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { PatientConsentsComponent } from '../../../privacy/patient-consents';
 import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -29,7 +30,7 @@ export const bloodGroupLabel = (code?: string): string => BLOOD_GROUPS.find(([c]
   selector: 'app-patient-detail',
   templateUrl: './patient-detail.html',
   styleUrl: './patient-detail.scss',
-  imports: [RouterLink, FormsModule, ConfirmDialogComponent, DatePipe],
+  imports: [RouterLink, FormsModule, ConfirmDialogComponent, DatePipe, PatientConsentsComponent],
 })
 export class PatientDetail implements OnInit {
   private route = inject(ActivatedRoute);

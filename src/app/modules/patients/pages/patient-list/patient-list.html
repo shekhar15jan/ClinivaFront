@@ -183,9 +183,38 @@
               <input id="patientEmail" type="email" formControlName="email" class="mt-1 block w-full border border-outline-variant rounded-lg py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-body-sm">
             </div>
           </div>
+          <fieldset class="mt-6 rounded-xl border border-indigo-200 bg-indigo-50/60 p-4" id="patient-privacy">
+            <legend class="px-1 text-body-sm font-semibold text-indigo-900">Privacy and consent</legend>
+            @if (minor) {
+              <p class="text-xs text-indigo-900 mb-2" id="patient-minor">Under {{ privacyInfo?.consentAge ?? 18 }}: a parent or guardian gives these consents.</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <label class="block text-xs font-medium text-on-surface">Parent or guardian's name
+                  <input id="patientGuardianName" type="text" formControlName="guardianName" maxlength="150"
+                    class="mt-1 block w-full border border-outline-variant rounded-lg py-2 px-3 text-body-sm bg-white"></label>
+                <label class="block text-xs font-medium text-on-surface">Relation to the patient
+                  <input id="patientGuardianRelation" type="text" formControlName="guardianRelation" maxlength="50" placeholder="Mother, Father, Guardian"
+                    class="mt-1 block w-full border border-outline-variant rounded-lg py-2 px-3 text-body-sm bg-white"></label>
+              </div>
+            }
+            <label class="flex items-start gap-2 text-body-sm text-on-surface min-h-touch">
+              <input id="patientNoticeGiven" type="checkbox" formControlName="noticeGiven" class="mt-1 h-4 w-4">
+              <span>The patient{{ minor ? "'s guardian" : '' }} was given the clinic's privacy notice
+                <button type="button" class="text-indigo-700 underline ml-1" (click)="showNotice = !showNotice">{{ showNotice ? 'hide' : 'read it' }}</button></span>
+            </label>
+            @if (showNotice && privacyInfo) {
+              <div class="mt-2 max-h-48 overflow-y-auto whitespace-pre-line rounded-lg bg-white border border-outline-variant p-3 text-xs text-slate-700" id="patient-notice-text">{{ privacyInfo.notice.body }}</div>
+            }
+            <p class="text-xs text-slate-600 mt-3 mb-1">Optional. Tick only what the patient agrees to:</p>
+            @for (p of optionalPurposes; track p.code) {
+              <label class="flex items-start gap-2 text-body-sm text-on-surface min-h-touch">
+                <input type="checkbox" [formControlName]="p.code" [id]="'patientConsent-' + p.code" class="mt-1 h-4 w-4">
+                <span>{{ p.label }}</span>
+              </label>
+            }
+          </fieldset>
           <div class="mt-8 flex justify-end gap-3">
             <button type="button" (click)="toggleAddModal()" class="px-4 py-2.5 border border-outline-variant bg-white text-body-sm font-medium text-on-surface-variant rounded-lg hover:bg-surface-container-high focus:outline-none transition-colors">Cancel</button>
-            <button type="submit" [disabled]="addForm.invalid || isSubmitting" class="px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-body-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none disabled:opacity-50 flex items-center transition-all hover:shadow-md">
+            <button type="submit" [disabled]="addForm.invalid || guardianMissing || isSubmitting" class="px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-body-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none disabled:opacity-50 flex items-center transition-all hover:shadow-md">
               @if (isSubmitting) {
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
