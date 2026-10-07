@@ -2,12 +2,13 @@ import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular
 import { FormsModule } from '@angular/forms';
 import { HealthPackageService } from '../../../../core/services/health-package.service';
 import { HealthPackageResponse, CreateHealthPackageRequest, UpdateHealthPackageRequest } from '../../../../core/models/health-package.model';
+import { CurrencySymbolPipe } from '../../../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-package-form',
   templateUrl: './package-form.html',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CurrencySymbolPipe, FormsModule],
 })
 export class PackageForm implements OnInit {
   private packageService = inject(HealthPackageService);

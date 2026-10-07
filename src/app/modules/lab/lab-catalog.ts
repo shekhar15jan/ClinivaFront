@@ -5,6 +5,8 @@ import { LabService } from '../../core/services/lab.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { LAB_CATEGORIES, LabCategory, SAMPLE_TYPES, SampleType, TestView } from '../../core/models/lab.model';
+import { formatMoney, fromMinor, toMinor } from '../../core/utils/money';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
 
 interface ParamDraft {
   name: string;
@@ -18,7 +20,7 @@ interface ParamDraft {
 @Component({
   selector: 'app-lab-catalog',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink],
   template: `
     <div class="p-4 sm:p-6 max-w-5xl">
       <a routerLink=".." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Lab</a>
@@ -41,7 +43,7 @@ interface ParamDraft {
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <input [(ngModel)]="code" maxlength="20" aria-label="Code" placeholder="Code" class="border border-outline-variant rounded-lg p-2 text-sm" />
             <input [(ngModel)]="name" maxlength="150" aria-label="Name" placeholder="Name" class="col-span-1 sm:col-span-2 border border-outline-variant rounded-lg p-2 text-sm" />
-            <input type="number" min="0" [(ngModel)]="price" aria-label="Price in rupees" placeholder="Price ₹" class="border border-outline-variant rounded-lg p-2 text-sm" />
+            <input type="number" min="0" [(ngModel)]="price" aria-label="Price" placeholder="Price {{ 'home' | currencySymbol }}" class="border border-outline-variant rounded-lg p-2 text-sm" />
             <select [(ngModel)]="category" aria-label="Category" class="border border-outline-variant rounded-lg p-2 text-sm">
               @for (c of categories; track c.value) { <option [value]="c.value">{{ c.label }}</option> }
             </select>
@@ -133,7 +135,7 @@ export class LabCatalogComponent implements OnInit {
     this.editingId = t?.id ?? null;
     this.code = t?.code ?? '';
     this.name = t?.name ?? '';
-    this.price = t ? t.priceInPaisa / 100 : null;
+    this.price = t ? fromMinor(t.priceInPaisa) : null;
     this.category = t?.category ?? 'BIOCHEMISTRY';
     this.sampleType = t?.sampleType ?? 'BLOOD';
     this.hours = t?.turnaroundHours ?? 24;
@@ -148,7 +150,7 @@ export class LabCatalogComponent implements OnInit {
       name: this.name.trim(),
       category: this.category,
       sampleType: this.sampleType,
-      priceInPaisa: Math.round((this.price ?? 0) * 100),
+      priceInPaisa: toMinor(this.price ?? 0),
       turnaroundHours: this.hours,
       parameters: this.params
         .filter((p) => p.name.trim())
@@ -174,6 +176,6 @@ export class LabCatalogComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

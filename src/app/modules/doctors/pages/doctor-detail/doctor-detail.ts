@@ -51,6 +51,7 @@ export function scheduleProblem(days: ScheduleDay[]): string {
 
 import { DepartmentService } from '../../../../core/services/department.service';
 import { Department } from '../../../../core/models/department.model';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 @Component({
   selector: 'app-doctor-detail',
   template: `
@@ -132,7 +133,7 @@ import { Department } from '../../../../core/models/department.model';
           <div class="bg-white rounded-xl border border-gray-200 p-5">
             <h3 class="text-sm font-semibold text-[#1E293B] mb-3">Consultation Fee</h3>
             <p id="doctor-fee" class="text-2xl font-bold text-[#0052CC]">
-              ₹{{ (doctor.consultationFeeInPaisa || 0) / 100 }}
+              {{ (doctor.consultationFeeInPaisa || 0) | money }}
             </p>
           </div>
           <div class="bg-white rounded-xl border border-gray-200 p-5">
@@ -188,7 +189,7 @@ import { Department } from '../../../../core/models/department.model';
       }
     </div>
   `,
-  imports: [RouterLink, FormsModule],
+  imports: [MoneyPipe, RouterLink, FormsModule],
 })
 export class DoctorDetail implements OnInit {
   private route = inject(ActivatedRoute);

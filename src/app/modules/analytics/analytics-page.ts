@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Analytics, AnalyticsService } from '../../core/services/analytics.service';
+import { formatMoney } from '../../core/utils/money';
 
 const SOURCE_LABEL: Record<string, string> = {
   OPD: 'Outpatient', INPATIENT: 'Inpatient stays', LAB: 'Lab', RADIOLOGY: 'Radiology', SURGERY: 'Day-case surgery',
@@ -188,7 +189,7 @@ export class AnalyticsPageComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    return formatMoney(paisa);
   }
 
   static iso(d: Date): string {

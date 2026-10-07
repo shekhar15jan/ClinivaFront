@@ -58,11 +58,11 @@
       </div>
       <div class="rounded-xl p-4 border border-amber-200 bg-amber-50">
         <p class="text-label-sm text-amber-900 uppercase tracking-wider">Billed this month</p>
-        <p class="text-headline-md text-amber-950 mt-1" id="mine-billed">₹{{ rupees(mine.billedThisMonthInPaisa) }}</p>
+        <p class="text-headline-md text-amber-950 mt-1" id="mine-billed">{{ mine.billedThisMonthInPaisa | money }}</p>
       </div>
       <div class="rounded-xl p-4 border border-violet-200 bg-violet-50">
         <p class="text-label-sm text-violet-800 uppercase tracking-wider">Billed this year</p>
-        <p class="text-headline-md text-violet-950 mt-1">₹{{ rupees(mine.billedThisYearInPaisa) }}</p>
+        <p class="text-headline-md text-violet-950 mt-1">{{ mine.billedThisYearInPaisa | money }}</p>
       </div>
     </div>
   }

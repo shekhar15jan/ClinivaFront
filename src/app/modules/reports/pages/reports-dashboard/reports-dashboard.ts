@@ -4,12 +4,14 @@ import { ReportService } from '../../../../core/services/report.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { ReportStore } from '../../store/report.store';
+import { formatMoney } from '../../../../core/utils/money';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-reports-dashboard',
   templateUrl: './reports-dashboard.html',
   standalone: true,
-  imports: [FormsModule],
+  imports: [MoneyPipe, FormsModule],
 })
 export class ReportsDashboard implements OnInit {
   readonly store = inject(ReportStore);
@@ -52,8 +54,8 @@ export class ReportsDashboard implements OnInit {
   }
 
   formatPaisa(paisa: number | null | undefined): string {
-    if (!paisa) return '₹0';
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    if (!paisa) return formatMoney(0);
+    return formatMoney(paisa);
   }
 
   donutDash(count: number, total: number): string {

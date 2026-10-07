@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { InsuranceService } from '../../core/services/insurance.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { CLAIM_STATUS_LABEL, CLAIM_STATUS_STYLE, ClaimSummary, Payer, PayerKind, Receivables } from '../../core/models/insurance.model';
+import { formatMoney } from '../../core/utils/money';
 
 const STAGES = [
   { value: '', label: 'Open' },
@@ -134,6 +135,6 @@ export class InsuranceDeskComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

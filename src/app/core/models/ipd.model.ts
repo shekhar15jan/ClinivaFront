@@ -1,3 +1,4 @@
+import { formatMoney } from '../utils/money';
 /** Inpatients (IPD): wards and beds, admissions and the stay's account. Money is in paisa. */
 
 export type WardType =
@@ -273,7 +274,7 @@ export interface AdmissionView {
 }
 
 export function rupees(paisa: number | null | undefined): string {
-  return '₹' + ((paisa ?? 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return formatMoney((paisa ?? 0));
 }
 
 export function labelOf<T extends string>(list: { value: T; label: string }[], value: T | null | undefined): string {

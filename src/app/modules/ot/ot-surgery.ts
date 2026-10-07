@@ -7,6 +7,7 @@ import { OtService } from '../../core/services/ot.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { ANAESTHESIA, SURGERY_STATUS_LABEL, Step, SurgeryView } from '../../core/models/ot.model';
+import { formatMoney } from '../../core/utils/money';
 
 type StepKey = 'consent' | 'sign-in' | 'time-out' | 'sign-out';
 
@@ -236,6 +237,6 @@ export class OtSurgeryComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

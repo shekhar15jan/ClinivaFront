@@ -5,6 +5,7 @@ import { PaymentService } from '../../../../core/services/payment.service';
 import { PaymentResponse, PaymentSummary } from '../../../../core/models/payment.model';
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { formatMoney } from '../../../../core/utils/money';
 
 @Component({
   selector: 'app-payment-list',
@@ -84,7 +85,7 @@ export class PaymentList implements OnInit, OnDestroy {
   }
 
   getAmount(amountInPaisa: number): string {
-    return '₹' + (amountInPaisa / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatMoney(amountInPaisa, undefined, { fixed: true });
   }
 
   openDetail(payment: PaymentResponse): void {

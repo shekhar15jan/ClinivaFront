@@ -12,6 +12,7 @@ import { DoctorService } from '../../../../core/services/doctor.service';
 
 import { DepartmentService } from '../../../../core/services/department.service';
 import { Department } from '../../../../core/models/department.model';
+import { CurrencySymbolPipe } from '../../../../shared/pipes/money.pipe';
 @Component({
   selector: 'app-doctor-form',
   template: `
@@ -103,7 +104,7 @@ import { Department } from '../../../../core/models/department.model';
 
           <div>
             <label for="consultationFee" class="block text-sm font-medium text-[#475569] mb-1"
-              >Consultation Fee (₹)</label
+              >Consultation Fee ({{ 'home' | currencySymbol }})</label
             >
             <input
               id="consultationFee"
@@ -154,7 +155,7 @@ import { Department } from '../../../../core/models/department.model';
       </div>
     </div>
   `,
-  imports: [RouterLink, FormsModule, ReactiveFormsModule],
+  imports: [CurrencySymbolPipe, RouterLink, FormsModule, ReactiveFormsModule],
 })
 export class DoctorForm {
   private fb = inject(FormBuilder);

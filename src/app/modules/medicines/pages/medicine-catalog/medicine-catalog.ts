@@ -5,13 +5,15 @@ import { MedicineService } from '../../../../core/services/medicine.service';
 import { Medicine } from '../../../../core/models/medicine.model';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { CurrencySymbolPipe, MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { fromMinor, toMinor } from '../../../../core/utils/money';
 
 @Component({
   selector: 'app-medicine-catalog',
   templateUrl: './medicine-catalog.html',
   styleUrl: './medicine-catalog.scss',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, PaginatorComponent, ConfirmDialogComponent],
+  imports: [CurrencySymbolPipe, MoneyPipe, FormsModule, ReactiveFormsModule, PaginatorComponent, ConfirmDialogComponent],
 })
 export class MedicineCatalog implements OnInit {
   private medicineService = inject(MedicineService);
@@ -136,7 +138,7 @@ export class MedicineCatalog implements OnInit {
       category: med.category,
       manufacturer: med.manufacturer,
       unit: med.unit,
-      price: (med.priceInPaisa / 100).toFixed(2),
+      price: fromMinor(med.priceInPaisa),
     });
     this.formError = '';
     this.showFormModal = true;
@@ -162,7 +164,7 @@ export class MedicineCatalog implements OnInit {
       category: formVal.category,
       manufacturer: formVal.manufacturer,
       unit: formVal.unit,
-      priceInPaisa: Math.round(formVal.price * 100),
+      priceInPaisa: toMinor(formVal.price),
     };
 
     const request$ = this.editingMedicine
@@ -234,6 +236,6 @@ export class MedicineCatalog implements OnInit {
   }
 
   getPriceInRupees(priceInPaisa: number | undefined): string {
-    return ((priceInPaisa || 0) / 100).toFixed(2);
+    return fromMinor((priceInPaisa || 0)).toFixed(2);
   }
 }

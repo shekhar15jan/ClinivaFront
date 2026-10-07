@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../../core/services/payment.service';
 import { RazorpayCheckoutService } from '../../../../core/services/razorpay-checkout.service';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { BillForeignCurrency } from '../../../../core/models/billing.model';
 
 type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
 
@@ -21,7 +23,12 @@ type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
 
           <div class="mb-4 p-3 bg-gray-50 rounded-lg">
             <p class="text-sm text-gray-600">Amount Due</p>
-            <p class="text-2xl font-bold text-gray-900">₹{{ (amountInPaisa / 100).toFixed(2) }}</p>
+            @if (foreign) {
+              <p class="text-2xl font-bold text-gray-900" id="pay-foreign-due">{{ foreign.dueInCurrencyMinor | money: foreign.currency : 'fixed' }}</p>
+              <p class="text-xs text-gray-600">{{ amountInPaisa | money: 'fixed' }} at 1 {{ foreign.currency }} = {{ foreign.exchangeRate }} {{ foreign.homeCurrency }}. Online payment is charged in {{ foreign.homeCurrency }}.</p>
+            } @else {
+              <p class="text-2xl font-bold text-gray-900">{{ amountInPaisa | money: 'fixed' }}</p>
+            }
           </div>
 
           <div class="mb-4">
@@ -82,7 +89,7 @@ type PaymentMethod = 'CASH' | 'UPI' | 'CARD' | 'NET_BANKING';
       </div>
     }
   `,
-  imports: [CommonModule, FormsModule],
+  imports: [MoneyPipe, CommonModule, FormsModule],
 })
 export class PaymentModal implements OnChanges {
   private paymentService = inject(PaymentService);
@@ -91,6 +98,8 @@ export class PaymentModal implements OnChanges {
   @Input() open = false;
   @Input() billId = '';
   @Input() amountInPaisa = 0;
+  /** The bill is shown in another currency: cash and card at the desk are taken in it. */
+  @Input() foreign: BillForeignCurrency | null = null;
   /** Filled in on the Razorpay form. */
   @Input() patientName = '';
   @Output() closed = new EventEmitter<void>();
@@ -141,9 +150,12 @@ export class PaymentModal implements OnChanges {
 
     const mode = this.selectedMethod === 'CASH' ? 'OFFLINE' : 'ONLINE';
 
+    const amount = this.foreign
+      ? { currency: this.foreign.currency, amountInCurrencyMinor: this.foreign.dueInCurrencyMinor }
+      : { amountInPaisa: this.amountInPaisa };
     this.paymentService.savePayment({
       billId: this.billId,
-      amountInPaisa: this.amountInPaisa,
+      ...amount,
       paymentMethod: this.selectedMethod,
       paymentMode: mode,
     }).subscribe({

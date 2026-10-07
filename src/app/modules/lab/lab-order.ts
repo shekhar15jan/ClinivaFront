@@ -7,6 +7,7 @@ import { LabService } from '../../core/services/lab.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { FLAG_STYLE, Flag, ItemView, ORDER_STATUS_LABEL, OrderView, ParameterView, flagOf } from '../../core/models/lab.model';
+import { formatMoney } from '../../core/utils/money';
 
 /**
  * One lab order: the lab collects the samples and enters each test's results (out-of-range values shown as they are
@@ -243,6 +244,6 @@ export class LabOrderComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

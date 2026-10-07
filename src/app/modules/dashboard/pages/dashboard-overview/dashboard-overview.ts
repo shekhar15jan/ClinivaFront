@@ -6,6 +6,8 @@ import { AppointmentService } from '../../../../core/services/appointment.servic
 import { ReportService } from '../../../../core/services/report.service';
 import { Appointment } from '../../../../core/models/appointment.model';
 import { DashboardStats, MyPerformance } from '../../../../core/models/report.model';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { formatMoney } from '../../../../core/utils/money';
 
 /** A local calendar day as YYYY-MM-DD (toISOString would give the UTC day, which can be off by one). */
 export function localDay(date: Date): string {
@@ -39,7 +41,7 @@ export function greetingFor(hour: number): string {
   templateUrl: './dashboard-overview.html',
   styleUrl: './dashboard-overview.scss',
   // Without this the routerLink attributes in the template are inert and the quick actions do nothing.
-  imports: [RouterLink],
+  imports: [MoneyPipe, RouterLink],
 })
 export class DashboardOverview implements OnInit, OnDestroy {
   private layoutStore = inject(LayoutStore);
@@ -91,7 +93,7 @@ export class DashboardOverview implements OnInit, OnDestroy {
 
   /** Paisa as rupees, Indian grouping (1,25,000). */
   rupees(paisa: number): string {
-    return (paisa / 100).toLocaleString('en-IN');
+    return formatMoney(paisa);
   }
 
   get waiting(): number {

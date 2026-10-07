@@ -97,7 +97,7 @@ describe('PackageList', () => {
 
   it('should format paisa to rupees correctly', () => {
     const component = createComponent();
-    expect(component.getPrice(150000)).toBe('₹1500.00');
+    expect(component.getPrice(150000)).toBe('₹1,500.00');
     expect(component.getPrice(0)).toBe('₹0.00');
   });
 });

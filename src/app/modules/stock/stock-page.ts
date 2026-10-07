@@ -5,6 +5,8 @@ import { StockService } from '../../core/services/stock.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { Alerts, MOVEMENT_LABEL, MedicineStock, MovementKind, StockLine, Supplier } from '../../core/models/stock.model';
+import { formatMoney, toMinor } from '../../core/utils/money';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
 
 type Tab = 'stock' | 'alerts' | 'receive';
 
@@ -24,7 +26,7 @@ interface DraftLine {
 @Component({
   selector: 'app-stock-page',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [CurrencySymbolPipe, FormsModule, DatePipe],
   template: `
     <div class="p-4 sm:p-6 max-w-6xl">
       <h1 class="text-2xl font-semibold text-on-surface">Pharmacy stock</h1>
@@ -170,7 +172,7 @@ interface DraftLine {
               <input [(ngModel)]="d.batchNumber" placeholder="Batch" maxlength="40" [attr.aria-label]="'Batch, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
               <input type="date" [(ngModel)]="d.expiryDate" [attr.aria-label]="'Expiry, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
               <input type="number" min="1" [(ngModel)]="d.quantity" placeholder="Qty" [attr.aria-label]="'Quantity, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
-              <input type="number" min="0" step="0.01" [(ngModel)]="d.cost" placeholder="Cost ₹/unit" [attr.aria-label]="'Cost per unit, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
+              <input type="number" min="0" step="0.01" [(ngModel)]="d.cost" placeholder="Cost {{ 'home' | currencySymbol }}/unit" [attr.aria-label]="'Cost per unit, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
             </div>
           }
           <div class="flex gap-2">
@@ -328,8 +330,8 @@ export class StockPageComponent implements OnInit {
         batchNumber: d.batchNumber.trim(),
         expiryDate: d.expiryDate,
         quantity: d.quantity!,
-        costInPaisa: Math.round((d.cost ?? 0) * 100),
-        mrpInPaisa: d.mrp === null ? null : Math.round(d.mrp * 100),
+        costInPaisa: toMinor(d.cost ?? 0),
+        mrpInPaisa: d.mrp === null ? null : toMinor(d.mrp),
       }));
     this.stock.receive(this.supplierId || null, this.invoice.trim() || null, lines).subscribe({
       next: () => {
@@ -352,6 +354,6 @@ export class StockPageComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

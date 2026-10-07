@@ -13,6 +13,7 @@ import { ApiResponse } from '../models/common.model';
 import { TenantContextService } from './tenant-context.service';
 import { TenantResolution } from '../models/tenant.model';
 import { environment } from '../../../environments/environment';
+import { homeCurrency } from '../utils/money';
 
 @Injectable({
   providedIn: 'root',
@@ -119,6 +120,7 @@ export class AuthService {
               logoUrl: rawTenant?.['logoUrl'] as string | undefined,
               timezone: rawTenant?.['timezone'] as string | undefined,
               activeModules: (rawTenant?.['activeModules'] as string[]) || [],
+              currency: AuthService.useCurrency(rawTenant?.['currency']),
             },
           };
           return { ...response, data: authResponse } as ApiResponse<AuthResponse>;
@@ -177,8 +179,16 @@ export class AuthService {
         logoUrl: rawTenant?.['logoUrl'] as string | undefined,
         timezone: rawTenant?.['timezone'] as string | undefined,
         activeModules: (rawTenant?.['activeModules'] as string[]) || [],
+        currency: AuthService.useCurrency(rawTenant?.['currency']),
       },
     };
+  }
+
+  /** The clinic's currency becomes the one all amounts are shown in. */
+  private static useCurrency(code: unknown): string {
+    const currency = typeof code === 'string' && /^[A-Z]{3}$/.test(code) ? code : 'INR';
+    homeCurrency.set(currency);
+    return currency;
   }
 
   /**

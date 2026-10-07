@@ -4,6 +4,7 @@ import { BillingService } from '../../../../core/services/billing.service';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-bill-list',
@@ -54,9 +55,9 @@ import { DatePipe } from '@angular/common';
                     <td class="px-4 py-3 text-sm font-mono font-medium text-on-surface">{{ bill.billNumber || 'INV-' + bill.id.substring(0, 6) }}</td>
                     <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ bill.patient.fullName }}</td>
                     <td class="px-4 py-3 text-sm text-on-surface-variant">{{ bill.createdAt | date: 'mediumDate' }}</td>
-                    <td class="px-4 py-3 text-sm font-semibold text-on-surface">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm text-on-surface-variant">₹{{ ((bill.totalAmountInPaisa || 0) - due(bill)) / 100 }}</td>
-                    <td class="px-4 py-3 text-sm text-red-600 font-medium">₹{{ due(bill) / 100 }}</td>
+                    <td class="px-4 py-3 text-sm font-semibold text-on-surface">{{ (bill.totalAmountInPaisa || 0) | money }}</td>
+                    <td class="px-4 py-3 text-sm text-on-surface-variant">{{ ((bill.totalAmountInPaisa || 0) - due(bill)) | money }}</td>
+                    <td class="px-4 py-3 text-sm text-red-600 font-medium">{{ due(bill) | money }}</td>
                     <td class="px-4 py-3"><span [class]="statusClass(bill.paymentStatus)" class="px-2.5 py-0.5 rounded-full text-xs font-medium">{{ bill.paymentStatus }}</span></td>
                     <td class="px-4 py-3">
                       <a [routerLink]="[bill.id]" class="text-primary hover:underline text-sm font-medium">View</a>
@@ -79,7 +80,7 @@ import { DatePipe } from '@angular/common';
                   <p class="text-xs text-on-surface-variant mt-0.5">{{ bill.createdAt | date: 'mediumDate' }}</p>
                 </div>
                 <div class="flex items-center gap-2 ml-3 shrink-0">
-                  <span class="text-sm font-semibold text-on-surface whitespace-nowrap">₹{{ (bill.totalAmountInPaisa || 0) / 100 }}</span>
+                  <span class="text-sm font-semibold text-on-surface whitespace-nowrap">{{ (bill.totalAmountInPaisa || 0) | money }}</span>
                   <span class="material-symbols-outlined text-on-surface-variant text-lg">chevron_right</span>
                 </div>
               </a>
@@ -100,7 +101,7 @@ import { DatePipe } from '@angular/common';
       </div>
     </div>
   `,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [MoneyPipe, FormsModule, RouterLink, DatePipe],
 })
 export class BillList implements OnInit, OnDestroy {
   private billingService = inject(BillingService);

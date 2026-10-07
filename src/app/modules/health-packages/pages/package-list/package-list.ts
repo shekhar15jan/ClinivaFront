@@ -6,6 +6,7 @@ import { HealthPackageResponse, BookHealthPackageRequest } from '../../../../cor
 import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { PackageForm } from '../package-form/package-form';
+import { formatMoney } from '../../../../core/utils/money';
 
 @Component({
   selector: 'app-package-list',
@@ -114,6 +115,6 @@ export class PackageList implements OnInit {
   }
 
   getPrice(amountInPaisa: number): string {
-    return '₹' + (amountInPaisa / 100).toFixed(2);
+    return formatMoney(amountInPaisa, undefined, { fixed: true });
   }
 }

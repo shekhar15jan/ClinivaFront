@@ -5,6 +5,7 @@ import { RadiologyService } from '../../core/services/radiology.service';
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { ImagingPriority, MODALITIES, Modality, StudyView } from '../../core/models/radiology.model';
+import { formatMoney } from '../../core/utils/money';
 
 /** Ordering imaging for a patient (from their screen or their stay): tap the studies, urgent or not, a note for radiology. */
 @Component({
@@ -117,6 +118,6 @@ export class RadiologyNewOrderComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

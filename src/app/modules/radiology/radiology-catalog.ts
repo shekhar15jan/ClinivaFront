@@ -5,12 +5,14 @@ import { RadiologyService } from '../../core/services/radiology.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { MODALITIES, Modality, StudyView, modalityLabel } from '../../core/models/radiology.model';
+import { formatMoney, fromMinor, toMinor } from '../../core/utils/money';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
 
 /** The imaging catalog: start from common studies in one tap, then set prices and patient preparation. */
 @Component({
   selector: 'app-radiology-catalog',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink],
   template: `
     <div class="p-4 sm:p-6 max-w-5xl">
       <a routerLink=".." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Radiology</a>
@@ -33,7 +35,7 @@ import { MODALITIES, Modality, StudyView, modalityLabel } from '../../core/model
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <input [(ngModel)]="code" maxlength="20" aria-label="Code" placeholder="Code" class="border border-outline-variant rounded-lg p-2 text-sm" />
             <input [(ngModel)]="name" maxlength="150" aria-label="Name" placeholder="Name" class="col-span-1 sm:col-span-2 border border-outline-variant rounded-lg p-2 text-sm" />
-            <input type="number" min="0" [(ngModel)]="price" aria-label="Price in rupees" placeholder="Price ₹" class="border border-outline-variant rounded-lg p-2 text-sm" />
+            <input type="number" min="0" [(ngModel)]="price" aria-label="Price" placeholder="Price {{ 'home' | currencySymbol }}" class="border border-outline-variant rounded-lg p-2 text-sm" />
             <select [(ngModel)]="modality" aria-label="Modality" class="border border-outline-variant rounded-lg p-2 text-sm">
               @for (m of modalities; track m.value) { <option [value]="m.value">{{ m.label }}</option> }
             </select>
@@ -112,7 +114,7 @@ export class RadiologyCatalogComponent implements OnInit {
     this.editingId = s?.id ?? null;
     this.code = s?.code ?? '';
     this.name = s?.name ?? '';
-    this.price = s ? s.priceInPaisa / 100 : null;
+    this.price = s ? fromMinor(s.priceInPaisa) : null;
     this.modality = s?.modality ?? 'XRAY';
     this.bodyPart = s?.bodyPart ?? '';
     this.preparation = s?.preparation ?? '';
@@ -125,7 +127,7 @@ export class RadiologyCatalogComponent implements OnInit {
       name: this.name.trim(),
       modality: this.modality,
       bodyPart: this.bodyPart.trim() || null,
-      priceInPaisa: Math.round((this.price ?? 0) * 100),
+      priceInPaisa: toMinor(this.price ?? 0),
       preparation: this.preparation.trim() || null,
       formFRequired: this.formF,
     };
@@ -149,6 +151,6 @@ export class RadiologyCatalogComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

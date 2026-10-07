@@ -27,6 +27,8 @@ export interface Bill {
   voidReason?: string;
   createdAt: string;
   updatedAt?: string;
+  /** Shown and paid in another currency (module MULTI_CURRENCY), at the rate frozen on the bill. */
+  foreign?: BillForeignCurrency | null;
 }
 
 export type BillStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID';
@@ -48,4 +50,14 @@ export interface UpdateBillRequest {
 export function amountDueInPaisa(bill: Pick<Bill, 'totalAmountInPaisa' | 'amountPaidInPaisa' | 'paymentStatus'>): number {
   if (bill.paymentStatus === 'PAID') return 0;
   return Math.max(0, (bill.totalAmountInPaisa || 0) - (bill.amountPaidInPaisa || 0));
+}
+
+/** A bill in another currency: totals in its minor units, the frozen rate (home units per one unit). */
+export interface BillForeignCurrency {
+  currency: string;
+  exchangeRate: number;
+  rateEffectiveFrom: string | null;
+  totalInCurrencyMinor: number;
+  dueInCurrencyMinor: number;
+  homeCurrency: string;
 }

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DoctorRules, PAYOUT_SOURCES, PayoutMode, PayoutService, PayoutSource, StatementStatus, StatementSummary } from '../../core/services/payout.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { formatMoney, fromMinor, toMinor } from '../../core/utils/money';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
 
 interface RuleDraft {
   mode: PayoutMode | 'NONE';
@@ -24,7 +26,7 @@ const STATUSES: { value: StatementStatus | ''; label: string }[] = [
 @Component({
   selector: 'app-payouts-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink, DatePipe],
   template: `
     <div class="p-4 sm:p-6 max-w-5xl">
       <h1 class="text-2xl font-semibold text-on-surface">Doctor payouts</h1>
@@ -91,8 +93,8 @@ const STATUSES: { value: StatementStatus | ''; label: string }[] = [
                         [class]="draft[src.value].mode === m.value ? 'bg-teal-600 text-white border-teal-600' : 'bg-white border-outline-variant'">{{ m.label }}</button>
                     }
                     @if (draft[src.value].mode !== 'NONE') {
-                      <input type="number" min="0" [(ngModel)]="draft[src.value].value" [attr.aria-label]="src.label + (draft[src.value].mode === 'PERCENT' ? ' %' : ' ₹')"
-                        [placeholder]="draft[src.value].mode === 'PERCENT' ? '%' : '₹ per item'" class="w-28 border border-outline-variant rounded-lg p-2 text-sm" />
+                      <input type="number" min="0" [(ngModel)]="draft[src.value].value" [attr.aria-label]="src.label + (draft[src.value].mode === 'PERCENT' ? ' %' : ' ' + ('home' | currencySymbol))"
+                        [placeholder]="draft[src.value].mode === 'PERCENT' ? '%' : ('home' | currencySymbol) + ' per item'" class="w-28 border border-outline-variant rounded-lg p-2 text-sm" />
                     }
                   </div>
                 }
@@ -121,7 +123,7 @@ export class PayoutsPageComponent implements OnInit {
   readonly modes: { value: PayoutMode | 'NONE'; label: string }[] = [
     { value: 'NONE', label: 'Nothing' },
     { value: 'PERCENT', label: 'Share %' },
-    { value: 'FIXED', label: 'Fixed ₹' },
+    { value: 'FIXED', label: 'Fixed amount' },
   ];
   tab: 'statements' | 'rules' = 'statements';
   doctors: DoctorRules[] = [];
@@ -199,7 +201,7 @@ export class PayoutsPageComponent implements OnInit {
     for (const s of this.sources) {
       const r = d.rules.find((x) => x.source === s.value);
       this.draft[s.value] = !r ? { mode: 'NONE', value: null }
-        : { mode: r.mode, value: r.mode === 'PERCENT' ? r.percentBasisPoints / 100 : r.fixedInPaisa / 100 };
+        : { mode: r.mode, value: r.mode === 'PERCENT' ? r.percentBasisPoints / 100 : fromMinor(r.fixedInPaisa) };
     }
   }
 
@@ -209,8 +211,8 @@ export class PayoutsPageComponent implements OnInit {
       .map((s) => {
         const r = this.draft[s.value];
         return r.mode === 'PERCENT'
-          ? { source: s.value, mode: 'PERCENT' as PayoutMode, percentBasisPoints: Math.round((r.value ?? 0) * 100) }
-          : { source: s.value, mode: 'FIXED' as PayoutMode, fixedInPaisa: Math.round((r.value ?? 0) * 100) };
+          ? { source: s.value, mode: 'PERCENT' as PayoutMode, percentBasisPoints: toMinor(r.value ?? 0) }
+          : { source: s.value, mode: 'FIXED' as PayoutMode, fixedInPaisa: toMinor(r.value ?? 0) };
       });
     this.payouts.setRules(d.doctorId, rules).subscribe({
       next: (saved) => {
@@ -232,7 +234,7 @@ export class PayoutsPageComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 
   static iso(d: Date): string {

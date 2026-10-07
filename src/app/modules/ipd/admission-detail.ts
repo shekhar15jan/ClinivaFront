@@ -28,6 +28,8 @@ import {
   labelOf,
   rupees,
 } from '../../core/models/ipd.model';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
+import { fromMinor, toMinor } from '../../core/utils/money';
 
 type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' | 'bill' | 'refund' | 'discharge' | null;
 
@@ -39,7 +41,7 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
 @Component({
   selector: 'app-admission-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe, ConfirmDialogComponent],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink, DatePipe, ConfirmDialogComponent],
   template: `
     <div class="p-4 sm:p-6 max-w-5xl">
       <a routerLink="../.." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Bed board</a>
@@ -160,7 +162,7 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
                     aria-label="Description" class="col-span-2 border border-outline-variant rounded-lg p-2.5 text-sm" />
                   <input id="charge-quantity" type="number" min="1" [(ngModel)]="chargeQuantity" name="chargeQuantity" aria-label="Quantity" inputmode="numeric"
                     class="border border-outline-variant rounded-lg p-2.5 text-sm" />
-                  <input id="charge-price" type="number" min="0" [(ngModel)]="chargePrice" name="chargePrice" aria-label="Price each in rupees" placeholder="₹ each" inputmode="decimal"
+                  <input id="charge-price" type="number" min="0" [(ngModel)]="chargePrice" name="chargePrice" aria-label="Price each" placeholder="{{ 'home' | currencySymbol }}  each" inputmode="decimal"
                     class="border border-outline-variant rounded-lg p-2.5 text-sm" />
                 </div>
                 <p class="text-sm text-slate-700">Total {{ money(chargeTotal) }}</p>
@@ -168,7 +170,7 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
               @case ('advance') {
                 <h2 class="font-semibold">Take an advance</h2>
                 <div class="flex gap-2 flex-wrap items-center">
-                  <input id="money-amount" type="number" min="1" [(ngModel)]="moneyRupees" name="moneyRupees" aria-label="Amount in rupees" placeholder="₹" inputmode="decimal"
+                  <input id="money-amount" type="number" min="1" [(ngModel)]="moneyRupees" name="moneyRupees" aria-label="Amount" placeholder="{{ 'home' | currencySymbol }} " inputmode="decimal"
                     class="w-36 border border-outline-variant rounded-lg p-2.5 text-sm" />
                   @for (m of methods; track m.value) {
                     <button type="button" (click)="moneyMethod = m.value" class="px-3 min-h-touch rounded-full text-sm border"
@@ -207,7 +209,7 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input [(ngModel)]="packageCode" name="packageCode" maxlength="40" aria-label="Package code" placeholder="Package code (PM-JAY)" class="border border-outline-variant rounded-lg p-2 text-sm" />
                   <input [(ngModel)]="packageName" name="packageName" maxlength="200" aria-label="Package name" placeholder="Package name" class="border border-outline-variant rounded-lg p-2 text-sm" />
-                  <input id="claim-requested" type="number" min="0" [(ngModel)]="requestedRupees" name="requested" aria-label="Estimate in rupees" placeholder="Estimate ₹" class="border border-outline-variant rounded-lg p-2 text-sm" />
+                  <input id="claim-requested" type="number" min="0" [(ngModel)]="requestedRupees" name="requested" aria-label="Estimate" placeholder="Estimate {{ 'home' | currencySymbol }}" class="border border-outline-variant rounded-lg p-2 text-sm" />
                 </div>
               }
               @case ('issue') {
@@ -228,7 +230,7 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
               @case ('refund') {
                 <h2 class="font-semibold">Give back {{ money(-a.account.balanceInPaisa) }}</h2>
                 <div class="flex gap-2 flex-wrap items-center">
-                  <input id="money-amount" type="number" min="1" [(ngModel)]="moneyRupees" name="moneyRupees" aria-label="Amount in rupees" inputmode="decimal"
+                  <input id="money-amount" type="number" min="1" [(ngModel)]="moneyRupees" name="moneyRupees" aria-label="Amount" inputmode="decimal"
                     class="w-36 border border-outline-variant rounded-lg p-2.5 text-sm" />
                   @for (m of methods; track m.value) {
                     <button type="button" (click)="moneyMethod = m.value" class="px-3 min-h-touch rounded-full text-sm border"
@@ -271,7 +273,7 @@ type Panel = 'move' | 'charge' | 'issue' | 'insurance' | 'advance' | 'summary' |
               @case ('bill') {
                 <h2 class="font-semibold">Final bill</h2>
                 <p class="text-sm text-slate-700">Beds {{ money(a.account.bedChargesInPaisa) }} + charges {{ money(a.account.otherChargesInPaisa) }}; the clinic's GST is added. Advances of {{ money(a.account.depositsInPaisa) }} are credited.</p>
-                <label for="bill-discount" class="block text-sm font-medium">Discount (₹)</label>
+                <label for="bill-discount" class="block text-sm font-medium">Discount ({{ 'home' | currencySymbol }})</label>
                 <input id="bill-discount" type="number" min="0" [(ngModel)]="discountRupees" name="discountRupees" inputmode="decimal"
                   class="w-36 border border-outline-variant rounded-lg p-2.5 text-sm" />
               }
@@ -561,7 +563,7 @@ export class AdmissionDetailComponent implements OnInit {
   }
 
   get chargeTotal(): number {
-    return Math.round((this.chargePrice ?? 0) * 100) * Math.max(1, this.chargeQuantity || 1);
+    return toMinor(this.chargePrice ?? 0) * Math.max(1, this.chargeQuantity || 1);
   }
 
   get panelReady(): boolean {
@@ -622,7 +624,7 @@ export class AdmissionDetailComponent implements OnInit {
     const a = this.a!;
     this.panel = panel;
     this.panelError = '';
-    this.moneyRupees = panel === 'refund' ? -a.account.balanceInPaisa / 100 : null;
+    this.moneyRupees = panel === 'refund' ? fromMinor(-a.account.balanceInPaisa) : null;
     this.moneyMethod = 'CASH';
     this.moneyReference = '';
     if (panel === 'move') {
@@ -671,7 +673,7 @@ export class AdmissionDetailComponent implements OnInit {
       return;
     }
     const id = this.a.id;
-    const money = { amountInPaisa: Math.round((this.moneyRupees ?? 0) * 100), paymentMethod: this.moneyMethod, reference: this.moneyReference.trim() || null };
+    const money = { amountInPaisa: toMinor(this.moneyRupees ?? 0), paymentMethod: this.moneyMethod, reference: this.moneyReference.trim() || null };
     const call = {
       move: () => this.ipd.transfer(id, this.moveTo, this.moveReason.trim()),
       issue: () =>
@@ -684,7 +686,7 @@ export class AdmissionDetailComponent implements OnInit {
           category: this.chargeCategory,
           description: this.chargeDescription.trim(),
           quantity: this.chargeQuantity,
-          unitPriceInPaisa: Math.round((this.chargePrice ?? 0) * 100),
+          unitPriceInPaisa: toMinor(this.chargePrice ?? 0),
         }),
       advance: () => this.ipd.deposit(id, money),
       refund: () => this.ipd.refund(id, money),
@@ -697,7 +699,7 @@ export class AdmissionDetailComponent implements OnInit {
           followUpDate: this.followUpDate || null,
           dischargeType: this.dischargeType,
         }),
-      bill: () => this.ipd.finalBill(id, Math.round((this.discountRupees ?? 0) * 100)),
+      bill: () => this.ipd.finalBill(id, toMinor(this.discountRupees ?? 0)),
       discharge: () => this.ipd.discharge(id, this.duesNote.trim() || null),
     }[this.panel!];
     const done = this.saveLabel;
@@ -719,7 +721,7 @@ export class AdmissionDetailComponent implements OnInit {
 
   private openClaim(): void {
     const a = this.a!;
-    const requested = this.requestedRupees === null ? null : Math.round(this.requestedRupees * 100);
+    const requested = this.requestedRupees === null ? null : toMinor(this.requestedRupees);
     const policy$ = this.policyId
       ? this.insurance.policies(a.patientId).pipe(map(() => this.policyId))
       : this.insurance

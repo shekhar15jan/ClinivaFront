@@ -75,7 +75,7 @@
                 <span class="bg-medical-blue/10 text-medical-blue px-2.5 py-0.5 rounded-full text-xs font-medium">{{ med.category }}</span>
               </td>
               <td class="px-4 py-3 text-sm text-on-surface-variant">{{ med.manufacturer }}</td>
-              <td class="px-4 py-3 text-sm font-medium text-on-surface">₹{{ getPriceInRupees(med.priceInPaisa) }}</td>
+              <td class="px-4 py-3 text-sm font-medium text-on-surface">{{ med.priceInPaisa | money: 'fixed' }}</td>
               <td class="px-4 py-3">
                 <span [class]="!med.isDiscontinued ? 'bg-green-50 text-status-green border border-green-200' : 'bg-red-50 text-status-red border border-red-200'" class="px-2.5 py-1 rounded-full text-xs font-medium">
                   {{ !med.isDiscontinued ? 'Active' : 'Discontinued' }}
@@ -120,7 +120,7 @@
                 <span>{{ med.unit }}</span>
               </div>
               <div class="flex items-center justify-between pt-1 border-t border-outline-variant">
-                <span class="text-sm font-semibold text-on-surface">₹{{ getPriceInRupees(med.priceInPaisa) }}</span>
+                <span class="text-sm font-semibold text-on-surface">{{ med.priceInPaisa | money: 'fixed' }}</span>
                 <div class="flex items-center gap-3">
                   <button (click)="openEditModal(med)" class="text-xs text-medical-blue font-medium flex items-center gap-1">
                     <span class="material-symbols-outlined text-sm">edit</span> Edit
@@ -189,7 +189,7 @@
             <input id="med-form-unit" type="text" formControlName="unit" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
           <div>
-            <label for="med-form-price" class="block text-sm font-medium text-on-surface mb-1">Price (₹) *</label>
+            <label for="med-form-price" class="block text-sm font-medium text-on-surface mb-1">Price ({{ 'home' | currencySymbol }}) *</label>
             <input id="med-form-price" type="number" formControlName="price" step="0.01" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical-blue/20 focus:border-medical-blue" />
           </div>
         </div>

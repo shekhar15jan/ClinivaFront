@@ -5,6 +5,7 @@ import { LabService } from '../../core/services/lab.service';
 import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { LAB_CATEGORIES, LabCategory, Priority, TestView } from '../../core/models/lab.model';
+import { formatMoney } from '../../core/utils/money';
 
 /**
  * Ordering tests for a patient (opened from their screen or their stay): tap the tests, mark it urgent if it is,
@@ -111,6 +112,6 @@ export class LabNewOrderComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

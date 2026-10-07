@@ -57,10 +57,11 @@ export class IdleSignOutService implements OnDestroy {
       this.lastActivity = this.now();
       return;
     }
-    let shared = 0;
+    let shared: number;
     try {
       shared = Number(localStorage.getItem(SHARED_KEY)) || 0;
     } catch {
+      // Storage blocked: only this tab's own activity counts.
       shared = 0;
     }
     const idle = this.now() - Math.max(this.lastActivity, shared);

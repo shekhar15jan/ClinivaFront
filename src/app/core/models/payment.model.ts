@@ -22,9 +22,13 @@ export interface VerifyPaymentRequest {
 
 export interface SavePaymentRequest {
   billId: string;
-  amountInPaisa: number;
+  /** Home currency; leave out when paying in the bill's foreign currency. */
+  amountInPaisa?: number;
   paymentMethod: string;
   paymentMode: string;
+  /** Paid in the bill's foreign currency (module MULTI_CURRENCY): that currency and the amount received in it. */
+  currency?: string;
+  amountInCurrencyMinor?: number;
 }
 
 export interface PaymentSummary {

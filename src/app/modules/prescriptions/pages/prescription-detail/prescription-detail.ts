@@ -8,6 +8,8 @@ import { ToastService } from '../../../../shared/components/toast/toast.service'
 import { hospitalCodeFrom } from '../../../../core/utils/route.util';
 import { Prescription } from '../../../../core/models/prescription.model';
 import { DatePipe } from '@angular/common';
+import { CurrencySymbolPipe } from '../../../../shared/pipes/money.pipe';
+import { toMinor } from '../../../../core/utils/money';
 
 @Component({
   selector: 'app-prescription-detail',
@@ -97,15 +99,15 @@ import { DatePipe } from '@angular/common';
               </p>
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label for="bill-additional" class="block text-xs text-[#64748B] mb-1">Additional charges (₹)</label>
+                  <label for="bill-additional" class="block text-xs text-[#64748B] mb-1">Additional charges ({{ 'home' | currencySymbol }})</label>
                   <input id="bill-additional" type="number" min="0" step="0.01" [(ngModel)]="additionalCharges" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
                 </div>
                 <div>
-                  <label for="bill-discount" class="block text-xs text-[#64748B] mb-1">Discount (₹)</label>
+                  <label for="bill-discount" class="block text-xs text-[#64748B] mb-1">Discount ({{ 'home' | currencySymbol }})</label>
                   <input id="bill-discount" type="number" min="0" step="0.01" [(ngModel)]="discount" class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
                 </div>
                 <div>
-                  <label for="bill-tax" class="block text-xs text-[#64748B] mb-1">Tax (₹)</label>
+                  <label for="bill-tax" class="block text-xs text-[#64748B] mb-1">Tax ({{ 'home' | currencySymbol }})</label>
                   <input id="bill-tax" type="number" min="0" step="0.01" [(ngModel)]="tax" placeholder="Clinic GST"
                          class="w-full border border-gray-200 rounded-lg p-2 text-sm bg-white" />
                   <p class="text-[11px] text-[#64748B] mt-1">Leave empty to apply the clinic's GST rate.</p>
@@ -146,7 +148,7 @@ import { DatePipe } from '@angular/common';
       }
     </div>
   `,
-  imports: [RouterLink, DatePipe, FormsModule],
+  imports: [CurrencySymbolPipe, RouterLink, DatePipe, FormsModule],
 })
 export class PrescriptionDetail implements OnInit {
   private route = inject(ActivatedRoute);
@@ -202,7 +204,7 @@ export class PrescriptionDetail implements OnInit {
 
   generateBill() {
     if (!this.id || this.isGeneratingBill) return;
-    const toPaise = (rupees: number | null) => Math.round((rupees ?? 0) * 100);
+    const toPaise = (rupees: number | null) => toMinor(rupees ?? 0);
     if ([this.additionalCharges, this.discount, this.tax].some((v) => (v ?? 0) < 0)) {
       this.billError = 'Amounts cannot be negative.';
       return;

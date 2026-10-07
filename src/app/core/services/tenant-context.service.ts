@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Tenant, TenantModule, Subscription } from '../models/tenant.model';
 import { EffectiveLicenseService } from './effective-license.service';
+import { homeCurrency } from '../utils/money';
 
 @Injectable({
   providedIn: 'root',
@@ -32,6 +33,7 @@ export class TenantContextService {
 
   setTenantContext(tenant: Tenant, modules: TenantModule[], subscription: Subscription): void {
     this.currentTenant.set(tenant);
+    if (tenant?.currency && /^[A-Z]{3}$/.test(tenant.currency)) homeCurrency.set(tenant.currency);
     this.currentModules.set(modules);
     this.currentSubscription.set(subscription);
 

@@ -21,6 +21,8 @@ import {
   labelOf,
   rupees,
 } from '../../core/models/ipd.model';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
+import { toMinor } from '../../core/utils/money';
 
 /** Tile colours by bed state; a patient whose discharge is advised stands out in violet. */
 const TILE: Record<string, string> = {
@@ -38,7 +40,7 @@ const TILE: Record<string, string> = {
 @Component({
   selector: 'app-bed-board',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink],
   template: `
     <div class="p-4 sm:p-6">
       <div class="flex items-start justify-between flex-wrap gap-3 mb-4">
@@ -215,7 +217,7 @@ const TILE: Record<string, string> = {
 
           @if (canTakeMoney) {
             <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
-              <label for="admit-advance" class="block text-sm font-medium mb-1">Advance taken now (₹)</label>
+              <label for="admit-advance" class="block text-sm font-medium mb-1">Advance taken now ({{ 'home' | currencySymbol }})</label>
               <div class="flex gap-2 flex-wrap items-center">
                 <input id="admit-advance" name="advance" type="number" min="0" [(ngModel)]="advanceRupees" inputmode="numeric"
                   class="w-36 border border-outline-variant rounded-lg p-2.5 text-sm" placeholder="0" />
@@ -383,7 +385,7 @@ export class BedBoardComponent implements OnInit {
     if (!this.canAdmit || this.admitting || !this.admitBed || !this.patient) return;
     this.admitting = true;
     this.admitError = '';
-    const advance = Math.round((this.advanceRupees ?? 0) * 100);
+    const advance = toMinor(this.advanceRupees ?? 0);
     this.ipd
       .admit({
         patientId: this.patient.id,

@@ -9,6 +9,8 @@ import { ToastService } from '../../shared/components/toast/toast.service';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Department } from '../../core/models/department.model';
 import { BedView, WARD_TYPES, WardType, WardView, labelOf, rupees } from '../../core/models/ipd.model';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
+import { fromMinor, toMinor } from '../../core/utils/money';
 
 /**
  * Wards and beds, set up once: the ward's type and daily bed charge, and its beds by number ("G-1" to "G-20" in one
@@ -17,7 +19,7 @@ import { BedView, WARD_TYPES, WardType, WardView, labelOf, rupees } from '../../
 @Component({
   selector: 'app-ward-setup',
   standalone: true,
-  imports: [FormsModule, RouterLink, ConfirmDialogComponent],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink, ConfirmDialogComponent],
   template: `
     <div class="p-4 sm:p-6 max-w-5xl">
       <a routerLink=".." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Bed board</a>
@@ -45,7 +47,7 @@ import { BedView, WARD_TYPES, WardType, WardView, labelOf, rupees } from '../../
               <input id="ward-name" name="name" [(ngModel)]="name" maxlength="80" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm" placeholder="e.g. General Ward A" />
             </div>
             <div>
-              <label for="ward-rate" class="block text-sm font-medium mb-1">Bed charge per day (₹) *</label>
+              <label for="ward-rate" class="block text-sm font-medium mb-1">Bed charge per day ({{ 'home' | currencySymbol }}) *</label>
               <input id="ward-rate" name="rate" type="number" min="0" [(ngModel)]="rateRupees" inputmode="decimal" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm" />
             </div>
             <div>
@@ -194,7 +196,7 @@ export class WardSetupComponent implements OnInit {
     this.formError = '';
     this.name = w?.name ?? '';
     this.wardType = w?.wardType ?? 'GENERAL';
-    this.rateRupees = w ? w.dailyRateInPaisa / 100 : null;
+    this.rateRupees = w ? fromMinor(w.dailyRateInPaisa) : null;
     this.floor = w?.floor ?? '';
     this.departmentId = w?.departmentId ?? '';
   }
@@ -207,7 +209,7 @@ export class WardSetupComponent implements OnInit {
       name: this.name.trim(),
       wardType: this.wardType,
       floor: this.floor.trim() || null,
-      dailyRateInPaisa: Math.round(this.rateRupees * 100),
+      dailyRateInPaisa: toMinor(this.rateRupees),
       departmentId: this.departmentId || null,
     };
     const beds = this.bedNumbers;

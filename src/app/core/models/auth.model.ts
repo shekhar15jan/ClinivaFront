@@ -18,6 +18,8 @@ export interface TenantInfo {
   logoUrl?: string;
   timezone?: string;
   activeModules: string[];
+  /** The clinic's home currency; every amount is in its minor units. */
+  currency?: string;
 }
 
 export interface AuthResponse {

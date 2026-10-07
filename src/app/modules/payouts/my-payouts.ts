@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { PayoutService, StatementSummary } from '../../core/services/payout.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { formatMoney } from '../../core/utils/money';
 
 /** A doctor's own payout statements, once approved, each as a PDF. Made for a phone. */
 @Component({
@@ -47,6 +48,6 @@ export class MyPayoutsComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }

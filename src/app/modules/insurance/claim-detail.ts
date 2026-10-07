@@ -5,12 +5,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { InsuranceService } from '../../core/services/insurance.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { CLAIM_STATUS_LABEL, CLAIM_STATUS_STYLE, Claim, NEXT_STEPS, STEP_AMOUNT, STEP_LABEL, Step } from '../../core/models/insurance.model';
+import { formatMoney, fromMinor, toMinor } from '../../core/utils/money';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
 
 /** One claim: its amounts, the timeline, and the next steps the insurer's answers allow. */
 @Component({
   selector: 'app-claim-detail',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink, DatePipe],
   template: `
     <div class="p-4 sm:p-6 max-w-4xl">
       <a routerLink=".." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Insurance</a>
@@ -44,11 +46,11 @@ import { CLAIM_STATUS_LABEL, CLAIM_STATUS_STYLE, Claim, NEXT_STEPS, STEP_AMOUNT,
         @if (step) {
           <div class="bg-white rounded-xl border-2 border-primary p-3 mb-3 space-y-2" id="step-form">
             @if (amountLabel) {
-              <label class="block text-sm font-medium">{{ amountLabel }} (₹)
+              <label class="block text-sm font-medium">{{ amountLabel }} ({{ 'home' | currencySymbol }})
                 <input id="step-amount" type="number" min="0" [(ngModel)]="amount" class="mt-1 w-40 border border-outline-variant rounded-lg p-2 text-sm block" /></label>
             }
             @if (step === 'SETTLE') {
-              <label class="block text-sm font-medium">TDS deducted (₹)
+              <label class="block text-sm font-medium">TDS deducted ({{ 'home' | currencySymbol }})
                 <input id="step-tds" type="number" min="0" [(ngModel)]="tds" class="mt-1 w-40 border border-outline-variant rounded-lg p-2 text-sm block" /></label>
             }
             @if (step !== 'NOTE' && step !== 'QUERY' && step !== 'CANCEL') {
@@ -132,13 +134,13 @@ export class ClaimDetailComponent implements OnInit {
       SETTLE: c.claimedInPaisa,
     };
     const v = suggested[s];
-    this.amount = v === null || v === undefined ? null : v / 100;
+    this.amount = v === null || v === undefined ? null : fromMinor(v);
   }
 
   save(): void {
     if (!this.c || !this.step || !this.ready) return;
     this.busy = true;
-    const paisa = (r: number | null) => (r === null ? null : Math.round(r * 100));
+    const paisa = (r: number | null) => (r === null ? null : toMinor(r));
     this.insurance.step(this.c.id, this.step, this.amountLabel ? paisa(this.amount) : null, this.step === 'SETTLE' ? paisa(this.tds) : null,
       this.reference.trim() || null, this.note.trim() || null).subscribe({
       next: (c) => {
@@ -163,6 +165,6 @@ export class ClaimDetailComponent implements OnInit {
   }
 
   money(paisa: number | null): string {
-    return paisa === null ? '—' : '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return paisa === null ? '—' : formatMoney(paisa);
   }
 }

@@ -8,6 +8,7 @@ import { Department } from '../../../../core/models/department.model';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaginatorComponent } from '../../../../shared/components/paginator/paginator.component';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 /**
  * The doctors directory. The search box and the specialization filter used to do nothing (and the filter offered a
@@ -121,7 +122,7 @@ import { PaginatorComponent } from '../../../../shared/components/paginator/pagi
                 <td class="px-4 py-3 text-sm text-[#475569]">{{ doc.specialization }}</td>
                 <td class="px-4 py-3 text-sm text-[#475569]">{{ doc.departmentName || '—' }}</td>
                 <td class="px-4 py-3 text-sm font-medium text-[#1E293B]">
-                  ₹{{ doc.consultationFeeInPaisa / 100 }}
+                  {{ doc.consultationFeeInPaisa | money }}
                 </td>
                 <td class="px-4 py-3">
                   <span
@@ -178,7 +179,7 @@ import { PaginatorComponent } from '../../../../shared/components/paginator/pagi
                 }
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-title-md font-semibold text-on-surface">₹{{ doc.consultationFeeInPaisa / 100 }}</span>
+                <span class="text-title-md font-semibold text-on-surface">{{ doc.consultationFeeInPaisa | money }}</span>
                 <span
                   [class]="
                     doc.isActive ? 'bg-status-green-light text-status-green' : 'bg-status-red-light text-status-red'
@@ -206,7 +207,7 @@ import { PaginatorComponent } from '../../../../shared/components/paginator/pagi
       }
     </div>
   `,
-  imports: [RouterLink, FormsModule, PaginatorComponent],
+  imports: [MoneyPipe, RouterLink, FormsModule, PaginatorComponent],
 })
 export class DoctorList implements OnInit, OnDestroy {
   private doctorService = inject(DoctorService);

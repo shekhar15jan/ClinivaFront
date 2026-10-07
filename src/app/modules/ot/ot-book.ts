@@ -7,6 +7,8 @@ import { PatientService } from '../../core/services/patient.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { Doctor } from '../../core/models/doctor.model';
 import { ANAESTHESIA, Anaesthesia, SIDES, Side, SurgeryPriority, TheatreView } from '../../core/models/ot.model';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
+import { toMinor } from '../../core/utils/money';
 
 /**
  * Booking a surgery for a patient (from their page or their stay): theatre, surgeon, procedure and side, anaesthesia,
@@ -15,7 +17,7 @@ import { ANAESTHESIA, Anaesthesia, SIDES, Side, SurgeryPriority, TheatreView } f
 @Component({
   selector: 'app-ot-book',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink],
   template: `
     <div class="p-4 sm:p-6 max-w-3xl">
       <a routerLink=".." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Operation theatre</a>
@@ -75,9 +77,9 @@ import { ANAESTHESIA, Anaesthesia, SIDES, Side, SurgeryPriority, TheatreView } f
         </div>
         <input [(ngModel)]="assistants" maxlength="200" aria-label="Assistants" placeholder="Assistants and scrub nurse (optional)" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm" />
         <div class="grid grid-cols-3 gap-2">
-          <label class="text-xs">Surgeon's fee ₹<input type="number" min="0" [(ngModel)]="surgeonFee" id="ot-surgeon-fee" class="block w-full mt-1 border border-outline-variant rounded-lg p-2 text-sm" /></label>
-          <label class="text-xs">Anaesthesia ₹<input type="number" min="0" [(ngModel)]="anaesthesiaFee" class="block w-full mt-1 border border-outline-variant rounded-lg p-2 text-sm" /></label>
-          <label class="text-xs">Theatre ₹<input type="number" min="0" [(ngModel)]="theatreFee" class="block w-full mt-1 border border-outline-variant rounded-lg p-2 text-sm" /></label>
+          <label class="text-xs">Surgeon's fee {{ 'home' | currencySymbol }}<input type="number" min="0" [(ngModel)]="surgeonFee" id="ot-surgeon-fee" class="block w-full mt-1 border border-outline-variant rounded-lg p-2 text-sm" /></label>
+          <label class="text-xs">Anaesthesia {{ 'home' | currencySymbol }}<input type="number" min="0" [(ngModel)]="anaesthesiaFee" class="block w-full mt-1 border border-outline-variant rounded-lg p-2 text-sm" /></label>
+          <label class="text-xs">Theatre {{ 'home' | currencySymbol }}<input type="number" min="0" [(ngModel)]="theatreFee" class="block w-full mt-1 border border-outline-variant rounded-lg p-2 text-sm" /></label>
         </div>
       </div>
       <div class="sticky bottom-0 bg-surface mt-4 pt-3">
@@ -157,9 +159,9 @@ export class OtBookComponent implements OnInit {
       priority: this.priority,
       scheduledStart: this.start.length === 16 ? this.start + ':00' : this.start,
       expectedMinutes: this.minutes,
-      surgeonFeeInPaisa: Math.round((this.surgeonFee ?? 0) * 100),
-      anaesthesiaFeeInPaisa: Math.round((this.anaesthesiaFee ?? 0) * 100),
-      theatreFeeInPaisa: Math.round((this.theatreFee ?? 0) * 100),
+      surgeonFeeInPaisa: toMinor(this.surgeonFee ?? 0),
+      anaesthesiaFeeInPaisa: toMinor(this.anaesthesiaFee ?? 0),
+      theatreFeeInPaisa: toMinor(this.theatreFee ?? 0),
     }).subscribe({
       next: (s) => {
         this.busy = false;

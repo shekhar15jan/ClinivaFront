@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ClinicSettings } from '../../../../core/models/setting.model';
 import { SettingService } from '../../../../core/services/setting.service';
@@ -6,6 +6,11 @@ import { ToastService } from '../../../../shared/components/toast/toast.service'
 import { FormsModule } from '@angular/forms';
 import { mediaUrl } from '../../../../core/utils/media-url';
 import { environment } from '../../../../../environments/environment';
+import { CurrencySymbolPipe } from '../../../../shared/pipes/money.pipe';
+import { fromMinor, homeCurrency, toMinor } from '../../../../core/utils/money';
+import { CurrencyInfo, CurrencyService } from '../../../../core/services/currency.service';
+import { TenantContextService } from '../../../../core/services/tenant-context.service';
+import { ExchangeRatesComponent } from './exchange-rates';
 
 @Component({
   selector: 'app-clinic-settings',
@@ -77,7 +82,7 @@ import { environment } from '../../../../../environments/environment';
             </div>
             <div>
               <label for="settingsDefaultFee" class="block text-sm font-medium text-[#475569] mb-1"
-                >Default Consultation Fee (₹)</label
+                >Default Consultation Fee ({{ 'home' | currencySymbol }})</label
               >
               <input
                 id="settingsDefaultFee"
@@ -93,9 +98,11 @@ import { environment } from '../../../../../environments/environment';
                 [(ngModel)]="settings.currency"
                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]"
               >
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
+                @for (c of currencies(); track c.code) {
+                  <option [value]="c.code">{{ c.code }} · {{ c.name }}</option>
+                }
               </select>
+              <p class="mt-1 text-xs text-[#64748B]">All amounts are kept in this currency. It can be changed only before the first bill.</p>
             </div>
             <div>
               <label for="settingsTimezone" class="block text-sm font-medium text-[#475569] mb-1">Timezone</label>
@@ -272,14 +279,25 @@ import { environment } from '../../../../../environments/environment';
         </div>
       </div>
     </div>
+    @if (multiCurrency) {
+      <div class="px-6 pb-6"><app-exchange-rates></app-exchange-rates></div>
+    }
   `,
-  imports: [FormsModule],
+  imports: [CurrencySymbolPipe, FormsModule, ExchangeRatesComponent],
 })
 export class ClinicSettingsPage implements OnInit {
   public router = inject(Router);
   public activatedRoute = inject(ActivatedRoute);
   private settingService = inject(SettingService);
   private toast = inject(ToastService);
+  private currencyService = inject(CurrencyService);
+  private tenantContext = inject(TenantContextService);
+
+  readonly currencies = signal<CurrencyInfo[]>([]);
+  /** The clinic's own exchange rates: plan module MULTI_CURRENCY. */
+  get multiCurrency(): boolean {
+    return this.tenantContext.isModuleActive('MULTI_CURRENCY');
+  }
 
   // Placeholders shown for a moment before the clinic's own settings arrive.
   settings: ClinicSettings = {
@@ -383,6 +401,7 @@ export class ClinicSettingsPage implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.currencyService.currencies().subscribe({ next: (list) => this.currencies.set(list), error: () => undefined });
   }
 
   /** Reads the clinic's saved settings from the server, replacing anything typed but not saved. */
@@ -393,7 +412,7 @@ export class ClinicSettingsPage implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.settings = { ...this.settings, ...res.data };
-          this.defaultFee = (res.data.defaultConsultationFeeInPaisa ?? 0) / 100;
+          this.defaultFee = fromMinor(res.data.defaultConsultationFeeInPaisa ?? 0);
         }
         this.isLoading = false;
       },
@@ -443,7 +462,7 @@ export class ClinicSettingsPage implements OnInit {
         ...this.settings,
         clinicName: this.settings.clinicName.trim(),
         patientIdPrefix: this.settings.patientIdPrefix.trim().toUpperCase(),
-        defaultConsultationFeeInPaisa: Math.round(this.defaultFee * 100),
+        defaultConsultationFeeInPaisa: toMinor(this.defaultFee),
         taxRatePercent: Math.round(tax * 100) / 100,
         upiPayeeId: upi,
         emailSenderName: (this.settings.emailSenderName ?? '').trim(),
@@ -457,9 +476,10 @@ export class ClinicSettingsPage implements OnInit {
           this.isSaving = false;
           if (res.success && res.data) {
             this.settings = { ...this.settings, ...res.data };
-            this.defaultFee = (res.data.defaultConsultationFeeInPaisa ?? 0) / 100;
+            this.defaultFee = fromMinor(res.data.defaultConsultationFeeInPaisa ?? 0);
             this.razorpaySecret = '';
             this.razorpayWebhookSecret = '';
+            if (res.data.currency) homeCurrency.set(res.data.currency);
             this.toast.success('Settings saved');
           } else {
             this.toast.error(res.message || 'The settings could not be saved.');

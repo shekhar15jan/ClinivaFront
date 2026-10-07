@@ -5,12 +5,14 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { PayoutService, StatementView } from '../../core/services/payout.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
+import { formatMoney, toMinor } from '../../core/utils/money';
+import { CurrencySymbolPipe } from '../../shared/pipes/money.pipe';
 
 /** One payout statement: its lines, manual additions or deductions, TDS, then approve and pay. */
 @Component({
   selector: 'app-payout-statement',
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [CurrencySymbolPipe, FormsModule, RouterLink, DatePipe],
   template: `
     <div class="p-4 sm:p-6 max-w-4xl">
       <a routerLink=".." class="text-sm text-primary flex items-center gap-1 mb-3"><span class="material-symbols-outlined text-lg">arrow_back</span> Doctor payouts</a>
@@ -55,7 +57,7 @@ import { ToastService } from '../../shared/components/toast/toast.service';
             <div class="flex gap-2 flex-wrap">
               <input [(ngModel)]="lineText" maxlength="255" id="line-text" aria-label="Line" placeholder="e.g. On-call allowance, advance recovered"
                 class="flex-1 min-w-[200px] border border-outline-variant rounded-lg p-2 text-sm" />
-              <input type="number" min="0" [(ngModel)]="lineAmount" id="line-amount" aria-label="Amount in rupees" placeholder="₹" class="w-28 border border-outline-variant rounded-lg p-2 text-sm" />
+              <input type="number" min="0" [(ngModel)]="lineAmount" id="line-amount" aria-label="Amount" placeholder="{{ 'home' | currencySymbol }}" class="w-28 border border-outline-variant rounded-lg p-2 text-sm" />
               <button type="button" (click)="deduct = !deduct" class="px-3 min-h-touch rounded-full text-sm border"
                 [class]="deduct ? 'bg-red-600 text-white border-red-600' : 'bg-white border-outline-variant'">{{ deduct ? 'Deduction' : 'Addition' }}</button>
               <button type="button" id="add-line" (click)="addLine()" [disabled]="!lineText.trim() || !lineAmount"
@@ -126,7 +128,7 @@ export class PayoutStatementComponent implements OnInit {
   }
 
   addLine(): void {
-    const paisa = Math.round((this.lineAmount ?? 0) * 100) * (this.deduct ? -1 : 1);
+    const paisa = toMinor(this.lineAmount ?? 0) * (this.deduct ? -1 : 1);
     this.run(this.payouts.addLine(this.s!.id, this.lineText.trim(), paisa), 'Line added', () => {
       this.lineText = '';
       this.lineAmount = null;
@@ -165,6 +167,6 @@ export class PayoutStatementComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return (paisa < 0 ? '−₹' : '₹') + (Math.abs(paisa) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return (paisa < 0 ? '−' : '') + formatMoney(Math.abs(paisa));
   }
 }

@@ -7,6 +7,7 @@ import { RadiologyService } from '../../core/services/radiology.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { IMAGING_STATUS_LABEL, ImagingItemView, ImagingOrderView, modalityLabel } from '../../core/models/radiology.model';
+import { formatMoney } from '../../core/utils/money';
 
 type Mode = 'schedule' | 'done' | 'report' | 'addendum';
 
@@ -285,6 +286,6 @@ export class RadiologyOrderComponent implements OnInit {
   }
 
   money(paisa: number): string {
-    return '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    return formatMoney(paisa);
   }
 }
