@@ -8,10 +8,9 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { GlobalErrorInterceptor } from './core/interceptors/global-error.interceptor';
 import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { TenantInterceptor } from './core/interceptors/tenant.interceptor';
-import { MockBackendInterceptor } from './core/interceptors/mock-backend.interceptor';
+import { MOCK_BACKEND_PROVIDERS } from './core/interceptors/mock-providers';
 import { AuthService } from './core/services/auth.service';
 import { initializeAuth } from './core/services/auth-initializer';
-import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -33,8 +32,6 @@ export const appConfig: ApplicationConfig = {
     { provide: HTTP_INTERCEPTORS, useClass: GlobalErrorInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: TenantInterceptor, multi: true },
-    ...(environment.enableMock
-      ? [{ provide: HTTP_INTERCEPTORS, useClass: MockBackendInterceptor, multi: true }]
-      : []),
+    ...MOCK_BACKEND_PROVIDERS,
   ],
 };

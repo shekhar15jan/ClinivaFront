@@ -32,7 +32,25 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
       - name: Security audit
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          # Code we ship to browsers (dependencies): any high-severity advisory blocks the build.
+          # Build tools (devDependencies, never shipped): reported as a warning instead of blocking every deploy.
+          # Today that is braces/micromatch/postcss-selector-parser via Tailwind 3 (removed by the Tailwind 4 migration);
+          # they only ever see our own file patterns, never user input.
+          # If npm's own audit service is down the audit cannot be evaluated: warn loudly and rely on the next run.
+          set +e
+          out=$(npm audit --omit=dev --audit-level=high 2>&1)
+          code=$?
+          echo "$out"
+          if [ "$code" -ne 0 ] && echo "$out" | grep -qE "audit endpoint returned an error|503 Service Unavailable"; then
+            echo "::warning::npm audit service unavailable - the audit gate was NOT evaluated on this run"
+            exit 0
+          fi
+          if [ "$code" -ne 0 ]; then exit "$code"; fi
+          if ! npm audit --audit-level=high > /tmp/audit-all.txt 2>&1; then
+            echo "::warning::Build tools (not shipped) have high-severity advisories - see the full report below"
+            cat /tmp/audit-all.txt
+          fi
       - name: Lint
         run: npm run lint
       - name: Type check
