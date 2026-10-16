@@ -31,7 +31,12 @@ export class TenantContextService {
       .map((m) => m.moduleCode),
   );
 
-  setTenantContext(tenant: Tenant, modules: TenantModule[], subscription: Subscription): void {
+  /**
+   * A new organisation can be resolved a moment before its plan arrives from the platform: then there are no modules
+   * and no subscription yet, and sign-in must still work (a null subscription left the sign-in page blank).
+   */
+  setTenantContext(tenant: Tenant, modules: TenantModule[] | null, subscription: Subscription | null): void {
+    modules = modules ?? [];
     this.currentTenant.set(tenant);
     if (tenant?.currency && /^[A-Z]{3}$/.test(tenant.currency)) homeCurrency.set(tenant.currency);
     this.currentModules.set(modules);
@@ -46,11 +51,11 @@ export class TenantContextService {
         source: m.source || '',
       })),
       {
-        planName: subscription.planName,
-        status: subscription.status,
-        endDate: subscription.endDate || '',
-        maxDoctors: subscription.maxDoctors,
-        maxPatients: subscription.maxPatients,
+        planName: subscription?.planName ?? '',
+        status: subscription?.status ?? 'PENDING',
+        endDate: subscription?.endDate || '',
+        maxDoctors: subscription?.maxDoctors ?? 0,
+        maxPatients: subscription?.maxPatients ?? 0,
       },
     );
   }
