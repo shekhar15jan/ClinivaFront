@@ -48,6 +48,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'AUDIT', label: 'Audit Log', icon: 'history', route: 'audit-logs', perms: ['AUDIT_VIEW'] },
   { code: 'DEPARTMENT', label: 'Emergency Access', icon: 'emergency', route: 'emergency-access', perms: ['AUDIT_VIEW'] },
   { code: 'HR_LINK', label: 'HR & Payroll link', icon: 'sync_alt', route: 'hr-link', perms: ['CLINIC_SETTINGS'] },
+  { code: 'ACCOUNTING_LINK', label: 'Accounting link', icon: 'account_balance', route: 'accounting-link', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Email Templates', icon: 'mail', route: 'settings/email-templates', perms: ['CLINIC_SETTINGS'] },
 ];
