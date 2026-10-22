@@ -120,6 +120,12 @@
               "extractLicenses": false,
               "sourceMap": true
             },
+            "local": {
+              "optimization": true,
+              "outputHashing": "all",
+              "extractLicenses": false,
+              "sourceMap": false
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
