@@ -105,6 +105,30 @@
               ],
               "outputHashing": "all"
             },
+            "demo": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.demo.ts"
+                }
+              ],
+              "baseHref": "/",
+              "index": { "input": "src/index.demo.html", "output": "index.html" },
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "sourceMap": false
+            },
             "e2e": {
               "fileReplacements": [
                 {
@@ -142,6 +166,9 @@
             },
             "staging": {
               "buildTarget": "ClinivaFront:build:staging"
+            },
+            "demo": {
+              "buildTarget": "ClinivaFront:build:demo"
             },
             "e2e": {
               "buildTarget": "ClinivaFront:build:e2e"
