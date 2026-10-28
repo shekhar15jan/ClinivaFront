@@ -31,7 +31,7 @@ describe('AuditLogService', () => {
     it('should GET with all params and unwrap data', () => {
       const pagedData: PagedResponse<AuditLog> = {
         content: [
-          { id: 'log1', tenantId: 't1', userId: 'u1', userName: 'Admin', action: 'LOGIN', entity: 'USER', entityId: 'u1', oldValue: null, newValue: null, ipAddress: '127.0.0.1', timestamp: '2024-01-01T00:00:00Z' },
+          { id: 'log1', tenantId: 't1', userId: 'u1', action: 'LOGIN', entity: 'USER', entityId: 'u1', oldValue: null, newValue: null, ipAddress: '127.0.0.1', createdAt: '2024-01-01T00:00:00Z' },
         ],
         pageNumber: 0,
         pageSize: 20,

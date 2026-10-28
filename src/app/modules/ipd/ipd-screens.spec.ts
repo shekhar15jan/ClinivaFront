@@ -40,7 +40,7 @@ function admission(extra: Partial<AdmissionView> = {}): AdmissionView {
     conditionAtDischarge: null, dischargeAdvice: null, followUpDate: null, dischargeType: null, advisedAt: null, advisedBy: null,
     dischargedAt: null, dischargedBy: null, duesNote: null, billId: null, billNumber: null, days: 2, stays: [], charges: [], deposits: [],
     account: { bedChargesInPaisa: 300000, otherChargesInPaisa: 50000, discountInPaisa: 0, taxInPaisa: 0, totalInPaisa: 350000,
-      finalBill: false, depositsInPaisa: 500000, refundsInPaisa: 0, paidOnBillInPaisa: 0, balanceInPaisa: -150000 },
+      finalBill: false, depositsInPaisa: 500000, insuranceExpectedInPaisa: 0, refundsInPaisa: 0, paidOnBillInPaisa: 0, balanceInPaisa: -150000 },
     ...extra,
   };
 }

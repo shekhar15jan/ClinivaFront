@@ -22,7 +22,7 @@ const saved: ClinicSettings = {
 const ok = (data: ClinicSettings) => ({ success: true, data, message: 'ok', timestamp: '', requestId: 'r' });
 
 describe('ClinicSettingsPage', () => {
-  let service: Record<string, ReturnType<typeof vi.fn>>;
+  let service: { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; uploadLogo: ReturnType<typeof vi.fn>; removeLogo: ReturnType<typeof vi.fn> };
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   function create() {

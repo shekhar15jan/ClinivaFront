@@ -31,7 +31,7 @@ describe('AppointmentService', () => {
     it('should GET with default pagination', () => {
       const mockResponse: ApiResponse<RawPagedResponse<Appointment>> = {
         success: true,
-        data: { content: [], pageNumber: 0, size: 50, totalElements: 0, totalPages: 0, last: true },
+        data: { content: [], number: 0, size: 50, totalElements: 0, totalPages: 0, last: true },
         message: '',
         timestamp: '',
         requestId: '',

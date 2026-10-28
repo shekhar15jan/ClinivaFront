@@ -3,13 +3,14 @@ import { RouterOutlet } from '@angular/router';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { LoadingSpinnerComponent } from './shared/components/loading-spinner/loading-spinner.component';
 import { FabComponent } from './shared/components/fab/fab.component';
+import { OfflineBannerComponent } from './core/offline/offline-banner.component';
 import { IdleSignOutService } from './core/services/idle-sign-out.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.scss',
-  imports: [RouterOutlet, ToastComponent, LoadingSpinnerComponent, FabComponent],
+  imports: [RouterOutlet, ToastComponent, LoadingSpinnerComponent, FabComponent, OfflineBannerComponent],
 })
 export class App {
   protected readonly title = signal('ClinivaFront');
