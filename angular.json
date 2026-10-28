@@ -85,6 +85,7 @@
               "outputHashing": "all"
             },
             "staging": {
+              "serviceWorker": "ngsw-config.json",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
