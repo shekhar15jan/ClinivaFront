@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, Injector, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 /** A write saved on this device while offline, waiting to be sent. `id` is also its Idempotency-Key. */
 export interface QueuedWrite {
@@ -10,6 +11,8 @@ export interface QueuedWrite {
   body: unknown;
   label: string;
   savedAt: string;
+  /** Who saved it (the signed-in person's id from the token); only that person's sign-in sends it. */
+  owner?: string | null;
   /** Set when the server refused it; it then waits for the person to retry or discard. */
   error?: string;
 }
@@ -19,6 +22,19 @@ export const REPLAY_HEADER = 'X-Offline-Replay';
 
 const KEY = 'cac.offline.queue.v1';
 const RETRY_MS = 60_000;
+
+/** The person a sign-in token belongs to (its subject), or null when nobody is signed in. */
+export function ownerOf(token: string | null | undefined): string | null {
+  try {
+    const part = token?.split('.')[1];
+    if (!part) return null;
+    const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+    const sub = (JSON.parse(json) as { sub?: string }).sub;
+    return sub ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export function newOfflineId(): string {
   try {
@@ -37,8 +53,14 @@ export function newOfflineId(): string {
 @Injectable({ providedIn: 'root' })
 export class OfflineQueue {
   private readonly http = inject(HttpClient);
+  private readonly injector = inject(Injector);
 
-  readonly entries = signal<QueuedWrite[]>(this.read());
+  /** Everything on this device, whoever saved it. */
+  private readonly all = signal<QueuedWrite[]>(this.read());
+  /** The signed-in person, refreshed when the queue starts, saves, sends or the connection changes. */
+  private readonly owner = signal<string | null>(null);
+  /** The entries of the person signed in now: another person's entries wait for their own sign-in. */
+  readonly entries = computed(() => this.all().filter((e) => e.owner != null && e.owner === this.owner()));
   readonly online = signal(typeof navigator === 'undefined' ? true : navigator.onLine);
   readonly syncing = signal(false);
   readonly waiting = computed(() => this.entries().filter((e) => !e.error).length);
@@ -52,39 +74,46 @@ export class OfflineQueue {
   start(): void {
     if (this.started || typeof window === 'undefined') return;
     this.started = true;
+    this.refreshOwner();
     window.addEventListener('online', () => {
       this.online.set(true);
       void this.flush();
     });
     window.addEventListener('offline', () => this.online.set(false));
-    setInterval(() => void this.flush(), RETRY_MS);
+    setInterval(() => {
+      this.refreshOwner();
+      void this.flush();
+    }, RETRY_MS);
     void this.flush();
   }
 
-  enqueue(entry: Omit<QueuedWrite, 'savedAt'>): void {
-    this.entries.update((all) => [...all, { ...entry, savedAt: new Date().toISOString() }]);
+  enqueue(entry: Omit<QueuedWrite, 'savedAt' | 'owner'>): void {
+    this.refreshOwner();
+    this.all.update((all) => [...all, { ...entry, savedAt: new Date().toISOString(), owner: this.owner() }]);
     this.save();
   }
 
   discard(id: string): void {
-    this.entries.update((all) => all.filter((e) => e.id !== id));
+    this.all.update((all) => all.filter((e) => e.id !== id));
     this.save();
   }
 
   retry(id: string): void {
-    this.entries.update((all) => all.map((e) => (e.id === id ? { ...e, error: undefined } : e)));
+    this.all.update((all) => all.map((e) => (e.id === id ? { ...e, error: undefined } : e)));
     this.save();
     void this.flush();
   }
 
   clear(): void {
-    this.entries.set([]);
+    this.all.update((all) => all.filter((e) => e.owner !== this.owner()));
     this.save();
   }
 
   /** Sends the waiting entries one at a time, oldest first, and stops at the first lost connection. */
   async flush(): Promise<void> {
     if (this.syncing() || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
+    this.refreshOwner();
+    if (!this.owner()) return;
     this.syncing.set(true);
     let sentAny = false;
     try {
@@ -102,7 +131,7 @@ export class OfflineQueue {
           const status = error instanceof HttpErrorResponse ? error.status : 0;
           if (status === 0 || status >= 500 || status === 401 || status === 408 || status === 429) break;
           const message = error instanceof HttpErrorResponse ? (error.error?.message as string | undefined) : undefined;
-          this.entries.update((all) =>
+          this.all.update((all) =>
             all.map((e) => (e.id === entry.id ? { ...e, error: message ?? 'The server did not accept this entry.' } : e)),
           );
           this.save();
@@ -112,6 +141,10 @@ export class OfflineQueue {
       this.syncing.set(false);
       if (sentAny) this.synced.update((n) => n + 1);
     }
+  }
+
+  private refreshOwner(): void {
+    this.owner.set(ownerOf(this.injector.get(AuthService).getToken()));
   }
 
   private read(): QueuedWrite[] {
@@ -126,7 +159,7 @@ export class OfflineQueue {
 
   private save(): void {
     try {
-      if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(this.entries()));
+      if (typeof localStorage !== 'undefined') localStorage.setItem(KEY, JSON.stringify(this.all()));
     } catch {
       // Storage full or blocked: the entries stay in memory for this session.
     }

@@ -1,13 +1,16 @@
 import { HttpClient, provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { AuthService } from '../services/auth.service';
 import { OfflineInterceptor } from './offline.interceptor';
-import { OfflineQueue } from './offline-queue.service';
+import { OfflineQueue, ownerOf } from './offline-queue.service';
 
 describe('offline queue (PLAT-51)', () => {
   let http: HttpClient;
   let ctrl: HttpTestingController;
   let queue: OfflineQueue;
+  let token: string | null;
+  const jwt = (sub: string) => `h.${btoa(JSON.stringify({ sub }))}.s`;
   const url = 'http://x.test/api/v1/hms/consultations';
 
   function setOnline(value: boolean): void {
@@ -16,12 +19,14 @@ describe('offline queue (PLAT-51)', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    token = jwt('alice');
     setOnline(true);
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
         { provide: HTTP_INTERCEPTORS, useClass: OfflineInterceptor, multi: true },
+        { provide: AuthService, useValue: { getToken: () => token } },
       ],
     });
     http = TestBed.inject(HttpClient);
@@ -75,6 +80,29 @@ describe('offline queue (PLAT-51)', () => {
     await done;
     expect(queue.failed().length).toBe(1);
     expect(queue.failed()[0].error).toBe('Closed account');
+  });
+
+  it('sends an entry only when the person who saved it is signed in', async () => {
+    queue.enqueue({ id: 'a1', method: 'POST', url, body: {}, label: 'Entry' });
+    expect(queue.waiting()).toBe(1);
+
+    token = jwt('bob');
+    await queue.flush();
+    ctrl.expectNone(url);
+    expect(queue.waiting()).toBe(0);
+
+    token = jwt('alice');
+    const done = queue.flush();
+    ctrl.expectOne(url).flush({});
+    await done;
+    expect(queue.waiting()).toBe(0);
+    expect(localStorage.getItem('cac.offline.queue.v1')).toBe('[]');
+  });
+
+  it('reads the person from a sign-in token', () => {
+    expect(ownerOf(jwt('u-1'))).toBe('u-1');
+    expect(ownerOf('garbage')).toBeNull();
+    expect(ownerOf(null)).toBeNull();
   });
 
   it('never queues a write that is not in the list', () => {
