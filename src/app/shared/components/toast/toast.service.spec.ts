@@ -85,4 +85,25 @@ describe('ToastService', () => {
     service.show('Custom', 'warning', 5000);
     expect(service.toasts()[0].duration).toBe(5000);
   });
+
+  it('should not stack an identical message that is already showing', () => {
+    service.warning('This module is not available in your current plan.');
+    service.warning('This module is not available in your current plan.');
+    service.warning('This module is not available in your current plan.');
+    expect(service.toasts().length).toBe(1);
+  });
+
+  it('should keep a different message or type as a separate toast', () => {
+    service.warning('Same words');
+    service.error('Same words');
+    service.warning('Other words');
+    expect(service.toasts().length).toBe(3);
+  });
+
+  it('should show the same message again after it was dismissed', () => {
+    service.show('Again', 'info', 3000);
+    vi.advanceTimersByTime(3000);
+    service.show('Again', 'info', 3000);
+    expect(service.toasts().length).toBe(1);
+  });
 });

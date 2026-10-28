@@ -17,6 +17,11 @@ export class ToastService {
   readonly toasts = this.toastsSignal.asReadonly();
 
   show(message: string, type: ToastType = 'info', duration = 4000): void {
+    // Several calls failing together (for example a module that is not on the plan) would stack the same
+    // message many times: one copy on screen is enough, and it can be shown again once it is gone.
+    if (this.toastsSignal().some(t => t.message === message && t.type === type)) {
+      return;
+    }
     const id = Math.random().toString(36).substring(2, 9);
     const toast: Toast = { id, message, type, duration };
     this.toastsSignal.set([...this.toastsSignal(), toast]);
