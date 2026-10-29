@@ -50,6 +50,8 @@ export class ConsultationWorkspace implements OnInit {
   consultationForm: FormGroup;
   isSubmitting = false;
   error = '';
+  /** Shown when the note was kept on this device because there is no network (PLAT-51). */
+  savedOffline = '';
 
   selectedAppointment: Appointment | null = null;
   existingConsultationId: string | null = null;
@@ -375,6 +377,7 @@ export class ConsultationWorkspace implements OnInit {
     }
     this.isSubmitting = true;
     this.error = '';
+    this.savedOffline = '';
     const formVal = this.consultationForm.value;
     const appointmentId = this.selectedAppointment.id;
 
@@ -398,7 +401,11 @@ export class ConsultationWorkspace implements OnInit {
 
     saveConsultation$.subscribe({
       next: (res) => {
-        if (res.success && res.data) {
+        if (res.success && (res as { queued?: boolean }).queued) {
+          // Kept on this device and sent when the network is back. The prescription needs the saved consultation's id, so it is added afterwards.
+          this.isSubmitting = false;
+          this.savedOffline = 'Note saved on this device. It is sent when you are back online; add the prescription after that.';
+        } else if (res.success && res.data) {
           const consultationId = res.data.id;
           this.existingConsultationId = consultationId;
           this.savePrescription(consultationId, formVal);

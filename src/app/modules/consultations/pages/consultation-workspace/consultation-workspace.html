@@ -317,6 +317,9 @@
         </div>
 
         <div class="p-4 border-t border-gray-100 bg-surface-container-low flex justify-end gap-4">
+          @if (savedOffline) {
+            <span id="saved-offline" class="text-sm text-amber-800 flex items-center">{{ savedOffline }}</span>
+          }
           @if (error) {
             <span class="text-sm text-status-red flex items-center">{{ error }}</span>
           }
