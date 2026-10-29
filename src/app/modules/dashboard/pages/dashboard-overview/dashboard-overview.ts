@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { LayoutStore } from '../../../../core/store/layout.store';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
+import { DemoSampleService, SampleLoaded } from '../../../../core/services/demo-sample.service';
 import { ReportService } from '../../../../core/services/report.service';
 import { Appointment } from '../../../../core/models/appointment.model';
 import { DashboardStats, MyPerformance } from '../../../../core/models/report.model';
@@ -48,6 +49,11 @@ export class DashboardOverview implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private appointmentService = inject(AppointmentService);
   private reportService = inject(ReportService);
+  private sample = inject(DemoSampleService);
+  sampleOffer = false;
+  sampleBusy = false;
+  sampleError = '';
+  sampleDone: SampleLoaded | null = null;
 
   readonly today = new Date();
   readonly week = weekDays(this.today);
@@ -110,6 +116,18 @@ export class DashboardOverview implements OnInit, OnDestroy {
       this.layoutStore.setFabConfig({ icon: 'add', label: 'New Appointment', route: 'appointments/book' });
     }
     this.load();
+    if (this.auth.can('DOCTOR_MANAGE')) {
+      this.sample.status().subscribe({ next: (st) => (this.sampleOffer = st.available && st.empty), error: () => (this.sampleOffer = false) });
+    }
+  }
+
+  loadSample(): void {
+    this.sampleBusy = true;
+    this.sampleError = '';
+    this.sample.load().subscribe({
+      next: (r) => { this.sampleBusy = false; this.sampleOffer = false; this.sampleDone = r; this.load(); },
+      error: (e) => { this.sampleBusy = false; this.sampleError = e?.error?.message ?? 'The sample data could not be loaded.'; },
+    });
   }
 
   ngOnDestroy(): void {
