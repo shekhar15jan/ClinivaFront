@@ -23,6 +23,8 @@ function gstinOf(first14: string): string {
 }
 
 test('a Cliniva bill reaches the Accounting vouchers and GSTR-1', async ({ page, request, browser }) => {
+  // Local Docker stack only: it reads the databases with docker exec (local-pg); staging has no such access.
+  test.skip(!!process.env.CLINIVA_API && !/localhost|127\.0\.0\.1/.test(process.env.CLINIVA_API), 'local Docker stack only (reads local-pg)');
   test.setTimeout(420000);
   const op = (await (await request.post(`${CS}/auth/login`, { data: { email: 'admin@codeatcloud.in', password: 'admin' } })).json()).data.accessToken;
   const h = { Authorization: `Bearer ${op}` };
