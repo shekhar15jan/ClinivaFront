@@ -197,11 +197,11 @@ test.describe('Privacy and consent, real backend', () => {
       await expect(page.locator('main')).toContainText('Anonymised patient');
       await expect(page.locator('main')).not.toContainText(`Erase Me ${stamp}`);
 
-      // The portal login is gone with the name: asking for a code sends nothing.
+      // The portal login is gone with the name: asking for a code says there is no account and sends nothing.
       const api = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
       const before = await countMails(request, email, 'otp');
       const sent = await request.post(`${api}/auth/send-otp`, { data: { email, tenantCode: code } });
-      expect(sent.status()).toBe(200);
+      expect(sent.status()).toBe(404);
       expect(await countMails(request, email, 'otp'), 'no sign-in code for an anonymised patient').toBe(before);
     });
 

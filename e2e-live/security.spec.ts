@@ -159,7 +159,7 @@ test.describe('Security and bad input, real backend', () => {
     expect(await locked.text()).toContain('Too many wrong passwords');
   });
 
-  test('sign-in never tells whether an email has an account @desktop', async ({ page, request }) => {
+  test('password sign-in never tells whether an email has an account; asking for a code says plainly when there is none @desktop', async ({ page, request }) => {
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
     const nobody = `nobody-${Date.now()}@e2e.test`;
     const tenantCode = admin.hospitalCode;
@@ -171,9 +171,11 @@ test.describe('Security and bad input, real backend', () => {
       .toBe(await answer('login', { email: admin.adminEmail, password: 'Wrong#123x' }));
     expect(await answer('verify-password', { email: nobody, password: 'Wrong#123x' }), 'verify-password')
       .toBe(await answer('verify-password', { email: admin.adminEmail, password: 'Wrong#123x' }));
-    // Asking for a code reads the same for anyone; no code is sent to an address with no account.
+    // Asking for a code for an email with no account is answered plainly (owner decision 28 Oct 2026, PLAT-52), so the person is not
+    // left on a code screen that never receives anything; no code is sent to that address.
     const sent = await request.post(`${CLINIVA}/auth/send-otp`, { data: { tenantCode, email: nobody } });
-    expect(sent.status()).toBe(200);
+    expect(sent.status()).toBe(404);
+    expect(((await sent.json()).message ?? '') as string).toMatch(/No account was found/i);
     expect(await countMails(request, nobody, '')).toBe(0);
     expect(await answer('verify-otp', { email: nobody, otp: '123456' }), 'verify-otp')
       .toBe(await answer('verify-otp', { email: admin.adminEmail, otp: '000000' }));
