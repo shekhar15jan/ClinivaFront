@@ -3,6 +3,10 @@ import { APIRequestContext, Browser, Page, devices, expect } from '@playwright/t
 const CLOUDSUITE = process.env.CLOUDSUITE_API || 'http://localhost:8081/api/v1';
 const MAILHOG = process.env.MAILHOG_API || 'http://localhost:8025/api/v2';
 const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1';
+/** Staging: the mail catcher is Mailpit behind basic auth (MAILPIT_API=https://host/mail/api/v1, MAILPIT_AUTH=user:password), and the operator password is not 'admin'. */
+const MAILPIT = process.env.MAILPIT_API;
+const MAILPIT_AUTH = process.env.MAILPIT_AUTH ? 'Basic ' + Buffer.from(process.env.MAILPIT_AUTH).toString('base64') : '';
+const OPERATOR_PASSWORD = process.env.CLOUDSUITE_ADMIN_PASSWORD || 'admin';
 
 /** The app's path prefix: '' at localhost:4201, '/cliniva' on staging (BASE_URL=http://localhost:8088/cliniva/). */
 export const BASE_PATH = new URL(process.env.BASE_URL || 'http://localhost:4201').pathname.replace(/\/$/, '');
@@ -22,7 +26,19 @@ export interface Mail {
   at: string;
 }
 
+async function mailpitMailsTo(request: APIRequestContext, address: string): Promise<Mail[]> {
+  const headers = { Authorization: MAILPIT_AUTH };
+  const list = await (await request.get(`${MAILPIT}/search`, { headers, params: { query: `to:${address}`, limit: '50' } })).json();
+  const mails: Mail[] = [];
+  for (const m of list.messages ?? []) {
+    const full = await (await request.get(`${MAILPIT}/message/${m.ID}`, { headers })).json();
+    mails.push({ subject: full.Subject ?? '', body: `${full.HTML || ''}\n${full.Text || ''}`, at: m.Created });
+  }
+  return mails.sort((a, b) => a.at.localeCompare(b.at));
+}
+
 export async function mailsTo(request: APIRequestContext, address: string): Promise<Mail[]> {
+  if (MAILPIT) return mailpitMailsTo(request, address);
   const res = await request.get(`${MAILHOG}/search`, { params: { kind: 'to', query: address } });
   const json = await res.json();
   return (json.items ?? [])
@@ -81,7 +97,7 @@ export interface ProvisionedTenant {
 
 /** Creates a tenant with an administrator in CloudSuite, the way an operator would. */
 export async function provisionTenant(request: APIRequestContext, planCode = 'CLINIC_BASIC'): Promise<ProvisionedTenant> {
-  const login = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email: 'admin@codeatcloud.in', password: 'admin' } });
+  const login = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email: 'admin@codeatcloud.in', password: OPERATOR_PASSWORD } });
   expect(login.ok(), 'CloudSuite operator sign-in').toBeTruthy();
   const token = (await login.json()).data.accessToken;
   const headers = { Authorization: `Bearer ${token}` };
