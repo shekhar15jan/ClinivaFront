@@ -5,12 +5,14 @@
  */
 export const QUEUEABLE: RegExp[] = [
   /\/hms\/consultations$/,
-  /\/hms\/nursing\/admissions\/[^\/]+\/vitals$/
+  /\/hms\/nursing\/admissions\/[^\/]+\/vitals$/,
+  /\/hms\/nursing\/admissions\/[^\/]+\/notes$/
 ];
 
 /** What the "waiting to send" list calls an entry. */
 export function offlineLabel(url: string): string {
   if (/\/vitals$/.test(url)) return 'Vitals reading';
+  if (/\/notes$/.test(url)) return 'Nursing note';
   if (/\/consultations$/.test(url)) return 'Consultation note';
   return 'Saved entry';
 }

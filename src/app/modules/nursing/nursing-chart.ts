@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { NursingService } from '../../core/services/nursing.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
@@ -373,14 +374,19 @@ export class NursingChartComponent implements OnInit {
     this.run(this.nursing.note(this.c.admissionId, this.noteKind, this.noteShift, this.noteText.trim()), 'Note saved', () => (this.noteText = ''));
   }
 
-  private run(call: ReturnType<NursingService['chart']>, done: string, after?: () => void): void {
+  private run(call: Observable<Chart | null>, done: string, after?: () => void): void {
     this.busy = true;
     call.subscribe({
       next: (c) => {
         this.busy = false;
-        this.c = c;
         after?.();
-        this.toast.success(done);
+        if (c) {
+          this.c = c;
+          this.toast.success(done);
+        } else {
+          // Kept on this device while there is no network: the chart stays as it is and the entry is sent when the connection is back.
+          this.toast.info('Saved on this device. It is sent when you are back online.');
+        }
       },
       error: (err) => {
         this.busy = false;

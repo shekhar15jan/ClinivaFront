@@ -51,8 +51,10 @@ describe('WardRoundComponent', () => {
 
 describe('NursingChartComponent', () => {
   let nursing: Record<string, ReturnType<typeof vi.fn>>;
+  let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn>; info: ReturnType<typeof vi.fn> };
 
   function create(role: string) {
+    toast = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
     nursing = {
       chart: vi.fn().mockReturnValue(of(chart)),
       dose: vi.fn().mockReturnValue(of(chart)),
@@ -64,7 +66,7 @@ describe('NursingChartComponent', () => {
       providers: [
         { provide: NursingService, useValue: nursing },
         { provide: AuthService, useValue: fakeAuth(role) },
-        { provide: ToastService, useValue: { success: vi.fn(), error: vi.fn() } },
+        { provide: ToastService, useValue: toast },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'a1' } } } },
       ],
     });
@@ -112,6 +114,26 @@ describe('NursingChartComponent', () => {
     doctor.orderDays = 5;
     doctor.saveOrder();
     expect(nursing['order']).toHaveBeenCalledWith('a1', expect.objectContaining({ medicineName: 'Ceftriaxone', route: 'IV', frequency: 'BD', days: 5 }));
+  });
+
+  it('a vitals reading or note saved with no network stays on the device: the chart is kept and the nurse is told (CLIN-23)', () => {
+    const c = create('NURSE');
+    const before = c.c;
+    expect(before).not.toBeNull();
+    nursing['vitals'].mockReturnValue(of(null));
+    c.v = { pulse: 88 };
+    c.saveVitals();
+    expect(c.c).toBe(before);
+    expect(c.v).toEqual({});
+    expect(toast.info).toHaveBeenCalledWith(expect.stringMatching(/on this device/i));
+    expect(toast.success).not.toHaveBeenCalled();
+
+    nursing['note'].mockReturnValue(of(null));
+    c.noteText = 'Slept well';
+    c.saveNote();
+    expect(c.c).toBe(before);
+    expect(c.noteText).toBe('');
+    expect(toast.info).toHaveBeenCalledTimes(2);
   });
 
   it('the receptionist reads nothing to record', () => {

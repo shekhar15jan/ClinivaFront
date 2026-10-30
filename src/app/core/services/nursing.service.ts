@@ -20,7 +20,8 @@ export class NursingService {
     return this.http.get<ApiResponse<Chart>>(`${this.api}/admissions/${admissionId}`).pipe(map((r) => r.data));
   }
 
-  vitals(admissionId: string, request: VitalsRequest): Observable<Chart> {
+  /** A null chart means the reading was kept on this device (no network) and will be sent later (CLIN-23). */
+  vitals(admissionId: string, request: VitalsRequest): Observable<Chart | null> {
     return this.http.post<ApiResponse<Chart>>(`${this.api}/admissions/${admissionId}/vitals`, request).pipe(map((r) => r.data));
   }
 
@@ -38,7 +39,8 @@ export class NursingService {
       .pipe(map((r) => r.data));
   }
 
-  note(admissionId: string, kind: NoteKind, shift: Shift | null, text: string): Observable<Chart> {
+  /** A null chart means the note was kept on this device (no network) and will be sent later (CLIN-23). */
+  note(admissionId: string, kind: NoteKind, shift: Shift | null, text: string): Observable<Chart | null> {
     return this.http
       .post<ApiResponse<Chart>>(`${this.api}/admissions/${admissionId}/notes`, { kind, shift, text })
       .pipe(map((r) => r.data));
