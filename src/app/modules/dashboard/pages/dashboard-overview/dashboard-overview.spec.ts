@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { fakeAuth } from '../../../../testing/role-permissions';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -6,6 +7,7 @@ import { LayoutStore } from '../../../../core/store/layout.store';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { ReportService } from '../../../../core/services/report.service';
+import { DemoSampleService } from '../../../../core/services/demo-sample.service';
 import { Appointment } from '../../../../core/models/appointment.model';
 import { DashboardOverview, greetingFor, localDay, weekDays } from './dashboard-overview';
 
@@ -43,9 +45,10 @@ describe('DashboardOverview', () => {
   let appointments: { getAppointments: ReturnType<typeof vi.fn>; getCountsByDay: ReturnType<typeof vi.fn> };
   let reports: { getDashboardStats: ReturnType<typeof vi.fn>; getMyPerformance: ReturnType<typeof vi.fn> };
   let layout: { setFabConfig: ReturnType<typeof vi.fn> };
+  let sample: { status: ReturnType<typeof vi.fn>; load: ReturnType<typeof vi.fn> };
 
   function create(role: string, items: Appointment[] = [appointment('b', today, '11:00:00', 'PENDING'), appointment('a', today, '09:30:00')],
-                  counts: Record<string, number> = {}) {
+                  counts: Record<string, number> = {}, code = 'abc', offer = false) {
     appointments = {
       getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: items } })),
       getCountsByDay: vi.fn().mockReturnValue(of({ success: true, data: counts })),
@@ -55,12 +58,18 @@ describe('DashboardOverview', () => {
       getMyPerformance: vi.fn().mockReturnValue(of({ success: true, data: { todayAppointments: 2, consultationsThisMonth: 14, consultationsThisYear: 120, patientsThisYear: 90, billedThisMonthInPaisa: 4200000, billedThisYearInPaisa: 36000000 } })),
     };
     layout = { setFabConfig: vi.fn() };
+    sample = {
+      status: vi.fn().mockReturnValue(of({ available: offer, empty: offer, loaded: false })),
+      load: vi.fn().mockReturnValue(of({ doctors: 2, patients: 6, appointments: 4, exercises: [] })),
+    };
     TestBed.configureTestingModule({
       providers: [
         { provide: LayoutStore, useValue: layout },
         { provide: AuthService, useValue: fakeAuth(role, { email: 'x@clinic.test', profile: { firstName: 'Meera', lastName: 'Nair' } }) },
         { provide: AppointmentService, useValue: appointments },
         { provide: ReportService, useValue: reports },
+        { provide: DemoSampleService, useValue: sample },
+        { provide: ActivatedRoute, useValue: { snapshot: { pathFromRoot: [{ paramMap: { get: () => code } }] } } },
       ],
     });
     const component = TestBed.runInInjectionContext(() => new DashboardOverview());
@@ -128,5 +137,21 @@ describe('DashboardOverview', () => {
     expect(layout.setFabConfig).toHaveBeenCalledWith(expect.objectContaining({ route: 'appointments/book' }));
     component.ngOnDestroy();
     expect(layout.setFabConfig).toHaveBeenLastCalledWith(null);
+  });
+
+  it('loads the practice clinic by itself for an organisation made for a demo request (dm-...)', () => {
+    create('ADMIN', undefined, {}, 'dm-lead-42', true);
+    expect(sample.load).toHaveBeenCalledTimes(1);
+  });
+
+  it('only offers the practice clinic, never loads it unasked, for any other organisation', () => {
+    const component = create('ADMIN', undefined, {}, 'STG-ABC', true);
+    expect(sample.load).not.toHaveBeenCalled();
+    expect(component.sampleOffer).toBe(true);
+  });
+
+  it('does not load the practice clinic for a demo organisation that already has records', () => {
+    create('ADMIN', undefined, {}, 'dm-lead-42', false);
+    expect(sample.load).not.toHaveBeenCalled();
   });
 });

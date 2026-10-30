@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { LayoutStore } from '../../../../core/store/layout.store';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
@@ -50,6 +50,8 @@ export class DashboardOverview implements OnInit, OnDestroy {
   private appointmentService = inject(AppointmentService);
   private reportService = inject(ReportService);
   private sample = inject(DemoSampleService);
+  /** The organisation code from the address (/:hospitalCode/dashboard), found on whichever parent route holds it. */
+  private readonly code = inject(ActivatedRoute).snapshot.pathFromRoot.map((r) => r.paramMap.get('hospitalCode')).find((c) => !!c) ?? '';
   sampleOffer = false;
   sampleBusy = false;
   sampleError = '';
@@ -117,7 +119,14 @@ export class DashboardOverview implements OnInit, OnDestroy {
     }
     this.load();
     if (this.auth.can('DOCTOR_MANAGE')) {
-      this.sample.status().subscribe({ next: (st) => (this.sampleOffer = st.available && st.empty), error: () => (this.sampleOffer = false) });
+      this.sample.status().subscribe({
+        next: (st) => {
+          this.sampleOffer = st.available && st.empty;
+          // An organisation made for a demo request (code dm-...) opens with the practice clinic already in it.
+          if (st.available && st.empty && /^dm-/i.test(this.code)) this.loadSample();
+        },
+        error: () => (this.sampleOffer = false),
+      });
     }
   }
 
