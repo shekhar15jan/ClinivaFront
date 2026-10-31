@@ -18,9 +18,10 @@ files are plain Markdown for now.
 | Theatre | `en/ot/book-and-run-a-surgery.md` |
 | Insurance | `en/insurance/track-an-insurance-claim.md` |
 | Reports | `en/reports/read-reports-and-analytics.md` |
+| Clinic administrator | `en/admin/add-staff-and-set-roles.md`, `en/admin/handle-privacy-requests-and-breaches.md` |
 | Accountant | `en/accounts/pay-doctors-from-statements.md` |
 | ABDM | `en/abdm/set-up-abdm-and-add-abha.md` |
 
 **How these were checked:** every button, field and message name was taken from the screens' code and the live browser suite
-(`Cliniva/ClinivaFront/e2e-live`) on 30 Oct 2026. Not covered yet (planned): roles and privacy administration, and the Hindi and Marathi translations (which need a
+(`Cliniva/ClinivaFront/e2e-live`) on 30 Oct 2026. Not covered yet (planned): the Hindi and Marathi translations (which need a
 fluent reviewer, owner decision #20).
