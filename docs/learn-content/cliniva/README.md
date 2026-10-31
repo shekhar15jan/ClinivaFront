@@ -17,7 +17,8 @@ files are plain Markdown for now.
 | Radiology | `en/radiology/order-imaging-and-report.md` |
 | Theatre | `en/ot/book-and-run-a-surgery.md` |
 | Insurance | `en/insurance/track-an-insurance-claim.md` |
+| Reports | `en/reports/read-reports-and-analytics.md` |
 
 **How these were checked:** every button, field and message name was taken from the screens' code and the live browser suite
-(`Cliniva/ClinivaFront/e2e-live`) on 30 Oct 2026. Not covered yet (planned): ABDM, payouts, reports, roles and privacy administration, and the Hindi and Marathi translations (which need a
+(`Cliniva/ClinivaFront/e2e-live`) on 30 Oct 2026. Not covered yet (planned): ABDM, payouts, roles and privacy administration, and the Hindi and Marathi translations (which need a
 fluent reviewer, owner decision #20).
