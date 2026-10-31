@@ -85,7 +85,7 @@ describe('GlobalErrorInterceptor', () => {
     );
 
     expect(toastService.show).toHaveBeenCalledWith(
-      'This module is not available in your current plan. Please upgrade.',
+      'This module is not available in your current plan.',
       'warning',
     );
     expect(licenseService.loadLicense).toHaveBeenCalled();

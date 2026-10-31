@@ -32,7 +32,7 @@ export class GlobalErrorInterceptor implements HttpInterceptor {
             const errorMsg = error.error?.message || 'Access denied';
             if (errorMsg.toLowerCase().includes('module')) {
               this.toastService.show(
-                'This module is not available in your current plan. Please upgrade.',
+                'This module is not available in your current plan.',   // the same words as the route guards: one toast, not two
                 'warning',
               );
               this.licenseService.loadLicense().subscribe();
