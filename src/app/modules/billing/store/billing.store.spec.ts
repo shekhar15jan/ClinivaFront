@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { BillingStore } from './billing.store';
@@ -72,100 +72,86 @@ describe('BillingStore', () => {
     expect(store.totalOutstanding()).toBe(0);
   });
 
-  it('should load bills successfully', fakeAsync(() => {
+  it('should load bills successfully', () => {
     store.loadBills({ page: 0, size: 20 });
-    tick();
     expect(store.bills()).toEqual([mockBill]);
     expect(store.totalElements()).toBe(1);
     expect(store.loading()).toBe(false);
     expect(store.hasBills()).toBe(true);
-  }));
+  });
 
-  it('should load bills with default params', fakeAsync(() => {
+  it('should load bills with default params', () => {
     store.loadBills();
-    tick();
     expect(mockBillingService.getBills).toHaveBeenCalledWith(0, 20, undefined);
-  }));
+  });
 
-  it('should handle load bills error', fakeAsync(() => {
+  it('should handle load bills error', () => {
     mockBillingService.getBills = vi.fn().mockReturnValue(throwError(() => new Error('Load failed')));
     const errorStore = TestBed.inject(BillingStore);
     errorStore.loadBills();
-    tick();
     expect(errorStore.error()).toBe('Load failed');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should load single bill', fakeAsync(() => {
+  it('should load single bill', () => {
     store.loadBill('b1');
-    tick();
     expect(store.selectedBill()).toEqual(mockBill);
-  }));
+  });
 
-  it('should handle load bill error', fakeAsync(() => {
+  it('should handle load bill error', () => {
     mockBillingService.getBillById = vi.fn().mockReturnValue(throwError(() => new Error('Not found')));
     const errorStore = TestBed.inject(BillingStore);
     errorStore.loadBill('b1');
-    tick();
     expect(errorStore.error()).toBe('Not found');
-  }));
+  });
 
-  it('should create bill', fakeAsync(() => {
+  it('should create bill', () => {
     store.loadBills();
-    tick();
     const initialCount = store.bills().length;
     const request: CreateBillRequest = { prescriptionId: 'rx1' };
     store.createBill(request);
-    tick();
     expect(mockBillingService.createBill).toHaveBeenCalledWith('rx1', request);
     expect(store.bills().length).toBe(initialCount + 1);
     expect(store.selectedBill()).toEqual(mockBill);
     expect(store.totalElements()).toBe(initialCount + 1);
-  }));
+  });
 
-  it('should handle create bill error', fakeAsync(() => {
+  it('should handle create bill error', () => {
     mockBillingService.createBill = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(BillingStore);
     errorStore.createBill({ prescriptionId: 'rx1' } as CreateBillRequest);
-    tick();
     expect(errorStore.error()).toBe('Create failed');
-  }));
+  });
 
-  it('should update bill', fakeAsync(() => {
+  it('should update bill', () => {
     store.loadBills();
-    tick();
     store.updateBill({ id: 'b1', request: {} });
-    tick();
     expect(mockBillingService.updateBill).toHaveBeenCalledWith('b1', {});
     expect(store.bills()[0].paymentStatus).toBe('PAID');
-  }));
+  });
 
-  it('should handle update bill error', fakeAsync(() => {
+  it('should handle update bill error', () => {
     mockBillingService.updateBill = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(BillingStore);
     errorStore.updateBill({ id: 'b1', request: {} });
-    tick();
     expect(errorStore.error()).toBe('Update failed');
-  }));
+  });
 
-  it('should compute unpaidBills and totalOutstanding', fakeAsync(() => {
+  it('should compute unpaidBills and totalOutstanding', () => {
     mockBillingService.getBills = vi.fn().mockReturnValue(of({
       ...mockPagedResponse,
       data: { ...mockPagedResponse.data, content: [mockBill, mockPaidBill], totalElements: 2 },
     }));
     store.loadBills();
-    tick();
     expect(store.unpaidBills()).toEqual([mockBill]);
     expect(store.totalOutstanding()).toBe(50000);
-  }));
+  });
 
-  it('should update selectedBill after status update', fakeAsync(() => {
+  it('should update selectedBill after status update', () => {
     store.loadBill('b1');
-    tick();
     store.updateBill({ id: 'b1', request: {} });
-    tick();
     expect(store.selectedBill()?.paymentStatus).toBe('PAID');
-  }));
+  });
 
   it('should clear selected bill', () => {
     store.clearSelectedBill();

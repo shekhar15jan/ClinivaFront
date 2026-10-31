@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { PatientStore } from './patient.store';
@@ -66,82 +66,71 @@ describe('PatientStore', () => {
     expect(store.hasPatients()).toBe(false);
   });
 
-  it('should load patients successfully', fakeAsync(() => {
+  it('should load patients successfully', () => {
     store.loadPatients({ page: 0, size: 20 });
-    tick();
     expect(store.patients()).toEqual([mockPatient]);
     expect(store.totalElements()).toBe(1);
     expect(store.currentPage()).toBe(0);
     expect(store.loading()).toBe(false);
     expect(store.hasPatients()).toBe(true);
-  }));
+  });
 
-  it('should load patients with default params', fakeAsync(() => {
+  it('should load patients with default params', () => {
     store.loadPatients();
-    tick();
     expect(mockPatientService.getPatients).toHaveBeenCalledWith(0, 20);
-  }));
+  });
 
-  it('should handle load patients error', fakeAsync(() => {
+  it('should handle load patients error', () => {
     mockPatientService.getPatients = vi.fn().mockReturnValue(throwError(() => new Error('Load failed')));
     const errorStore = TestBed.inject(PatientStore);
     errorStore.loadPatients({ page: 0, size: 20 });
-    tick();
     expect(errorStore.error()).toBe('Load failed');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should load single patient', fakeAsync(() => {
+  it('should load single patient', () => {
     store.loadPatient('p1');
-    tick();
     expect(store.selectedPatient()).toEqual(mockPatient);
     expect(store.loading()).toBe(false);
-  }));
+  });
 
-  it('should handle load patient error', fakeAsync(() => {
+  it('should handle load patient error', () => {
     mockPatientService.getPatientById = vi.fn().mockReturnValue(throwError(() => new Error('Not found')));
     const errorStore = TestBed.inject(PatientStore);
     errorStore.loadPatient('p1');
-    tick();
     expect(errorStore.error()).toBe('Not found');
     expect(errorStore.selectedPatient()).toBeNull();
-  }));
+  });
 
-  it('should create patient', fakeAsync(() => {
+  it('should create patient', () => {
     store.loadPatients({ page: 0, size: 20 });
-    tick();
     const initialCount = store.totalElements();
     store.createPatient({ fullName: 'New Patient' } as Partial<Patient>);
-    tick();
     expect(mockPatientService.createPatient).toHaveBeenCalled();
     expect(store.totalElements()).toBe(initialCount + 1);
     expect(store.loading()).toBe(false);
-  }));
+  });
 
-  it('should handle create patient error', fakeAsync(() => {
+  it('should handle create patient error', () => {
     mockPatientService.createPatient = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(PatientStore);
     errorStore.createPatient({ fullName: 'Bad' } as Partial<Patient>);
-    tick();
     expect(errorStore.error()).toBe('Create failed');
-  }));
+  });
 
-  it('should update patient', fakeAsync(() => {
+  it('should update patient', () => {
     store.loadPatients({ page: 0, size: 20 });
-    tick();
     store.updatePatient({ id: 'p1', patient: { fullName: 'Updated' } });
-    tick();
     expect(mockPatientService.updatePatient).toHaveBeenCalledWith('p1', { fullName: 'Updated' });
     expect(store.loading()).toBe(false);
-  }));
+  });
 
-  it('should handle update patient error', fakeAsync(() => {
+  it('should handle update patient error', () => {
     mockPatientService.updatePatient = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(PatientStore);
     errorStore.updatePatient({ id: 'p1', patient: { fullName: 'Bad' } });
-    tick();
     expect(errorStore.error()).toBe('Update failed');
-  }));
+  });
 
   it('should clear selected patient', () => {
     store.loadPatient('p1');

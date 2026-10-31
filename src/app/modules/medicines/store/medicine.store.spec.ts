@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { MedicineStore } from './medicine.store';
@@ -87,103 +87,89 @@ describe('MedicineStore', () => {
     expect(store.activeMedicines()).toEqual([]);
   });
 
-  it('should load medicines successfully', fakeAsync(() => {
+  it('should load medicines successfully', () => {
     store.loadMedicines({ page: 0, size: 20 });
-    tick();
     expect(store.medicines()).toEqual([mockMedicine]);
     expect(store.totalElements()).toBe(1);
     expect(store.loading()).toBe(false);
     expect(store.hasMedicines()).toBe(true);
-  }));
+  });
 
-  it('should load medicines with default params', fakeAsync(() => {
+  it('should load medicines with default params', () => {
     store.loadMedicines();
-    tick();
     expect(mockMedicineService.getMedicines).toHaveBeenCalledWith(0, 20, undefined);
-  }));
+  });
 
-  it('should handle load medicines error', fakeAsync(() => {
+  it('should handle load medicines error', () => {
     mockMedicineService.getMedicines = vi.fn().mockReturnValue(throwError(() => new Error('Load failed')));
     const errorStore = TestBed.inject(MedicineStore);
     errorStore.loadMedicines();
-    tick();
     expect(errorStore.error()).toBe('Load failed');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should search medicines', fakeAsync(() => {
+  it('should search medicines', () => {
     store.searchMedicines('para');
-    tick();
     expect(store.searchResults()).toEqual([mockMedicine]);
     expect(mockMedicineService.searchMedicines).toHaveBeenCalledWith('para');
-  }));
+  });
 
-  it('should handle search medicines error', fakeAsync(() => {
+  it('should handle search medicines error', () => {
     mockMedicineService.searchMedicines = vi.fn().mockReturnValue(throwError(() => new Error('Search failed')));
     const errorStore = TestBed.inject(MedicineStore);
     errorStore.searchMedicines('para');
-    tick();
     expect(errorStore.error()).toBe('Search failed');
-  }));
+  });
 
-  it('should load single medicine', fakeAsync(() => {
+  it('should load single medicine', () => {
     store.loadMedicine('m1');
-    tick();
     expect(store.selectedMedicine()).toEqual(mockMedicine);
-  }));
+  });
 
-  it('should handle load medicine error', fakeAsync(() => {
+  it('should handle load medicine error', () => {
     mockMedicineService.getMedicineById = vi.fn().mockReturnValue(throwError(() => new Error('Not found')));
     const errorStore = TestBed.inject(MedicineStore);
     errorStore.loadMedicine('m1');
-    tick();
     expect(errorStore.error()).toBe('Not found');
-  }));
+  });
 
-  it('should create medicine', fakeAsync(() => {
+  it('should create medicine', () => {
     store.loadMedicines();
-    tick();
     const initialCount = store.medicines().length;
     store.createMedicine({ medicineName: 'New Med' } as Partial<Medicine>);
-    tick();
     expect(mockMedicineService.createMedicine).toHaveBeenCalled();
     expect(store.medicines().length).toBe(initialCount + 1);
     expect(store.totalElements()).toBe(initialCount + 1);
-  }));
+  });
 
-  it('should handle create medicine error', fakeAsync(() => {
+  it('should handle create medicine error', () => {
     mockMedicineService.createMedicine = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(MedicineStore);
     errorStore.createMedicine({ medicineName: 'Bad' } as Partial<Medicine>);
-    tick();
     expect(errorStore.error()).toBe('Create failed');
-  }));
+  });
 
-  it('should update medicine', fakeAsync(() => {
+  it('should update medicine', () => {
     store.loadMedicines();
-    tick();
     store.updateMedicine({ id: 'm1', medicine: { priceInPaisa: 1000 } });
-    tick();
     expect(mockMedicineService.updateMedicine).toHaveBeenCalledWith('m1', { priceInPaisa: 1000 });
-  }));
+  });
 
-  it('should handle update medicine error', fakeAsync(() => {
+  it('should handle update medicine error', () => {
     mockMedicineService.updateMedicine = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(MedicineStore);
     errorStore.updateMedicine({ id: 'm1', medicine: { medicineName: 'Bad' } });
-    tick();
     expect(errorStore.error()).toBe('Update failed');
-  }));
+  });
 
-  it('should compute activeMedicines filtering inactive', fakeAsync(() => {
+  it('should compute activeMedicines filtering inactive', () => {
     mockMedicineService.getMedicines = vi.fn().mockReturnValue(of({
       ...mockPagedResponse,
       data: { ...mockPagedResponse.data, content: [mockMedicine, mockInactiveMedicine], totalElements: 2 },
     }));
     store.loadMedicines();
-    tick();
     expect(store.activeMedicines()).toEqual([mockMedicine]);
-  }));
+  });
 
   it('should clear search results', () => {
     store.clearSearchResults();

@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { ConsultationStore } from './consultation.store';
@@ -54,69 +54,61 @@ describe('ConsultationStore', () => {
     expect(store.error()).toBeNull();
   });
 
-  it('should load consultation by appointment', fakeAsync(() => {
+  it('should load consultation by appointment', () => {
     store.loadConsultation('a1');
-    tick();
     expect(store.consultation()).toEqual(mockConsultation);
     expect(store.loading()).toBe(false);
     expect(mockConsultationService.getByAppointment).toHaveBeenCalledWith('a1');
-  }));
+  });
 
-  it('should handle load consultation error', fakeAsync(() => {
+  it('should handle load consultation error', () => {
     mockConsultationService.getByAppointment = vi.fn().mockReturnValue(throwError(() => new Error('Not found')));
     const errorStore = TestBed.inject(ConsultationStore);
     errorStore.loadConsultation('a1');
-    tick();
     expect(errorStore.error()).toBe('Not found');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should create consultation', fakeAsync(() => {
+  it('should create consultation', () => {
     const request: CreateConsultationRequest = { appointmentId: 'a1', chiefComplaints: 'Fever' };
     store.createConsultation(request);
-    tick();
     expect(mockConsultationService.createConsultation).toHaveBeenCalledWith(request);
     expect(store.consultation()).toEqual(mockConsultation);
-  }));
+  });
 
-  it('should handle create consultation error', fakeAsync(() => {
+  it('should handle create consultation error', () => {
     mockConsultationService.createConsultation = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(ConsultationStore);
     errorStore.createConsultation({ appointmentId: 'a1', chiefComplaints: 'Fever' });
-    tick();
     expect(errorStore.error()).toBe('Create failed');
-  }));
+  });
 
-  it('should update consultation', fakeAsync(() => {
+  it('should update consultation', () => {
     store.updateConsultation({ id: 'c1', consultation: { diagnosis: 'Migraine' } });
-    tick();
     expect(mockConsultationService.updateConsultation).toHaveBeenCalledWith('c1', { diagnosis: 'Migraine' });
     expect(store.consultation()).toEqual(mockConsultation);
-  }));
+  });
 
-  it('should handle update consultation error', fakeAsync(() => {
+  it('should handle update consultation error', () => {
     mockConsultationService.updateConsultation = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(ConsultationStore);
     errorStore.updateConsultation({ id: 'c1', consultation: { diagnosis: 'Bad' } });
-    tick();
     expect(errorStore.error()).toBe('Update failed');
-  }));
+  });
 
-  it('should record vitals', fakeAsync(() => {
+  it('should record vitals', () => {
     const vitals: Vitals = { bp: '120/80' };
     store.recordVitals({ appointmentId: 'a1', vitals });
-    tick();
     expect(mockConsultationService.recordVitals).toHaveBeenCalledWith('a1', vitals);
     expect(store.consultation()?.vitals?.bp).toBe('120/80');
-  }));
+  });
 
-  it('should handle record vitals error', fakeAsync(() => {
+  it('should handle record vitals error', () => {
     mockConsultationService.recordVitals = vi.fn().mockReturnValue(throwError(() => new Error('Vitals failed')));
     const errorStore = TestBed.inject(ConsultationStore);
     errorStore.recordVitals({ appointmentId: 'a1', vitals: {} });
-    tick();
     expect(errorStore.error()).toBe('Vitals failed');
-  }));
+  });
 
   it('should clear consultation', () => {
     store.clearConsultation();

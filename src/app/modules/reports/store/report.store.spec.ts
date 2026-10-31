@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { ReportStore } from './report.store';
@@ -60,70 +60,62 @@ describe('ReportStore', () => {
     expect(store.error()).toBeNull();
   });
 
-  it('should load dashboard stats successfully', fakeAsync(() => {
+  it('should load dashboard stats successfully', () => {
     store.loadDashboardStats();
-    tick();
     expect(store.dashboardStats()).toEqual(mockDashboardStats);
     expect(store.loading()).toBe(false);
     expect(mockReportService.getDashboardStats).toHaveBeenCalledOnce();
-  }));
+  });
 
-  it('should handle load dashboard stats error', fakeAsync(() => {
+  it('should handle load dashboard stats error', () => {
     mockReportService.getDashboardStats = vi.fn().mockReturnValue(throwError(() => new Error('Dashboard failed')));
     const errorStore = TestBed.inject(ReportStore);
     errorStore.loadDashboardStats();
-    tick();
     expect(errorStore.error()).toBe('Dashboard failed');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should load appointment trends successfully', fakeAsync(() => {
+  it('should load appointment trends successfully', () => {
     store.loadAppointmentTrends();
-    tick();
     expect(store.appointmentTrends()).toEqual(mockAppointmentTrends);
     expect(store.loading()).toBe(false);
     expect(mockReportService.getAppointmentTrends).toHaveBeenCalledOnce();
-  }));
+  });
 
-  it('should handle load appointment trends error', fakeAsync(() => {
+  it('should handle load appointment trends error', () => {
     mockReportService.getAppointmentTrends = vi.fn().mockReturnValue(throwError(() => new Error('Trends failed')));
     const errorStore = TestBed.inject(ReportStore);
     errorStore.loadAppointmentTrends();
-    tick();
     expect(errorStore.error()).toBe('Trends failed');
-  }));
+  });
 
-  it('should load revenue report successfully', fakeAsync(() => {
+  it('should load revenue report successfully', () => {
     store.loadRevenueReport();
-    tick();
     expect(store.revenueReport()).toEqual(mockRevenueReport);
     expect(store.loading()).toBe(false);
     expect(mockReportService.getRevenueReport).toHaveBeenCalledOnce();
-  }));
+  });
 
-  it('should handle load revenue report error', fakeAsync(() => {
+  it('should handle load revenue report error', () => {
     mockReportService.getRevenueReport = vi.fn().mockReturnValue(throwError(() => new Error('Revenue failed')));
     const errorStore = TestBed.inject(ReportStore);
     errorStore.loadRevenueReport();
-    tick();
     expect(errorStore.error()).toBe('Revenue failed');
-  }));
+  });
 
-  it('should load doctor performance successfully', fakeAsync(() => {
+  it('should load doctor performance successfully', () => {
     store.loadDoctorPerformance();
-    tick();
     expect(store.doctorPerformance()).toEqual(mockDoctorPerformance);
     expect(store.loading()).toBe(false);
     expect(mockReportService.getDoctorPerformance).toHaveBeenCalledOnce();
-  }));
+  });
 
-  it('should handle load doctor performance error', fakeAsync(() => {
+  it('should handle load doctor performance error', () => {
     mockReportService.getDoctorPerformance = vi.fn().mockReturnValue(throwError(() => new Error('Performance failed')));
     const errorStore = TestBed.inject(ReportStore);
     errorStore.loadDoctorPerformance();
-    tick();
     expect(errorStore.error()).toBe('Performance failed');
-  }));
+  });
 
   it('should clear error', () => {
     store.clearError();

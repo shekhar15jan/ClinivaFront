@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { SettingsStore } from './settings.store';
@@ -44,40 +44,35 @@ describe('SettingsStore', () => {
     expect(store.error()).toBeNull();
   });
 
-  it('should load settings successfully', fakeAsync(() => {
+  it('should load settings successfully', () => {
     store.loadSettings();
-    tick();
     expect(store.settings()).toEqual(mockSettings);
     expect(store.loading()).toBe(false);
     expect(mockSettingService.get).toHaveBeenCalledOnce();
-  }));
+  });
 
-  it('should handle load settings error', fakeAsync(() => {
+  it('should handle load settings error', () => {
     mockSettingService.get = vi.fn().mockReturnValue(throwError(() => new Error('Load failed')));
     const errorStore = TestBed.inject(SettingsStore);
     errorStore.loadSettings();
-    tick();
     expect(errorStore.error()).toBe('Load failed');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should update settings successfully', fakeAsync(() => {
+  it('should update settings successfully', () => {
     store.loadSettings();
-    tick();
     const updates: Partial<ClinicSettings> = { clinicName: 'Updated Clinic' };
     store.updateSettings(updates);
-    tick();
     expect(mockSettingService.update).toHaveBeenCalledWith(updates);
     expect(store.loading()).toBe(false);
-  }));
+  });
 
-  it('should handle update settings error', fakeAsync(() => {
+  it('should handle update settings error', () => {
     mockSettingService.update = vi.fn().mockReturnValue(throwError(() => new Error('Update failed')));
     const errorStore = TestBed.inject(SettingsStore);
     errorStore.updateSettings({ clinicName: 'Bad' });
-    tick();
     expect(errorStore.error()).toBe('Update failed');
-  }));
+  });
 
   it('should clear error', () => {
     store.clearError();

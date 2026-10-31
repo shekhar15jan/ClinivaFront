@@ -2,14 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientModule, HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
 import { MockBackendInterceptor } from './mock-backend.interceptor';
 import { firstValueFrom } from 'rxjs';
-import { vi } from 'vitest';
 
-vi.mock('../../../environments/environment', () => ({
-  environment: { production: false, apiUrl: 'http://localhost:8080/api/v1', enableMock: true }
-}));
+import { environment } from '../../../environments/environment';
 
 describe('MockBackendInterceptor', () => {
   let http: HttpClient;
+  const originalEnableMock = environment.enableMock;
+
+  beforeAll(() => { environment.enableMock = true; });
+  afterAll(() => { environment.enableMock = originalEnableMock; });
 
   beforeEach(() => {
     TestBed.configureTestingModule({

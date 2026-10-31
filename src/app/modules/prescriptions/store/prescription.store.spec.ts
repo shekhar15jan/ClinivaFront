@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { PrescriptionStore } from './prescription.store';
@@ -73,79 +73,69 @@ describe('PrescriptionStore', () => {
     expect(store.hasPrescriptions()).toBe(false);
   });
 
-  it('should load prescriptions successfully', fakeAsync(() => {
+  it('should load prescriptions successfully', () => {
     store.loadPrescriptions({ page: 0, size: 20 });
-    tick();
     expect(store.prescriptions()).toEqual([mockPrescription]);
     expect(store.totalElements()).toBe(1);
     expect(store.loading()).toBe(false);
     expect(store.hasPrescriptions()).toBe(true);
-  }));
+  });
 
-  it('should load prescriptions with default params', fakeAsync(() => {
+  it('should load prescriptions with default params', () => {
     store.loadPrescriptions();
-    tick();
     expect(mockPrescriptionService.getPrescriptions).toHaveBeenCalledWith(0, 20);
-  }));
+  });
 
-  it('should handle load prescriptions error', fakeAsync(() => {
+  it('should handle load prescriptions error', () => {
     mockPrescriptionService.getPrescriptions = vi.fn().mockReturnValue(throwError(() => new Error('Load failed')));
     const errorStore = TestBed.inject(PrescriptionStore);
     errorStore.loadPrescriptions();
-    tick();
     expect(errorStore.error()).toBe('Load failed');
     expect(errorStore.loading()).toBe(false);
-  }));
+  });
 
-  it('should load single prescription', fakeAsync(() => {
+  it('should load single prescription', () => {
     store.loadPrescription('rx1');
-    tick();
     expect(store.selectedPrescription()).toEqual(mockPrescription);
-  }));
+  });
 
-  it('should handle load prescription error', fakeAsync(() => {
+  it('should handle load prescription error', () => {
     mockPrescriptionService.getPrescriptionById = vi.fn().mockReturnValue(throwError(() => new Error('Not found')));
     const errorStore = TestBed.inject(PrescriptionStore);
     errorStore.loadPrescription('rx1');
-    tick();
     expect(errorStore.error()).toBe('Not found');
-  }));
+  });
 
-  it('should load prescriptions by patient', fakeAsync(() => {
+  it('should load prescriptions by patient', () => {
     store.loadPrescriptionsByPatient('p1');
-    tick();
     expect(store.prescriptions()).toEqual([mockPrescription]);
     expect(mockPrescriptionService.getPrescriptionsByPatient).toHaveBeenCalledWith('p1');
-  }));
+  });
 
-  it('should handle load by patient error', fakeAsync(() => {
+  it('should handle load by patient error', () => {
     mockPrescriptionService.getPrescriptionsByPatient = vi.fn().mockReturnValue(throwError(() => new Error('Patient load failed')));
     const errorStore = TestBed.inject(PrescriptionStore);
     errorStore.loadPrescriptionsByPatient('p1');
-    tick();
     expect(errorStore.error()).toBe('Patient load failed');
-  }));
+  });
 
-  it('should create prescription', fakeAsync(() => {
+  it('should create prescription', () => {
     store.loadPrescriptions();
-    tick();
     const initialCount = store.prescriptions().length;
     const request: CreatePrescriptionRequest = { consultationId: 'c1', medicines: [] };
     store.createPrescription(request);
-    tick();
     expect(mockPrescriptionService.createPrescription).toHaveBeenCalledWith(request);
     expect(store.prescriptions().length).toBe(initialCount + 1);
     expect(store.selectedPrescription()).toEqual(mockPrescription);
     expect(store.totalElements()).toBe(initialCount + 1);
-  }));
+  });
 
-  it('should handle create prescription error', fakeAsync(() => {
+  it('should handle create prescription error', () => {
     mockPrescriptionService.createPrescription = vi.fn().mockReturnValue(throwError(() => new Error('Create failed')));
     const errorStore = TestBed.inject(PrescriptionStore);
     errorStore.createPrescription({ consultationId: 'c1', medicines: [] });
-    tick();
     expect(errorStore.error()).toBe('Create failed');
-  }));
+  });
 
   it('should clear selected prescription', () => {
     store.clearSelectedPrescription();
