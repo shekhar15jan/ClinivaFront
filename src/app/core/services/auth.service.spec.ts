@@ -160,53 +160,79 @@ describe('AuthService', () => {
   });
 
   describe('the clinic licence after sign-in', () => {
-    const signIn = (flush: () => void) => {
-      let done = false;
-      service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe(() => (done = true));
-      flush();
-      return () => done;
-    };
-    const answer = () =>
+    const answer = (modules: string[] = ['PATIENT', 'DOCTOR']) =>
       httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`).flush({
         success: true,
-        data: { token: 't', refreshToken: 'r', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' } },
+        data: {
+          token: 't', refreshToken: 'r', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' },
+          tenant: { id: 't1', name: 'Clinic', activeModules: modules },
+        },
       });
 
-    it('loads the signed-in clinic licence (modules and limits) before the first screen opens', () => {
-      const finished = signIn(answer);
+    beforeEach(() => {
+      Object.assign(license, { seedModules: vi.fn() });
+    });
+
+    it('shows the clinic modules from the sign-in answer at once, without waiting for a request', () => {
+      let done = false;
+      service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe(() => (done = true));
+      answer();
+
+      expect((license as unknown as { seedModules: ReturnType<typeof vi.fn> }).seedModules).toHaveBeenCalledWith(['PATIENT', 'DOCTOR']);
+      expect(done).toBe(true);
+    });
+
+    it('loads the full licence (limits and usage) in the background', () => {
+      service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe();
+      answer();
 
       expect(license.loadLicense).toHaveBeenCalledTimes(1);
-      expect(finished()).toBe(true);
     });
 
     it('still signs in when the licence cannot be loaded', () => {
       license.loadLicense.mockReturnValue(throwError(() => new Error('network')));
+      let done = false;
 
-      const finished = signIn(answer);
+      service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe(() => (done = true));
+      answer();
 
-      expect(finished()).toBe(true);
+      expect(done).toBe(true);
       expect(service.isLoggedIn()).toBe(true);
     });
 
-    it('does not load a licence when the code was wrong', () => {
+    it('does nothing about the licence when the code was wrong', () => {
       service.verifyOtp({ email: 'test@cliniva.com', otp: '000000' }).subscribe();
       httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`).flush({ success: false, message: 'Invalid code' });
 
       expect(license.loadLicense).not.toHaveBeenCalled();
     });
 
-    it('loads it again when the session is restored after a page reload', async () => {
+    it('does the same when the session is restored after a page reload', async () => {
       localStorage.setItem('cliniva_signed_in', '1');
       const restored = service.silentRefresh();
       httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({
         success: true,
-        data: { token: 't2', refreshToken: 'r2', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' } },
+        data: { token: 't2', refreshToken: 'r2', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' },
+          tenant: { id: 't1', name: 'Clinic', activeModules: ['PATIENT'] } },
       });
       await restored;
 
+      expect((license as unknown as { seedModules: ReturnType<typeof vi.fn> }).seedModules).toHaveBeenCalledWith(['PATIENT']);
       expect(license.loadLicense).toHaveBeenCalledTimes(1);
       expect(service.isLoggedIn()).toBe(true);
       localStorage.removeItem('cliniva_signed_in');
+    });
+
+    it('leaves the licence alone on the routine token renewal', async () => {
+      const renewed = new Promise<string>((resolve) => service.refreshToken().subscribe(resolve));
+      httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({
+        success: true,
+        data: { token: 't3', refreshToken: 'r3', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' },
+          tenant: { id: 't1', name: 'Clinic', activeModules: ['PATIENT'] } },
+      });
+      expect(await renewed).toBe('t3');
+
+      expect(license.loadLicense).not.toHaveBeenCalled();
     });
   });
 });

@@ -23,7 +23,7 @@ describe('Auth Flow Integration', () => {
         ]),
       ],
       providers: [
-        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined, seedModules: () => undefined } },
         
         AuthService,
         AuthGuard,

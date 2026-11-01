@@ -258,6 +258,33 @@ describe('EffectiveLicenseService', () => {
     });
   });
 
+  describe('seedModules (from the sign-in answer)', () => {
+    it('makes the clinic modules available at once', () => {
+      service.seedModules(['PATIENT', 'DOCTOR']);
+
+      expect(service.activeModules()).toEqual(['PATIENT', 'DOCTOR']);
+    });
+
+    it('keeps limits and usage already loaded', () => {
+      service.setLicenseFromTenantContext(
+        [{ moduleCode: 'PATIENT', moduleName: 'Patients', status: 'ACTIVE', isCore: true, source: 'PLAN' }],
+        { planName: 'Plus', status: 'ACTIVE', endDate: '', maxDoctors: 10 },
+      );
+
+      service.seedModules(['PATIENT', 'BILLING']);
+
+      expect(service.activeModules()).toEqual(['PATIENT', 'BILLING']);
+      expect(service.resourceUsage().length).toBe(1);
+    });
+
+    it('does nothing with an empty list', () => {
+      service.seedModules([]);
+      service.seedModules(undefined);
+
+      expect(service.activeModules()).toEqual([]);
+    });
+  });
+
   describe('the public lookup before sign-in', () => {
     it('does not replace a licence that is already loaded when it carries no modules', () => {
       service.setLicenseFromTenantContext(

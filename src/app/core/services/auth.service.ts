@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, map, switchMap, firstValueFrom, of, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, firstValueFrom, of, combineLatest } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 import {
@@ -132,13 +132,6 @@ export class AuthService {
             this.setSession(response.data);
           }
         }),
-        // The screens decide what to show from the clinic's licence (modules and limits). The public lookup before sign-in
-        // no longer carries it, so it is loaded here, before the first screen opens. A failure must not fail the sign-in.
-        switchMap((response) =>
-          response.success && response.data
-            ? this.licenseService.loadLicense().pipe(map(() => response), catchError(() => of(response)))
-            : of(response),
-        ),
       );
   }
 
@@ -210,8 +203,6 @@ export class AuthService {
     const response = await firstValueFrom(this.postRefresh().pipe(catchError(() => of(null))));
     if (response?.success && response.data) {
       this.setSession(this.normalizeResponse(response.data));
-      // After a page reload the licence is gone with the page; load it before the first screen is shown.
-      await firstValueFrom(this.licenseService.loadLicense().pipe(catchError(() => of(null))));
     } else {
       this.clearSession();
     }
@@ -222,7 +213,7 @@ export class AuthService {
       map((response) => {
         if (response.success && response.data) {
           const normalized = this.normalizeResponse(response.data);
-          this.setSession(normalized);
+          this.setSession(normalized, false);
           return normalized.token;
         }
         throw new Error('Refresh failed');
@@ -243,7 +234,14 @@ export class AuthService {
     );
   }
 
-  private setSession(authResponse: AuthResponse): void {
+  private setSession(authResponse: AuthResponse, newSession = true): void {
+    if (newSession) {
+      // The screens decide what to show from the clinic's modules. The public lookup before sign-in no longer carries them,
+      // so they come from the sign-in answer at once, and the full licence (limits, usage) is loaded in the background.
+      // Nothing waits for it, and a failure to load it never fails the sign-in. The routine token renewal skips this.
+      this.licenseService.seedModules(authResponse.tenant?.activeModules);
+      this.licenseService.loadLicense().pipe(catchError(() => of(null))).subscribe();
+    }
     this.accessToken = authResponse.token;
     this.currentUserSubject.next(authResponse.user);
     this.currentUser.set(authResponse.user);

@@ -18,7 +18,7 @@ describe('MockBackendInterceptor', () => {
     TestBed.configureTestingModule({
       imports: [HttpClientModule],
       providers: [
-        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined, seedModules: () => undefined } },
         
         { provide: HTTP_INTERCEPTORS, useClass: MockBackendInterceptor, multi: true },
       ],

@@ -192,6 +192,38 @@ export class EffectiveLicenseService {
     this.license.set(effectiveLicense);
   }
 
+  /**
+   * Fills in which modules the clinic has from the sign-in (or session restore) answer, which carries the active module
+   * codes read from the clinic's own database. It is instant, so the first screen can decide what to show without waiting
+   * for the full licence (limits and usage), which is loaded afterwards by {@link loadLicense}.
+   */
+  seedModules(moduleCodes: readonly string[] | null | undefined): void {
+    if (!moduleCodes || moduleCodes.length === 0) {
+      return;
+    }
+    const current = this.license();
+    const effectiveModules: EffectiveModule[] = moduleCodes.map((code) => ({
+      moduleCode: code,
+      moduleName: code,
+      isCore: false,
+      source: 'PLAN' as EffectiveModule['source'],
+      status: 'ACTIVE' as EffectiveModule['status'],
+    }));
+    this.license.set({
+      tenantId: current?.tenantId ?? '',
+      planName: current?.planName ?? '',
+      planCode: current?.planCode ?? '',
+      status: current?.status ?? ('ACTIVE' as EffectiveLicense['status']),
+      effectiveProducts: current?.effectiveProducts ?? [],
+      effectiveModules,
+      effectiveConstraints: current?.effectiveConstraints ?? [],
+      effectiveFeatures: current?.effectiveFeatures ?? [],
+      purchasedAddons: current?.purchasedAddons ?? [],
+      trialEndsAt: current?.trialEndsAt ?? null,
+      subscriptionEndsAt: current?.subscriptionEndsAt ?? '',
+    });
+  }
+
   clear(): void {
     this.license.set(null);
   }

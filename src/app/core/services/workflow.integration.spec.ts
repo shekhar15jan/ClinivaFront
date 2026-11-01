@@ -36,7 +36,7 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
-        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined, seedModules: () => undefined } },
         
         AuthService, PatientService, DoctorService, AppointmentService,
         ConsultationService, PrescriptionService, BillingService, PaymentService,

@@ -27,7 +27,7 @@ describe('AuthService — Full Coverage', () => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
-        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined, seedModules: () => undefined } },
         AuthService, TenantContextService],
     });
     service = TestBed.inject(AuthService);

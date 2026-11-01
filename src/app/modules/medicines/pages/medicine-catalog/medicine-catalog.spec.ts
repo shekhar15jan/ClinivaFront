@@ -18,7 +18,7 @@ describe('MedicineCatalog', () => {
   function createComponent(overrides?: Partial<MedicineService>) {
     TestBed.configureTestingModule({
       providers: [
-        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined, seedModules: () => undefined } },
         
         FormBuilder,
         { provide: MedicineService, useValue: { getMedicines: vi.fn().mockReturnValue(of(mockPaged)), searchMedicines: vi.fn().mockReturnValue(of(mockSearchResponse)), createMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'created', timestamp: '', requestId: 'r1' })), updateMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'updated', timestamp: '', requestId: 'r1' })), deactivate: vi.fn().mockReturnValue(of({ success: true })), uploadMedicines: vi.fn(), ...overrides } },
