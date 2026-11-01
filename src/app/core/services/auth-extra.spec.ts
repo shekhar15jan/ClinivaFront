@@ -130,6 +130,21 @@ describe('AuthService — Full Coverage', () => {
     });
   });
 
+  describe('registration with an emailed code', () => {
+    it('asks for the code first, then registers with it', () => {
+      service.sendRegistrationCode({ email: 'new@test.com', tenantCode: 'test' }).subscribe();
+      const first = httpMock.expectOne(`${apiUrl}/auth/register/send-code`);
+      expect(first.request.method).toBe('POST');
+      expect(first.request.body).toEqual({ email: 'new@test.com', tenantCode: 'test' });
+      first.flush({ success: true, data: { message: 'sent' }, message: '', timestamp: '', requestId: '' });
+
+      service.register({ email: 'new@test.com', tenantCode: 'test', role: 'PATIENT', otp: '123456' }).subscribe();
+      const second = httpMock.expectOne(`${apiUrl}/auth/register`);
+      expect(second.request.body.otp).toBe('123456');
+      second.flush({ success: true, data: { message: 'ok' }, message: '', timestamp: '', requestId: '' });
+    });
+  });
+
   describe('logout', () => {
     it('should clear state and POST logout', () => {
       service['setSession'](mockAuthData);
