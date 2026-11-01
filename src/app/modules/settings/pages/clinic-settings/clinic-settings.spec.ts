@@ -92,6 +92,34 @@ describe('ClinicSettingsPage', () => {
     expect(toast.error).toHaveBeenCalledTimes(2);
   });
 
+  it('shows an inline GSTIN problem while typing, and nothing for an empty or valid GSTIN', () => {
+    const component = create();
+    expect(component.gstinError).toBeNull();
+    component.settings.gstin = '27ABCDE1234F1Z';
+    expect(component.gstinError).toContain('15 characters');
+    component.settings.gstin = '99ABCDE1234F1Z5';
+    expect(component.gstinError).toContain('state code');
+    component.settings.gstin = '27ABCDE1234F1Y5';
+    expect(component.gstinError).toContain('not a valid GSTIN');
+    component.settings.gstin = ' 27abcde1234f1z5 ';
+    expect(component.gstinError).toBeNull();
+  });
+
+  it('will not save a malformed GSTIN or SAC, and sends a valid one in capitals', () => {
+    const component = create();
+    component.settings.gstin = '27ABCDE1234F1';
+    component.save();
+    component.settings.gstin = '';
+    component.settings.sacCode = '12';
+    component.save();
+    expect(service.update).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledTimes(2);
+    component.settings.gstin = '27abcde1234f1z5';
+    component.settings.sacCode = '9993';
+    component.save();
+    expect(service.update).toHaveBeenCalledWith(expect.objectContaining({ gstin: '27ABCDE1234F1Z5', sacCode: '9993' }));
+  });
+
   it('will not save a negative fee', () => {
     const component = create();
     component.defaultFee = -1;

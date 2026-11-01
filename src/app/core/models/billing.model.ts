@@ -29,6 +29,21 @@ export interface Bill {
   updatedAt?: string;
   /** Shown and paid in another currency (module MULTI_CURRENCY), at the rate frozen on the bill. */
   foreign?: BillForeignCurrency | null;
+  /** CGST / SGST split; present only when the clinic has a GSTIN and the bill carries tax. */
+  gst?: BillGst | null;
+}
+
+/** Intra-state GST split of the tax on a bill (paise); the odd paisa is on SGST. */
+export interface BillGst {
+  gstin: string;
+  placeOfSupply?: string | null;
+  sacCode: string;
+  taxableInPaisa: number;
+  cgstRatePercent: number;
+  cgstInPaisa: number;
+  sgstRatePercent: number;
+  sgstInPaisa: number;
+  amountInWords?: string | null;
 }
 
 export type BillStatus = 'UNPAID' | 'PARTIALLY_PAID' | 'PAID';

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ClinicSettings } from '../../../../core/models/setting.model';
+import { gstinProblem, sacProblem } from '../../../../core/utils/gstin';
 import { SettingService } from '../../../../core/services/setting.service';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { FormsModule } from '@angular/forms';
@@ -149,6 +150,28 @@ import { ExchangeRatesComponent } from './exchange-rates';
               <input id="settingsTaxRate" type="number" min="0" max="100" step="0.01"
                      [(ngModel)]="settings.taxRatePercent" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
               <p class="text-xs text-[#64748B] mt-1">Added to new bills. Use 0 if your services are exempt.</p>
+            </div>
+            <div>
+              <label for="settingsGstin" class="block text-sm font-medium text-[#475569] mb-1">Clinic GSTIN</label>
+              <input id="settingsGstin" type="text" maxlength="15" placeholder="27ABCDE1234F1Z5" autocomplete="off"
+                     [(ngModel)]="settings.gstin" [attr.aria-invalid]="gstinError ? 'true' : null"
+                     class="w-full px-3 py-2 border rounded-lg text-sm uppercase focus:outline-none focus:border-[#0052CC]"
+                     [class.border-red-400]="gstinError" [class.border-gray-200]="!gstinError" />
+              @if (gstinError) {
+                <p id="settingsGstinError" class="text-xs text-red-600 mt-1" role="alert">{{ gstinError }}</p>
+              } @else {
+                <p class="text-xs text-[#64748B] mt-1">Optional. With a GSTIN and a GST rate, invoices show CGST and SGST.</p>
+              }
+            </div>
+            <div>
+              <label for="settingsSac" class="block text-sm font-medium text-[#475569] mb-1">HSN/SAC code</label>
+              <input id="settingsSac" type="text" maxlength="8" placeholder="9993"
+                     [(ngModel)]="settings.sacCode" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#0052CC]" />
+              @if (sacError) {
+                <p id="settingsSacError" class="text-xs text-red-600 mt-1" role="alert">{{ sacError }}</p>
+              } @else {
+                <p class="text-xs text-[#64748B] mt-1">Printed on the invoice. Leave empty for 9993 (healthcare services).</p>
+              }
             </div>
             <div>
               <label for="settingsUpiId" class="block text-sm font-medium text-[#475569] mb-1">Clinic UPI ID</label>
@@ -337,6 +360,10 @@ export class ClinicSettingsPage implements OnInit {
 
   isUploading = false;
 
+  /** Inline GSTIN / SAC problems, shown while typing. */
+  get gstinError(): string | null { return gstinProblem(this.settings.gstin); }
+  get sacError(): string | null { return sacProblem(this.settings.sacCode); }
+
   /** Typed secrets; empty means "keep what is saved". Never filled from the server. */
   razorpaySecret = '';
   razorpayWebhookSecret = '';
@@ -471,6 +498,10 @@ export class ClinicSettingsPage implements OnInit {
       this.toast.error('GST must be between 0 and 100%.');
       return;
     }
+    if (this.gstinError || this.sacError) {
+      this.toast.error(this.gstinError || this.sacError || '');
+      return;
+    }
     const upi = (this.settings.upiPayeeId ?? '').trim();
     if (upi && !/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$/.test(upi)) {
       this.toast.error('Enter a UPI ID such as clinic@okhdfcbank.');
@@ -494,6 +525,8 @@ export class ClinicSettingsPage implements OnInit {
         defaultConsultationFeeInPaisa: toMinor(this.defaultFee),
         taxRatePercent: Math.round(tax * 100) / 100,
         upiPayeeId: upi,
+        gstin: (this.settings.gstin ?? '').trim().toUpperCase(),
+        sacCode: (this.settings.sacCode ?? '').trim(),
         emailSenderName: (this.settings.emailSenderName ?? '').trim(),
         razorpayKeyId: keyId,
         // Only what was typed is sent; a missing value keeps the saved secret.
