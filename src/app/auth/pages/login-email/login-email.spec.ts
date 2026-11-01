@@ -28,6 +28,12 @@ function createLoginEmail() {
 }
 
 describe('LoginEmail', () => {
+  it('goToRegister opens the registration page of the clinic', () => {
+    const { component, routerSpy } = createLoginEmail();
+    component.goToRegister();
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/test-hospital/register']);
+  });
+
   it('should create', () => {
     const { component } = createLoginEmail();
     expect(component).toBeTruthy();

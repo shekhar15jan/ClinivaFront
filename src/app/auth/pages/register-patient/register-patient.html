@@ -1,0 +1,55 @@
+<div class="space-y-lg">
+  <header class="rounded-xl bg-gradient-to-r from-teal-600 to-sky-600 text-white px-md py-md">
+    <h2 class="text-headline-md font-bold mb-xs">New patient? Register</h2>
+    <p class="text-body-md">Step {{ step() }} of 2: {{ step() === 1 ? 'Your details' : 'Enter the code we emailed you' }}</p>
+  </header>
+
+  @if (error()) {
+    <div id="register-error" class="bg-red-50 text-red-900 px-md py-sm rounded-lg text-body-sm" role="alert">{{ error() }}</div>
+  }
+
+  @if (done()) {
+    <div id="register-done" class="bg-emerald-50 text-emerald-900 px-md py-md rounded-lg" role="status">
+      You are registered. Sign in with your email to get a secure code.
+    </div>
+    <button id="go-login" type="button" (click)="goToLogin()" class="w-full bg-teal-600 text-white font-semibold py-4 rounded-lg">Go to sign in</button>
+  } @else if (step() === 1) {
+    <form (ngSubmit)="sendCode()" class="space-y-md">
+      <input name="fullName" id="fullName" [(ngModel)]="fullName" placeholder="Full name" autocomplete="name" class="w-full px-md py-4 rounded-lg border border-slate-300" />
+      <input name="email" id="email" type="email" [(ngModel)]="email" placeholder="Email" autocomplete="email" class="w-full px-md py-4 rounded-lg border border-slate-300" />
+      <input name="phone" id="phone" type="tel" [(ngModel)]="phone" placeholder="Mobile number" autocomplete="tel" class="w-full px-md py-4 rounded-lg border border-slate-300" />
+      <div class="flex gap-sm">
+        <select name="gender" id="gender" [(ngModel)]="gender" class="flex-1 px-md py-4 rounded-lg border border-slate-300">
+          <option value="">Gender (optional)</option>
+          <option value="FEMALE">Female</option>
+          <option value="MALE">Male</option>
+          <option value="OTHER">Other</option>
+        </select>
+        <input name="dob" id="dob" type="date" [(ngModel)]="dateOfBirth" class="flex-1 px-md py-4 rounded-lg border border-slate-300" />
+      </div>
+      <label class="flex items-start gap-sm text-body-sm text-slate-700">
+        <input name="privacy" id="privacy" type="checkbox" [(ngModel)]="acceptPrivacyNotice" class="mt-1 h-5 w-5" />
+        <span>I have read and accept the privacy notice of this clinic.</span>
+      </label>
+      <button id="send-code" type="submit" [disabled]="loading()" class="w-full bg-teal-600 text-white font-semibold py-4 rounded-lg disabled:opacity-50">
+        {{ loading() ? 'Sending...' : 'Email me a code' }}
+      </button>
+    </form>
+  } @else {
+    <form (ngSubmit)="createAccount()" class="space-y-md">
+      <p class="text-body-sm text-slate-700">We sent a code to <strong>{{ email }}</strong>.</p>
+      <input name="otp" id="otp" [(ngModel)]="otp" inputmode="numeric" autocomplete="one-time-code" placeholder="Code" class="w-full px-md py-4 rounded-lg border border-slate-300 text-center tracking-widest text-xl" />
+      <button id="create-account" type="submit" [disabled]="loading()" class="w-full bg-teal-600 text-white font-semibold py-4 rounded-lg disabled:opacity-50">
+        {{ loading() ? 'Creating...' : 'Create my account' }}
+      </button>
+      <div class="flex justify-between text-body-sm">
+        <button id="back" type="button" (click)="back()" class="text-sky-700 underline">Change details</button>
+        <button id="resend" type="button" (click)="sendCode()" class="text-sky-700 underline">Send a new code</button>
+      </div>
+    </form>
+  }
+
+  <div class="text-center">
+    <a id="back-to-login" [href]="'/' + hospitalCode + '/login'" class="text-body-sm text-sky-700 underline">Already registered? Sign in</a>
+  </div>
+</div>

@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthShell } from './pages/auth-shell/auth-shell';
 import { LoginEmail } from './pages/login-email/login-email';
 import { LoginOtp } from './pages/login-otp/login-otp';
+import { RegisterPatient } from './pages/register-patient/register-patient';
 import { ChangePassword } from './pages/change-password/change-password';
 
 const routes: Routes = [
@@ -12,6 +13,7 @@ const routes: Routes = [
     children: [
       { path: 'login', component: LoginEmail },
       { path: 'otp', component: LoginOtp },
+      { path: 'register', component: RegisterPatient },
       { path: 'change-password', component: ChangePassword },
       { path: '', redirectTo: 'login', pathMatch: 'full' }
     ]

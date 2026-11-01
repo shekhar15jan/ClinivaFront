@@ -59,6 +59,10 @@ export class LoginEmail implements OnInit {
     this.signedOutIdle.set(this.route.snapshot?.queryParams?.['reason'] === 'idle');
   }
 
+  goToRegister(): void {
+    this.router.navigate([`/${this.hospitalCode}/register`]);
+  }
+
   goToChangePassword(): void {
     this.authService.pendingEmail = this.email || this.authService.pendingEmail;
     this.router.navigate([`/${this.hospitalCode}/change-password`]);
