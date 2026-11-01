@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, map, firstValueFrom, of, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, firstValueFrom, of, combineLatest, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 import {
@@ -15,6 +15,28 @@ import { EffectiveLicenseService } from './effective-license.service';
 import { TenantResolution } from '../models/tenant.model';
 import { environment } from '../../../environments/environment';
 import { homeCurrency } from '../utils/money';
+
+/** A CodeAtCloud support staff member working in this clinic with the customer's approval. */
+export interface SupportSession {
+  sessionId: string;
+  staffName: string;
+  role: string;
+  accessEndsAt: string | null;
+}
+
+/** What POST /auth/support-login and /auth/support-refresh answer. */
+export interface SupportLoginData {
+  accessToken: string;
+  accessTokenExpiresAt: string;
+  accessEndsAt: string | null;
+  sessionId: string;
+  tenantId: string;
+  staffName: string;
+  role: string;
+  tenantCode: string | null;
+  tenantName: string | null;
+  permissions: string[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -40,6 +62,9 @@ export class AuthService {
   public pendingEmail: string | null = null;
   public pendingTenantCode: string | null = null;
   public loginStep = signal<'credentials' | 'otp'>('credentials');
+  /** Set while the signed-in person is a support staff member; the banner shows it and End closes it. */
+  public supportSession = signal<SupportSession | null>(null);
+  private static readonly SUPPORT_KEY = 'cliniva_support_token';
 
   // Convert tenant signal to observable
   private tenant$ = toObservable(this.tenantContext.tenant);
@@ -136,6 +161,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.endSupportSession();
     this.accessToken = null;
     this.currentUserSubject.next(null);
     this.currentUser.set(null);
@@ -199,6 +225,13 @@ export class AuthService {
    */
   async silentRefresh(): Promise<void> {
     this.clearLegacyStorage();
+    const saved = this.savedSupportToken();
+    if (saved) {
+      // A reload inside a support session: the platform is asked again before the session continues.
+      const ok = await firstValueFrom(this.supportRefreshWith(saved).pipe(map(() => true), catchError(() => of(false))));
+      if (!ok) this.clearSession();
+      return;
+    }
     if (!this.hadSession()) return;
     const response = await firstValueFrom(this.postRefresh().pipe(catchError(() => of(null))));
     if (response?.success && response.data) {
@@ -209,6 +242,7 @@ export class AuthService {
   }
 
   refreshToken(): Observable<string> {
+    if (this.supportSession()) return this.refreshSupport();
     return this.postRefresh().pipe(
       map((response) => {
         if (response.success && response.data) {
@@ -234,6 +268,64 @@ export class AuthService {
     );
   }
 
+  /** Exchanges the platform's single-use support token for a clinic session. */
+  supportLogin(platformToken: string): Observable<SupportLoginData> {
+    return this.http
+      .post<ApiResponse<SupportLoginData>>(`${this.apiUrl}/auth/support-login`, { token: platformToken })
+      .pipe(map((r) => this.startSupport(r.data)));
+  }
+
+  private refreshSupport(): Observable<string> {
+    const token = this.accessToken ?? this.savedSupportToken();
+    if (!token) return throwError(() => new Error('No support session'));
+    return this.supportRefreshWith(token).pipe(map((d) => d.accessToken));
+  }
+
+  private supportRefreshWith(token: string): Observable<SupportLoginData> {
+    return this.http
+      .post<ApiResponse<SupportLoginData>>(`${this.apiUrl}/auth/support-refresh`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      .pipe(map((r) => this.startSupport(r.data, false)));
+  }
+
+  private startSupport(data: SupportLoginData, newSession = true): SupportLoginData {
+    const user: User = {
+      id: data.sessionId,
+      email: data.staffName,
+      role: data.role,
+      roleName: data.role === 'SUPPORT_READONLY' ? 'Support (read-only)' : data.role === 'SUPPORT_ADMIN' ? 'Support admin' : 'Support agent',
+      permissions: data.permissions,
+      tenantId: data.tenantId,
+      tenantCode: data.tenantCode ?? undefined,
+    };
+    this.accessToken = data.accessToken;
+    this.currentUserSubject.next(user);
+    this.currentUser.set(user);
+    this.supportSession.set({ sessionId: data.sessionId, staffName: data.staffName, role: data.role, accessEndsAt: data.accessEndsAt });
+    try { sessionStorage.setItem(AuthService.SUPPORT_KEY, data.accessToken); } catch { /* storage unavailable */ }
+    if (newSession) {
+      this.licenseService.loadLicense().pipe(catchError(() => of(null))).subscribe();
+    }
+    return data;
+  }
+
+  private savedSupportToken(): string | null {
+    try { return sessionStorage.getItem(AuthService.SUPPORT_KEY); } catch { return null; }
+  }
+
+  /** Tells the clinic (and through it the platform) the support session is over; the token stops working at once. */
+  private endSupportSession(): void {
+    if (!this.supportSession()) return;
+    const token = this.accessToken;
+    if (token) {
+      this.http
+        .post(`${this.apiUrl}/hms/support-access/session/end`, {}, { headers: { Authorization: `Bearer ${token}` } })
+        .pipe(catchError(() => of(null)))
+        .subscribe();
+    }
+    this.supportSession.set(null);
+    try { sessionStorage.removeItem(AuthService.SUPPORT_KEY); } catch { /* storage unavailable */ }
+  }
+
   private setSession(authResponse: AuthResponse, newSession = true): void {
     this.accessToken = authResponse.token;
     this.currentUserSubject.next(authResponse.user);
@@ -250,6 +342,8 @@ export class AuthService {
   }
 
   private clearSession(): void {
+    this.supportSession.set(null);
+    try { sessionStorage.removeItem(AuthService.SUPPORT_KEY); } catch { /* storage unavailable */ }
     this.accessToken = null;
     this.currentUserSubject.next(null);
     this.currentUser.set(null);

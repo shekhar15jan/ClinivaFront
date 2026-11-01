@@ -5,12 +5,13 @@ import { BottomNav } from '../bottom-nav/bottom-nav';
 import { MobileDrawer } from '../mobile-drawer/mobile-drawer';
 import { FabComponent } from '../../shared/components/fab/fab.component';
 import { RouterOutlet } from '@angular/router';
+import { SupportBannerComponent } from '../../modules/support-access/support-banner';
 
 @Component({
   selector: 'app-shell',
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
-  imports: [Sidebar, Header, BottomNav, MobileDrawer, FabComponent, RouterOutlet],
+  imports: [Sidebar, Header, BottomNav, MobileDrawer, FabComponent, RouterOutlet, SupportBannerComponent],
 })
 export class Shell {
   protected readonly drawerOpen = signal(false);
