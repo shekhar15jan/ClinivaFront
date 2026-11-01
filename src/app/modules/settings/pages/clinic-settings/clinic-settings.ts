@@ -485,8 +485,6 @@ export class ClinicSettingsPage implements OnInit {
       this.toast.error('Enter the Razorpay key secret for this Key ID.');
       return;
     }
-    this.settingService.setReminders(this.appointmentReminders).subscribe({ error: () => undefined });
-    this.settingService.setOnlineBooking(this.onlineBooking).subscribe({ error: () => undefined });
     this.isSaving = true;
     this.settingService
       .update({
@@ -505,6 +503,11 @@ export class ClinicSettingsPage implements OnInit {
       .subscribe({
         next: (res) => {
           this.isSaving = false;
+          // Sent after the main save, one at a time: they change the same clinic row, and a save that overlapped them could put the old value back.
+          this.settingService.setReminders(this.appointmentReminders).subscribe({
+            complete: () => this.settingService.setOnlineBooking(this.onlineBooking).subscribe({ error: () => undefined }),
+            error: () => this.settingService.setOnlineBooking(this.onlineBooking).subscribe({ error: () => undefined }),
+          });
           if (res.success && res.data) {
             this.settings = { ...this.settings, ...res.data };
             this.defaultFee = fromMinor(res.data.defaultConsultationFeeInPaisa ?? 0);
