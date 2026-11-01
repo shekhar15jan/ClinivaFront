@@ -245,6 +245,15 @@ import { ExchangeRatesComponent } from './exchange-rates';
               />
               <span class="text-sm text-[#475569]">Email patients a reminder the day before their appointment</span>
             </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input
+                id="online-booking"
+                type="checkbox"
+                [(ngModel)]="onlineBooking"
+                class="w-4 h-4 rounded border-gray-300 text-[#0052CC] focus:ring-[#0052CC]"
+              />
+              <span class="text-sm text-[#475569]">Open the public booking page (patients ask for a time; the front desk confirms)</span>
+            </label>
           </div>
         </div>
 
@@ -409,6 +418,7 @@ export class ClinicSettingsPage implements OnInit {
   error = '';
   /** Patients get an email the day before their appointment (saved with the other settings). */
   appointmentReminders = true;
+  onlineBooking = false;
 
   ngOnInit(): void {
     this.load();
@@ -428,6 +438,10 @@ export class ClinicSettingsPage implements OnInit {
         this.isLoading = false;
         this.settingService.getReminders().subscribe({
           next: (r) => (this.appointmentReminders = r.success && r.data ? r.data.enabled : true),
+          error: () => undefined,
+        });
+        this.settingService.getOnlineBooking().subscribe({
+          next: (r) => (this.onlineBooking = r.success && r.data ? r.data.enabled : false),
           error: () => undefined,
         });
       },
@@ -472,6 +486,7 @@ export class ClinicSettingsPage implements OnInit {
       return;
     }
     this.settingService.setReminders(this.appointmentReminders).subscribe({ error: () => undefined });
+    this.settingService.setOnlineBooking(this.onlineBooking).subscribe({ error: () => undefined });
     this.isSaving = true;
     this.settingService
       .update({

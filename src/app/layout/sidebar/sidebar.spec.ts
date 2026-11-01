@@ -32,9 +32,9 @@ describe('Sidebar', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have 35 staff nav items (with the hospital modules)', () => {
+  it('should have 36 staff nav items (with the hospital modules)', () => {
     const { component } = setup();
-    expect(component.staffNavItems.length).toBe(35);
+    expect(component.staffNavItems.length).toBe(36);
   });
 
   it('should have 6 patient nav items', () => {

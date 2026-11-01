@@ -22,7 +22,7 @@ const saved: ClinicSettings = {
 const ok = (data: ClinicSettings) => ({ success: true, data, message: 'ok', timestamp: '', requestId: 'r' });
 
 describe('ClinicSettingsPage', () => {
-  let service: { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; uploadLogo: ReturnType<typeof vi.fn>; removeLogo: ReturnType<typeof vi.fn>; getReminders: ReturnType<typeof vi.fn>; setReminders: ReturnType<typeof vi.fn> };
+  let service: { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; uploadLogo: ReturnType<typeof vi.fn>; removeLogo: ReturnType<typeof vi.fn>; getReminders: ReturnType<typeof vi.fn>; setReminders: ReturnType<typeof vi.fn>; getOnlineBooking: ReturnType<typeof vi.fn>; setOnlineBooking: ReturnType<typeof vi.fn> };
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   function create() {
@@ -32,6 +32,8 @@ describe('ClinicSettingsPage', () => {
       uploadLogo: vi.fn().mockReturnValue(of(ok({ ...saved, logoUrl: '/api/v1/public/media/abc' }))),
       removeLogo: vi.fn().mockReturnValue(of(ok({ ...saved, logoUrl: null }))),
       getReminders: vi.fn().mockReturnValue(of({ success: true, data: { enabled: true } })),
+      getOnlineBooking: vi.fn().mockReturnValue(of({ success: true, data: { enabled: false } })),
+      setOnlineBooking: vi.fn().mockReturnValue(of({ success: true, data: { enabled: true } })),
       setReminders: vi.fn().mockImplementation((enabled: boolean) => of({ success: true, data: { enabled } })),
     };
     toast = { success: vi.fn(), error: vi.fn() };
@@ -216,6 +218,23 @@ describe('ClinicSettingsPage', () => {
       c.save();
 
       expect(service.setReminders).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('online booking', () => {
+    it('shows the saved choice, off by default', () => {
+      const c = create();
+      expect(service.getOnlineBooking).toHaveBeenCalled();
+      expect(c.onlineBooking).toBe(false);
+    });
+
+    it('saves the choice with the other settings', () => {
+      const c = create();
+      c.onlineBooking = true;
+
+      c.save();
+
+      expect(service.setOnlineBooking).toHaveBeenCalledWith(true);
     });
   });
 });

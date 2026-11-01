@@ -8,6 +8,7 @@ import { NotFoundComponent } from './shared/pages/not-found/not-found';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', loadChildren: () => import('./auth/generic-login-module').then(m => m.GenericLoginModule) },
+  { path: ':hospitalCode/book', loadComponent: () => import('./modules/appointments/public-booking').then(m => m.PublicBookingComponent) },
   {
     path: ':hospitalCode',
     canActivate: [TenantResolverGuard],
@@ -30,6 +31,7 @@ export const routes: Routes = [
             path: 'appointments',
             loadChildren: () => import('./modules/appointments/appointments-module').then(m => m.AppointmentsModule)
           },
+          { path: 'booking-requests', loadComponent: () => import('./modules/appointments/booking-requests').then(m => m.BookingRequestsComponent) },
           {
             path: 'consultations',
             loadChildren: () => import('./modules/consultations/consultations-module').then(m => m.ConsultationsModule)

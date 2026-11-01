@@ -16,6 +16,15 @@ export class SettingService {
     return this.http.get<ApiResponse<ClinicProfile>>(`${this.baseUrl}/profile`);
   }
 
+  /** Whether the clinic's public booking page is open. */
+  getOnlineBooking(): Observable<ApiResponse<{ enabled: boolean }>> {
+    return this.http.get<ApiResponse<{ enabled: boolean }>>(`${this.baseUrl}/online-booking`);
+  }
+
+  setOnlineBooking(enabled: boolean): Observable<ApiResponse<{ enabled: boolean }>> {
+    return this.http.put<ApiResponse<{ enabled: boolean }>>(`${this.baseUrl}/online-booking`, { enabled });
+  }
+
   /** Whether patients get an email the day before their appointment. */
   getReminders(): Observable<ApiResponse<{ enabled: boolean }>> {
     return this.http.get<ApiResponse<{ enabled: boolean }>>(`${this.baseUrl}/reminders`);
