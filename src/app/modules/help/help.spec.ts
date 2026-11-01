@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService } from '../../core/services/auth.service';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
@@ -163,7 +164,7 @@ describe('TourService', () => {
 });
 
 describe('Help screens', () => {
-  const router = { navigate: vi.fn(), url: '/sai/help' };
+  const router = { navigate: vi.fn(), url: '/sai/dashboard', events: new Subject<unknown>() };
 
   function setup(role: string) {
     localStorage.clear();

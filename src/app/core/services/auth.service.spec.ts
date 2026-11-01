@@ -202,6 +202,19 @@ describe('AuthService', () => {
       expect(tokenWhenAsked).toBeTruthy();
     });
 
+    it('does not ask a patient for the staff licence (the API refuses it)', () => {
+      service.verifyOtp({ email: 'p@cliniva.com', otp: '123456' }).subscribe();
+      httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`).flush({
+        success: true,
+        data: {
+          token: 'tok', refreshToken: 'r', user: { id: 'u9', email: 'p@cliniva.com', role: 'PATIENT' },
+          tenant: { id: 't1', name: 'Clinic', activeModules: ['PATIENT'] },
+        },
+      });
+
+      expect(license.loadLicense).not.toHaveBeenCalled();
+    });
+
     it('still signs in when the licence cannot be loaded', () => {
       license.loadLicense.mockReturnValue(throwError(() => new Error('network')));
       let done = false;

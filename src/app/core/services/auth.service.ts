@@ -361,7 +361,10 @@ export class AuthService {
       // Nothing waits for it, and a failure to load it never fails the sign-in. The routine token renewal skips this.
       // It starts only after the token is stored: the request has to carry it.
       this.licenseService.seedModules(authResponse.tenant?.activeModules);
-      this.licenseService.loadLicense().pipe(catchError(() => of(null))).subscribe();
+      // The full licence (limits, usage) is for staff; the API refuses it to a patient (403), which would only be noise.
+      if (authResponse.user?.role !== 'PATIENT') {
+        this.licenseService.loadLicense().pipe(catchError(() => of(null))).subscribe();
+      }
     }
   }
 
