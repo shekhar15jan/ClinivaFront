@@ -7,9 +7,11 @@ import { ConsultationService } from '../../../../core/services/consultation.serv
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { MedicineService } from '../../../../core/services/medicine.service';
 import { PrescriptionService } from '../../../../core/services/prescription.service';
+import { DrugSafetyService } from '../../../../core/services/drug-safety.service';
+import { SafetyWarning } from '../../../../core/models/drug-safety.model';
 import { ToastService } from '../../../../shared/components/toast/toast.service';
 import { Medicine } from '../../../../core/models/medicine.model';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
 describe('ConsultationWorkspace', () => {
@@ -21,12 +23,23 @@ describe('ConsultationWorkspace', () => {
   };
 
   let component: ConsultationWorkspace;
+  const drugSafety = {
+    allergies: vi.fn(),
+    addAllergy: vi.fn(),
+    removeAllergy: vi.fn(),
+    check: vi.fn(),
+  };
 
   beforeEach(() => {
+    drugSafety.allergies.mockReset().mockReturnValue(of({ success: true, data: [] }));
+    drugSafety.addAllergy.mockReset().mockReturnValue(of({ success: true, data: {} }));
+    drugSafety.removeAllergy.mockReset().mockReturnValue(of({ success: true }));
+    drugSafety.check.mockReset().mockReturnValue(of({ success: true, data: [] }));
     TestBed.configureTestingModule({
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: vi.fn().mockReturnValue(null) }, pathFromRoot: [{ paramMap: { get: (k: string) => (k === 'hospitalCode' ? 'sai-clinic' : null) } }] } } },
         { provide: Router, useValue: { navigate: vi.fn() } },
+        { provide: DrugSafetyService, useValue: drugSafety },
         { provide: ConsultationService, useValue: { createConsultation: vi.fn().mockReturnValue(of({ success: true, data: { id: 'c1' } })), updateConsultation: vi.fn().mockReturnValue(of({ success: true, data: { id: 'c1' } })), getByAppointment: vi.fn().mockReturnValue(of({ success: false })) } },
         { provide: AppointmentService, useValue: { getAppointmentById: vi.fn().mockReturnValue(of({ success: true, data: mockAppointment })), getAppointments: vi.fn().mockReturnValue(of({ success: true, data: { content: [], totalElements: 0 } })) } },
         { provide: MedicineService, useValue: { searchMedicines: vi.fn().mockReturnValue(of({ success: true, data: [] })) } },
@@ -171,6 +184,159 @@ describe('ConsultationWorkspace', () => {
         duration: 5,
         durationUnit: 'DAYS',
       });
+    });
+  });
+
+  describe('drug safety', () => {
+    const allergyWarning: SafetyWarning = {
+      type: 'ALLERGY', severity: 'SEVERE', medicine: 'Amoxicillin',
+      message: 'The patient is allergic to Penicillin (severe).', blocking: true,
+    };
+    const duplicateWarning: SafetyWarning = {
+      type: 'DUPLICATE', severity: 'MODERATE', medicine: 'Paracetamol', other: 'Paracetamol',
+      message: 'The same drug (paracetamol) is prescribed twice.', blocking: false,
+    };
+
+    function prescribe(name = 'Amoxicillin 500') {
+      component.selectedAppointment = mockAppointment;
+      component.addMedicine();
+      component.medicines.at(0).patchValue({ name, frequency: '1-0-1', duration: 5 });
+    }
+
+    const prescriptionApi = () => TestBed.inject(PrescriptionService) as unknown as { createPrescription: ReturnType<typeof vi.fn> };
+    const consultationApi = () => TestBed.inject(ConsultationService) as unknown as { createConsultation: ReturnType<typeof vi.fn> };
+
+    it('loads the patient allergies', () => {
+      drugSafety.allergies.mockReturnValue(of({ success: true, data: [{ id: 'a1', substance: 'Penicillin', severity: 'SEVERE', recordedAt: '2026-11-01' }] }));
+      component.selectedAppointment = mockAppointment;
+
+      component.loadAllergies();
+
+      expect(drugSafety.allergies).toHaveBeenCalledWith('p1');
+      expect(component.allergies.map((a) => a.substance)).toEqual(['Penicillin']);
+    });
+
+    it('records an allergy with its severity and reloads the list', () => {
+      component.selectedAppointment = mockAppointment;
+
+      component.addAllergy('  Penicillin ', 'SEVERE', 'Rash');
+
+      expect(drugSafety.addAllergy).toHaveBeenCalledWith('p1', 'Penicillin', 'SEVERE', 'Rash');
+      expect(drugSafety.allergies).toHaveBeenCalled();
+    });
+
+    it('asks for the drug when the allergy field is empty', () => {
+      component.selectedAppointment = mockAppointment;
+
+      component.addAllergy('   ', 'MILD', '');
+
+      expect(component.allergyError).toContain('Type the drug');
+      expect(drugSafety.addAllergy).not.toHaveBeenCalled();
+    });
+
+    it('checks the drugs before saving anything, and saves when there is no warning', () => {
+      prescribe('Paracetamol');
+
+      component.finishAndPrint();
+
+      expect(drugSafety.check).toHaveBeenCalledWith('p1', [{ medicineId: undefined, medicineName: 'Paracetamol' }]);
+      expect(consultationApi().createConsultation).toHaveBeenCalled();
+    });
+
+    it('holds a serious warning: nothing is saved until the doctor acknowledges it with a reason', () => {
+      drugSafety.check.mockReturnValue(of({ success: true, data: [allergyWarning] }));
+      prescribe();
+
+      component.finishAndPrint();
+
+      expect(component.safetyWarnings).toEqual([allergyWarning]);
+      expect(component.safetyBlocking).toBe(true);
+      expect(consultationApi().createConsultation).not.toHaveBeenCalled();
+      expect(component.isSubmitting).toBe(false);
+    });
+
+    it('still holds it when the box is ticked but no reason is given', () => {
+      drugSafety.check.mockReturnValue(of({ success: true, data: [allergyWarning] }));
+      prescribe();
+      component.finishAndPrint();
+      component.safetyAcknowledged = true;
+      component.safetyReason = '   ';
+
+      component.finishAndPrint();
+
+      expect(consultationApi().createConsultation).not.toHaveBeenCalled();
+    });
+
+    it('goes ahead once acknowledged with a reason, and sends the reason with the prescription', () => {
+      drugSafety.check.mockReturnValue(of({ success: true, data: [allergyWarning] }));
+      prescribe();
+      component.finishAndPrint();
+      component.safetyAcknowledged = true;
+      component.safetyReason = '  Supervised first dose, no alternative  ';
+
+      component.finishAndPrint();
+
+      expect(consultationApi().createConsultation).toHaveBeenCalled();
+      expect(prescriptionApi().createPrescription).toHaveBeenCalledWith(
+        expect.objectContaining({ acknowledgeWarnings: true, overrideReason: 'Supervised first dose, no alternative' }));
+    });
+
+    it('does not send an acknowledgement when there was no serious warning', () => {
+      drugSafety.check.mockReturnValue(of({ success: true, data: [duplicateWarning] }));
+      prescribe('Paracetamol');
+      component.safetyAcknowledged = true;
+      component.safetyReason = 'left ticked from before';
+
+      component.finishAndPrint();
+
+      const sent = prescriptionApi().createPrescription.mock.calls[0][0];
+      expect(sent.acknowledgeWarnings).toBeUndefined();
+      expect(sent.overrideReason).toBeUndefined();
+    });
+
+    it('saves with a mild warning, and keeps showing it', () => {
+      drugSafety.check.mockReturnValue(of({ success: true, data: [duplicateWarning] }));
+      prescribe('Paracetamol');
+
+      component.finishAndPrint();
+
+      expect(component.safetyBlocking).toBe(false);
+      expect(consultationApi().createConsultation).toHaveBeenCalled();
+    });
+
+    it('forgets an acknowledgement when the drugs change', () => {
+      component.ngOnInit();
+      drugSafety.check.mockReturnValue(of({ success: true, data: [allergyWarning] }));
+      prescribe();
+      component.finishAndPrint();
+      component.safetyAcknowledged = true;
+      component.safetyReason = 'because';
+
+      component.medicines.at(0).patchValue({ name: 'Azithromycin' });
+
+      expect(component.safetyWarnings).toEqual([]);
+      expect(component.safetyAcknowledged).toBe(false);
+      expect(component.safetyReason).toBe('');
+    });
+
+    it('saves anyway if the check itself cannot be reached (the server checks again)', () => {
+      drugSafety.check.mockReturnValue(throwError(() => new Error('offline')));
+      prescribe();
+
+      component.finishAndPrint();
+
+      expect(consultationApi().createConsultation).toHaveBeenCalled();
+    });
+
+    it('shows the server message when it refuses a serious warning', () => {
+      prescribe();
+      prescriptionApi().createPrescription.mockReturnValue(throwError(() => ({
+        error: { errorCode: 'DRUG_SAFETY_WARNING', message: 'The patient is allergic to Penicillin.' },
+      })));
+
+      component.finishAndPrint();
+
+      expect(component.error).toBe('The patient is allergic to Penicillin.');
     });
   });
 });

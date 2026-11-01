@@ -7,6 +7,8 @@ import { ConsultationService } from '../../../../core/services/consultation.serv
 import { AppointmentService } from '../../../../core/services/appointment.service';
 import { MedicineService } from '../../../../core/services/medicine.service';
 import { PrescriptionService } from '../../../../core/services/prescription.service';
+import { DrugSafetyService } from '../../../../core/services/drug-safety.service';
+import { Allergy, AllergySeverity, SafetyWarning } from '../../../../core/models/drug-safety.model';
 import { Medicine } from '../../../../core/models/medicine.model';
 import { Appointment } from '../../../../core/models/appointment.model';
 import { PrescriptionTemplate, Prescription, PrescriptionMedicine } from '../../../../core/models/prescription.model';
@@ -42,6 +44,7 @@ export class ConsultationWorkspace implements OnInit {
   private appointmentService = inject(AppointmentService);
   private medicineService = inject(MedicineService);
   private prescriptionService = inject(PrescriptionService);
+  private drugSafety = inject(DrugSafetyService);
   private cdr = inject(ChangeDetectorRef);
   private toast = inject(ToastService);
 
@@ -57,6 +60,14 @@ export class ConsultationWorkspace implements OnInit {
   existingConsultationId: string | null = null;
   existingPrescriptionId: string | null = null;
   loadingContext = false;
+
+  /** The patient's recorded allergies, shown above the note and used to check the prescription. */
+  allergies: Allergy[] = [];
+  allergyError = '';
+  /** Warnings found for the drugs on the form. A blocking one needs the doctor's acknowledgement and a reason to save. */
+  safetyWarnings: SafetyWarning[] = [];
+  safetyAcknowledged = false;
+  safetyReason = '';
 
   medicineSuggestions = new Map<number, Medicine[]>();
   medicineSearchTerms = new Map<number, string>();
@@ -81,6 +92,7 @@ export class ConsultationWorkspace implements OnInit {
   }
 
   ngOnInit(): void {
+    this.medicines.valueChanges.subscribe(() => this.clearSafety());
     const appointmentId = this.route.snapshot.paramMap.get('appointmentId');
     if (appointmentId) {
       this.loadAppointment(appointmentId);
@@ -90,6 +102,68 @@ export class ConsultationWorkspace implements OnInit {
     }
   }
 
+  get safetyBlocking(): boolean {
+    return this.safetyWarnings.some((w) => w.blocking);
+  }
+
+  private clearSafety(): void {
+    if (this.safetyWarnings.length || this.safetyAcknowledged || this.safetyReason) {
+      this.safetyWarnings = [];
+      this.safetyAcknowledged = false;
+      this.safetyReason = '';
+    }
+  }
+
+  loadAllergies(): void {
+    const patientId = this.selectedAppointment?.patient?.id;
+    this.allergies = [];
+    if (!patientId) return;
+    this.drugSafety.allergies(patientId).subscribe({
+      next: (res) => {
+        this.allergies = res.success && res.data ? res.data : [];
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.allergyError = 'The allergy list could not be loaded.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  addAllergy(substance: string, severity: string, reaction: string): void {
+    const patientId = this.selectedAppointment?.patient?.id;
+    this.allergyError = '';
+    if (!patientId || !substance.trim()) {
+      this.allergyError = 'Type the drug or class the patient is allergic to.';
+      return;
+    }
+    this.drugSafety.addAllergy(patientId, substance.trim(), severity as AllergySeverity, reaction).subscribe({
+      next: () => {
+        this.loadAllergies();
+        this.clearSafety();
+      },
+      error: (err) => {
+        this.allergyError = err?.error?.message || 'The allergy could not be saved.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  removeAllergy(allergy: Allergy): void {
+    const patientId = this.selectedAppointment?.patient?.id;
+    if (!patientId) return;
+    this.drugSafety.removeAllergy(patientId, allergy.id).subscribe({
+      next: () => {
+        this.loadAllergies();
+        this.clearSafety();
+      },
+      error: (err) => {
+        this.allergyError = err?.error?.message || 'The allergy could not be removed.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
   private loadAppointment(id: string): void {
     this.loadingContext = true;
     this.error = '';
@@ -97,6 +171,7 @@ export class ConsultationWorkspace implements OnInit {
       next: (res) => {
         if (res.success && res.data) {
           this.selectedAppointment = res.data;
+          this.loadAllergies();
           this.loadingContext = false;
           this.addMedicine();
           this.loadExistingConsultation(id);
@@ -375,6 +450,41 @@ export class ConsultationWorkspace implements OnInit {
       this.error = 'Please select an appointment first';
       return;
     }
+    const patientId = this.selectedAppointment.patient?.id;
+    const refs = this.safetyRefs();
+    if (!patientId || refs.length === 0) {
+      this.persist();
+      return;
+    }
+    // Ask about allergies and dangerous pairs before anything is saved. A serious warning waits for the doctor.
+    this.isSubmitting = true;
+    this.error = '';
+    this.drugSafety.check(patientId, refs).subscribe({
+      next: (res) => {
+        this.safetyWarnings = res.success && res.data ? res.data : [];
+        this.isSubmitting = false;
+        if (this.safetyBlocking && !(this.safetyAcknowledged && this.safetyReason.trim())) {
+          this.cdr.markForCheck();
+          return;
+        }
+        this.persist();
+      },
+      // If the check cannot be reached the save goes ahead: the server checks again and refuses a serious warning.
+      error: () => {
+        this.isSubmitting = false;
+        this.persist();
+      },
+    });
+  }
+
+  private safetyRefs(): { medicineId?: string; medicineName: string }[] {
+    return ((this.consultationForm.value.medicines || []) as { medicineId?: string; name: string }[])
+      .filter((m) => m.name && m.name.trim())
+      .map((m) => ({ medicineId: m.medicineId || undefined, medicineName: m.name.trim() }));
+  }
+
+  private persist(): void {
+    if (!this.selectedAppointment) return;
     this.isSubmitting = true;
     this.error = '';
     this.savedOffline = '';
@@ -434,10 +544,12 @@ export class ConsultationWorkspace implements OnInit {
       instructions: m.instructions || '',
     }));
 
+    const acknowledged = this.safetyBlocking && this.safetyAcknowledged && this.safetyReason.trim().length > 0;
     const prescriptionPayload = {
       consultationId,
       diagnosis: formVal.notes?.diagnosis || '',
       medicines,
+      ...(acknowledged ? { acknowledgeWarnings: true, overrideReason: this.safetyReason.trim() } : {}),
     };
 
     const savePrescription$ = this.existingPrescriptionId
@@ -467,7 +579,9 @@ export class ConsultationWorkspace implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        this.error = 'Consultation saved but prescription error: ' + (err?.message || 'unknown');
+        this.error = err?.error?.errorCode === 'DRUG_SAFETY_WARNING'
+          ? (err.error.message as string)
+          : 'Consultation saved but prescription error: ' + (err?.error?.message || err?.message || 'unknown');
         this.cdr.markForCheck();
       },
     });

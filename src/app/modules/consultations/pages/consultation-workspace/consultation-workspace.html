@@ -139,6 +139,41 @@
         </div>
 
         <div class="flex-1 p-6 overflow-y-auto space-y-6">
+          <div id="allergy-panel" class="rounded-lg border border-amber-300 bg-amber-50 p-3">
+            <p class="text-sm font-semibold text-amber-900 flex items-center gap-1">
+              <span class="material-symbols-outlined text-[18px]">warning</span> Allergies
+            </p>
+            @if (allergies.length === 0) {
+              <p class="text-xs text-slate-700 mt-1">None recorded for this patient.</p>
+            }
+            <div class="flex flex-wrap gap-2 mt-2">
+              @for (a of allergies; track a.id) {
+                <span class="allergy-chip inline-flex items-center gap-1 rounded-full bg-white border border-amber-400 px-2.5 py-1 text-xs text-slate-800">
+                  <b>{{ a.substance }}</b> &middot; {{ a.severity.toLowerCase() }}
+                  <button type="button" class="text-slate-700 hover:text-red-700" [attr.aria-label]="'Remove allergy ' + a.substance" (click)="removeAllergy(a)">
+                    <span class="material-symbols-outlined text-[14px]">close</span>
+                  </button>
+                </span>
+              }
+            </div>
+            <div class="mt-2 flex flex-wrap items-end gap-2">
+              <input #allergyName type="text" maxlength="120" aria-label="Allergic to" placeholder="Drug or class, e.g. Penicillin"
+                     class="border border-outline-variant rounded-lg p-2 text-sm flex-1 min-w-[10rem] bg-white" />
+              <select #allergySeverity aria-label="How severe" class="border border-outline-variant rounded-lg p-2 text-sm bg-white">
+                <option value="MILD">Mild</option>
+                <option value="MODERATE" selected>Moderate</option>
+                <option value="SEVERE">Severe</option>
+              </select>
+              <input #allergyReaction type="text" maxlength="300" aria-label="Reaction" placeholder="Reaction (optional)"
+                     class="border border-outline-variant rounded-lg p-2 text-sm flex-1 min-w-[8rem] bg-white" />
+              <button type="button" id="add-allergy"
+                      (click)="addAllergy(allergyName.value, allergySeverity.value, allergyReaction.value); allergyName.value = ''; allergyReaction.value = ''"
+                      class="px-3 py-2 bg-amber-700 hover:bg-amber-800 text-white text-sm font-medium rounded-lg">Add allergy</button>
+            </div>
+            @if (allergyError) {
+              <p class="text-xs text-red-700 mt-1" role="alert">{{ allergyError }}</p>
+            }
+          </div>
           <div>
             <label for="chiefComplaint" class="block text-sm font-medium text-on-surface mb-2">Chief Complaint (CC)</label>
             <textarea
@@ -315,6 +350,36 @@
             }
           </div>
         </div>
+
+        @if (safetyWarnings.length) {
+          <div id="safety-panel" role="alert" class="mx-4 mb-3 rounded-lg border p-3"
+               [class.border-red-400]="safetyBlocking" [class.bg-red-50]="safetyBlocking"
+               [class.border-amber-400]="!safetyBlocking" [class.bg-amber-50]="!safetyBlocking">
+            <p class="text-sm font-semibold" [class.text-red-800]="safetyBlocking" [class.text-amber-900]="!safetyBlocking">
+              {{ safetyBlocking ? 'Serious drug warning: this prescription is not saved yet' : 'Drug warnings' }}
+            </p>
+            <ul class="mt-1 space-y-1">
+              @for (w of safetyWarnings; track $index) {
+                <li class="safety-warning text-sm text-slate-800">
+                  @if (w.blocking) { <b class="text-red-800">Serious:</b> }
+                  {{ w.message }}
+                </li>
+              }
+            </ul>
+            @if (safetyBlocking) {
+              <label class="flex items-start gap-2 mt-2 text-sm text-slate-800">
+                <input id="safety-ack" type="checkbox" class="mt-1" [checked]="safetyAcknowledged"
+                       (change)="safetyAcknowledged = $any($event.target).checked" />
+                I have read these warnings and prescribe anyway.
+              </label>
+              <textarea id="safety-reason" rows="2" maxlength="300" aria-label="Why is this prescription necessary despite the warning"
+                        placeholder="Why is this prescription necessary despite the warning?"
+                        class="mt-2 w-full border border-outline-variant rounded-lg p-2 text-sm bg-white"
+                        [value]="safetyReason" (input)="safetyReason = $any($event.target).value"></textarea>
+              <p class="text-xs text-slate-700 mt-1">Tick the box and give the reason, then press the button again. The reason is kept on the prescription.</p>
+            }
+          </div>
+        }
 
         <div class="p-4 border-t border-gray-100 bg-surface-container-low flex justify-end gap-4">
           @if (savedOffline) {

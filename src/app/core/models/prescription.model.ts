@@ -31,12 +31,17 @@ export interface CreatePrescriptionRequest {
   diagnosis?: string;
   medicines: PrescriptionMedicine[];
   notes?: string;
+  /** The doctor has seen the serious drug warnings and goes ahead; needs overrideReason. */
+  acknowledgeWarnings?: boolean;
+  overrideReason?: string;
 }
 
 export interface UpdatePrescriptionRequest {
   diagnosis?: string;
   notes?: string;
   medicines?: PrescriptionMedicine[];
+  acknowledgeWarnings?: boolean;
+  overrideReason?: string;
 }
 
 export interface PrescriptionTemplate {
