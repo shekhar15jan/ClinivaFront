@@ -11,12 +11,14 @@ import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { EffectiveLicenseService } from '../services/effective-license.service';
+import { SubscriptionStateService } from '../services/subscription-state.service';
 
 @Injectable()
 export class GlobalErrorInterceptor implements HttpInterceptor {
   private toastService = inject(ToastService);
   private router = inject(Router);
   private licenseService = inject(EffectiveLicenseService);
+  private subscription = inject(SubscriptionStateService);
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
@@ -30,6 +32,16 @@ export class GlobalErrorInterceptor implements HttpInterceptor {
             break;
           case 403: {
             const errorMsg = error.error?.message || 'Access denied';
+            const code = error.error?.errorCode;
+            if (code === 'SUBSCRIPTION_READ_ONLY') {
+              // The server explains in plain words (view only after the subscription ended); show that, not a generic error.
+              this.toastService.show(errorMsg, 'warning');
+              break;
+            }
+            if (code === 'SUBSCRIPTION_LOCKED') {
+              this.subscription.markLocked();
+              break;
+            }
             if (errorMsg.toLowerCase().includes('module')) {
               this.toastService.show(
                 'This module is not available in your current plan.',   // the same words as the route guards: one toast, not two
