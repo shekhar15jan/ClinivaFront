@@ -35,4 +35,8 @@ export interface ClinicSettings {
   razorpayWebhookSecret?: string | null;
   /** The last part of this clinic's Razorpay webhook address. */
   clinicCode?: string | null;
+  /** The clinic's GSTIN (optional); with it and a GST rate, invoices show the CGST / SGST split. */
+  gstin?: string | null;
+  /** HSN/SAC code printed on invoices; 9993 when empty. */
+  sacCode?: string | null;
 }
