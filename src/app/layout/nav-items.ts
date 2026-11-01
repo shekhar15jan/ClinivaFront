@@ -51,6 +51,7 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'HR_LINK', label: 'HR & Payroll link', icon: 'sync_alt', route: 'hr-link', perms: ['CLINIC_SETTINGS'] },
   { code: 'ACCOUNTING_LINK', label: 'Accounting link', icon: 'account_balance', route: 'accounting-link', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Settings', icon: 'settings', route: 'settings', perms: ['CLINIC_SETTINGS'] },
+  { code: 'SETTINGS', label: 'Plan & billing', icon: 'credit_card', route: 'settings/plan', perms: ['CLINIC_SETTINGS'] },
   { code: 'SETTINGS', label: 'Email Templates', icon: 'mail', route: 'settings/email-templates', perms: ['CLINIC_SETTINGS'] },
 ];
 
