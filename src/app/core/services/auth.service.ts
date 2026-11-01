@@ -123,6 +123,11 @@ export class AuthService {
     return this.http.post<ApiResponse<{ message: string }>>(`${this.apiUrl}/auth/register`, request);
   }
 
+  /** "Not registered? Ask for access": passed on to the platform by our server; the answer never says whether an account exists. */
+  requestAccess(request: { contact: string; name?: string; consent: boolean; website?: string }): Observable<ApiResponse<{ received: boolean }>> {
+    return this.http.post<ApiResponse<{ received: boolean }>>(`${this.apiUrl}/public/access-request`, request);
+  }
+
   /** Replaces a temporary or expired password. Needs no session: the current password proves identity. */
   changePassword(email: string, currentPassword: string, newPassword: string, tenantCode?: string): Observable<ApiResponse<unknown>> {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/auth/change-password`, {

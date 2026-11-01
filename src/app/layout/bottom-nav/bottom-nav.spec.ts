@@ -36,4 +36,19 @@ describe('BottomNav (phone bar)', () => {
   it('gives a patient their bills, so Pay now is reachable on a phone', () => {
     expect(labels('PATIENT')).toEqual(['Home', 'Appointments', 'Rx', 'Bills', 'Profile']);
   });
+
+  it('More asks the shell to open the menu, where Help is', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: AuthService, useValue: fakeAuth('ADMIN') },
+        { provide: EffectiveLicenseService, useValue: { activeModules: signal(ALL) } },
+      ],
+    });
+    const nav = TestBed.runInInjectionContext(() => new BottomNav());
+    let taps = 0;
+    nav.more.subscribe(() => taps++);
+    nav.more.emit();
+    expect(taps).toBe(1);
+  });
 });

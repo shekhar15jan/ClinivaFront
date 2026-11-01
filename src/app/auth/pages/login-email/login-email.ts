@@ -59,6 +59,16 @@ export class LoginEmail implements OnInit {
     this.signedOutIdle.set(this.route.snapshot?.queryParams?.['reason'] === 'idle');
   }
 
+  goToRegister(): void {
+    this.router.navigate([`/${this.hospitalCode}/register`]);
+  }
+
+  /** Opens the small form that asks the team to set the person up; the typed email is carried over. */
+  goToRequestAccess(): void {
+    this.authService.pendingEmail = this.email || this.authService.pendingEmail;
+    this.router.navigate([`/${this.hospitalCode}/request-access`]);
+  }
+
   goToChangePassword(): void {
     this.authService.pendingEmail = this.email || this.authService.pendingEmail;
     this.router.navigate([`/${this.hospitalCode}/change-password`]);
