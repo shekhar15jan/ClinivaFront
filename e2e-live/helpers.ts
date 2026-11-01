@@ -210,7 +210,8 @@ export async function signInAsNewAdmin(page: Page, request: APIRequestContext, p
     .poll(async () => {
       const res = await request.get(`${CLINIVA}/tenant/resolve-by-email`, { params: { email: tenant.adminEmail } });
       return res.ok() ? ((await res.json()).data ?? []).length : 0;
-    }, { timeout: 30000, message: 'Cliniva knows the new administrator' })
+    // Slow polls: this lookup is limited to 10 a minute per address (anti-enumeration), shared with every sign-in page of the run.
+    }, { timeout: 40000, intervals: [1500, 3000, 5000], message: 'Cliniva knows the new administrator' })
     .toBeGreaterThan(0);
   const changed = await request.post(`${CLINIVA}/auth/change-password`, {
     data: { email: tenant.adminEmail, currentPassword: temporary, newPassword: password },
@@ -223,10 +224,21 @@ export async function signInAsNewAdmin(page: Page, request: APIRequestContext, p
 
 /** Signs `email` in through the real sign-in screens: the emailed one-time code is read from the mailbox. Returns the clinic code. */
 export async function signInWithOtp(page: Page, request: APIRequestContext, email: string): Promise<string> {
-  await page.goto('login');
-  await page.fill('input[type="email"]', email);
-  await page.locator('button[type="submit"]').first().click();
-  await page.waitForURL((url) => CLINIC_LOGIN.test(url.pathname), { timeout: 15000 });
+  // The email lookup is limited per address (10 a minute) and a whole run shares one address: when the page
+  // answers "Too many attempts", wait out the minute and ask again instead of failing.
+  for (let attempt = 1; ; attempt++) {
+    await page.goto('login');
+    await page.fill('input[type="email"]', email);
+    await page.locator('button[type="submit"]').first().click();
+    try {
+      await page.waitForURL((url) => CLINIC_LOGIN.test(url.pathname), { timeout: 15000 });
+      break;
+    } catch (e) {
+      const throttled = await page.getByText(/Too many attempts/i).count();
+      if (!throttled || attempt >= 3) throw e;
+      await page.waitForTimeout(62000);
+    }
+  }
   const hospitalCode = new URL(page.url()).pathname.split('/').slice(-2)[0] /* <clinic>/login, also under /cliniva/ */;
 
   const before = await countMails(request, email, 'otp');

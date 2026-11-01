@@ -192,6 +192,8 @@ for (const role of ROLES) {
       }
       if (screen.name === 'surgery') {
         const consent = page.locator('#step-consent');
+        // A missing step (page bounced or failed to load) is a finding, not a 5-minute wait.
+        if (await consent.count() === 0) { failures.push(`surgery: consent step not on the page for ${role} (at ${page.url()})`); continue; }
         const enabled = await consent.isEnabled();
         if (enabled !== has(role, 'OT_RECORD')) failures.push(`surgery: consent step ${enabled ? 'usable' : 'locked'} for ${role}`);
       }
