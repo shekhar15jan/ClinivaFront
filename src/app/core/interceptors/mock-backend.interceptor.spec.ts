@@ -4,6 +4,8 @@ import { MockBackendInterceptor } from './mock-backend.interceptor';
 import { firstValueFrom } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { EffectiveLicenseService } from '../../core/services/effective-license.service';
+import { of } from 'rxjs';
 
 describe('MockBackendInterceptor', () => {
   let http: HttpClient;
@@ -16,6 +18,8 @@ describe('MockBackendInterceptor', () => {
     TestBed.configureTestingModule({
       imports: [HttpClientModule],
       providers: [
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        
         { provide: HTTP_INTERCEPTORS, useClass: MockBackendInterceptor, multi: true },
       ],
     });

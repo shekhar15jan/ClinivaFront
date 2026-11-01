@@ -7,6 +7,8 @@ import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from '../core/interceptors/auth.interceptor';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { EffectiveLicenseService } from '../core/services/effective-license.service';
+import { of } from 'rxjs';
 
 describe('Auth Flow Integration', () => {
   let authService: AuthService;
@@ -21,6 +23,8 @@ describe('Auth Flow Integration', () => {
         ]),
       ],
       providers: [
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        
         AuthService,
         AuthGuard,
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

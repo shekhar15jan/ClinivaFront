@@ -2,20 +2,25 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
 import { TenantContextService } from './tenant-context.service';
+import { EffectiveLicenseService } from './effective-license.service';
 import { SendOtpRequest, VerifyOtpRequest } from '../models/auth.model';
 import { ApiResponse } from '../models/common.model';
 import { vi } from 'vitest';
+import { of, throwError } from 'rxjs';
 
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
+  const license = { loadLicense: vi.fn() };
 
   beforeEach(() => {
+    license.loadLicense.mockReset().mockReturnValue(of({}));
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         AuthService,
         { provide: TenantContextService, useValue: { clear: vi.fn() } },
+        { provide: EffectiveLicenseService, useValue: license },
       ],
     });
     service = TestBed.inject(AuthService);
@@ -151,6 +156,57 @@ describe('AuthService', () => {
 
     it('getToken should return null when no token stored', () => {
       expect(service.getToken()).toBeNull();
+    });
+  });
+
+  describe('the clinic licence after sign-in', () => {
+    const signIn = (flush: () => void) => {
+      let done = false;
+      service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe(() => (done = true));
+      flush();
+      return () => done;
+    };
+    const answer = () =>
+      httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`).flush({
+        success: true,
+        data: { token: 't', refreshToken: 'r', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' } },
+      });
+
+    it('loads the signed-in clinic licence (modules and limits) before the first screen opens', () => {
+      const finished = signIn(answer);
+
+      expect(license.loadLicense).toHaveBeenCalledTimes(1);
+      expect(finished()).toBe(true);
+    });
+
+    it('still signs in when the licence cannot be loaded', () => {
+      license.loadLicense.mockReturnValue(throwError(() => new Error('network')));
+
+      const finished = signIn(answer);
+
+      expect(finished()).toBe(true);
+      expect(service.isLoggedIn()).toBe(true);
+    });
+
+    it('does not load a licence when the code was wrong', () => {
+      service.verifyOtp({ email: 'test@cliniva.com', otp: '000000' }).subscribe();
+      httpMock.expectOne(`${service['apiUrl']}/auth/verify-otp`).flush({ success: false, message: 'Invalid code' });
+
+      expect(license.loadLicense).not.toHaveBeenCalled();
+    });
+
+    it('loads it again when the session is restored after a page reload', async () => {
+      localStorage.setItem('cliniva_signed_in', '1');
+      const restored = service.silentRefresh();
+      httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({
+        success: true,
+        data: { token: 't2', refreshToken: 'r2', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' } },
+      });
+      await restored;
+
+      expect(license.loadLicense).toHaveBeenCalledTimes(1);
+      expect(service.isLoggedIn()).toBe(true);
+      localStorage.removeItem('cliniva_signed_in');
     });
   });
 });

@@ -6,6 +6,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiResponse, PagedResponse } from '../../../../core/models/common.model';
 import { Medicine } from '../../../../core/models/medicine.model';
+import { EffectiveLicenseService } from '../../../../core/services/effective-license.service';
 
 describe('MedicineCatalog', () => {
   const mockMedicine: Medicine = { id: 'm1', medicineName: 'Paracetamol', genericName: 'Acetaminophen', manufacturer: 'Cipla', category: 'Analgesic', unit: 'tablet', priceInPaisa: 1000, quantity: 100, isDiscontinued: false, createdAt: '2026-01-01' };
@@ -17,6 +18,8 @@ describe('MedicineCatalog', () => {
   function createComponent(overrides?: Partial<MedicineService>) {
     TestBed.configureTestingModule({
       providers: [
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        
         FormBuilder,
         { provide: MedicineService, useValue: { getMedicines: vi.fn().mockReturnValue(of(mockPaged)), searchMedicines: vi.fn().mockReturnValue(of(mockSearchResponse)), createMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'created', timestamp: '', requestId: 'r1' })), updateMedicine: vi.fn().mockReturnValue(of({ success: true, data: mockMedicine, message: 'updated', timestamp: '', requestId: 'r1' })), deactivate: vi.fn().mockReturnValue(of({ success: true })), uploadMedicines: vi.fn(), ...overrides } },
       ],

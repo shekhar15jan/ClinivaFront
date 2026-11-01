@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, map, firstValueFrom, of, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, switchMap, firstValueFrom, of, combineLatest } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../models/auth.model';
 import { ApiResponse } from '../models/common.model';
 import { TenantContextService } from './tenant-context.service';
+import { EffectiveLicenseService } from './effective-license.service';
 import { TenantResolution } from '../models/tenant.model';
 import { environment } from '../../../environments/environment';
 import { homeCurrency } from '../utils/money';
@@ -21,6 +22,7 @@ import { homeCurrency } from '../utils/money';
 export class AuthService {
   private http = inject(HttpClient);
   private tenantContext = inject(TenantContextService);
+  private licenseService = inject(EffectiveLicenseService);
 
   private readonly apiUrl = `${environment.apiUrl}`;
   /**
@@ -130,6 +132,13 @@ export class AuthService {
             this.setSession(response.data);
           }
         }),
+        // The screens decide what to show from the clinic's licence (modules and limits). The public lookup before sign-in
+        // no longer carries it, so it is loaded here, before the first screen opens. A failure must not fail the sign-in.
+        switchMap((response) =>
+          response.success && response.data
+            ? this.licenseService.loadLicense().pipe(map(() => response), catchError(() => of(response)))
+            : of(response),
+        ),
       );
   }
 
@@ -201,6 +210,8 @@ export class AuthService {
     const response = await firstValueFrom(this.postRefresh().pipe(catchError(() => of(null))));
     if (response?.success && response.data) {
       this.setSession(this.normalizeResponse(response.data));
+      // After a page reload the licence is gone with the page; load it before the first screen is shown.
+      await firstValueFrom(this.licenseService.loadLicense().pipe(catchError(() => of(null))));
     } else {
       this.clearSession();
     }

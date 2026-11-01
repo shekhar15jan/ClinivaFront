@@ -6,6 +6,8 @@ import { AuthResponse } from '../models/auth.model';
 import { ApiResponse } from '../models/common.model';
 import { TenantResolution } from '../models/tenant.model';
 import { environment } from '../../../environments/environment';
+import { EffectiveLicenseService } from './effective-license.service';
+import { of } from 'rxjs';
 
 describe('AuthService — Full Coverage', () => {
   let service: AuthService;
@@ -24,7 +26,9 @@ describe('AuthService — Full Coverage', () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [AuthService, TenantContextService],
+      providers: [
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        AuthService, TenantContextService],
     });
     service = TestBed.inject(AuthService);
     httpMock = TestBed.inject(HttpTestingController);

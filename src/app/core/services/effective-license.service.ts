@@ -138,6 +138,11 @@ export class EffectiveLicenseService {
       maxPatients?: number;
     },
   ): void {
+    // The public clinic lookup (before sign-in) gives the clinic's identity only: no modules. It must not wipe the
+    // signed-in clinic's real licence, which is loaded from the server after sign-in.
+    if (modules.length === 0 && this.license() !== null) {
+      return;
+    }
     const effectiveModules: EffectiveModule[] = modules.map((m) => ({
       moduleCode: m.moduleCode,
       moduleName: m.moduleName,

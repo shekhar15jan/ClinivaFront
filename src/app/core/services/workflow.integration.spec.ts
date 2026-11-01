@@ -11,6 +11,8 @@ import { BillingService } from './billing.service';
 import { PaymentService } from './payment.service';
 import { AuthResponse, SendOtpRequest } from '../models/auth.model';
 import { ApiResponse } from '../models/common.model';
+import { EffectiveLicenseService } from './effective-license.service';
+import { of } from 'rxjs';
 
 describe('Full Workflow Integration: Patient → Appointment → Consultation → Prescription → Billing → Payment', () => {
   let authService: AuthService;
@@ -34,6 +36,8 @@ describe('Full Workflow Integration: Patient → Appointment → Consultation �
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
+        { provide: EffectiveLicenseService, useValue: { loadLicense: () => of({}), clear: () => undefined, setLicenseFromTenantContext: () => undefined } },
+        
         AuthService, PatientService, DoctorService, AppointmentService,
         ConsultationService, PrescriptionService, BillingService, PaymentService,
       ],

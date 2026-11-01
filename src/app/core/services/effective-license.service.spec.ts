@@ -258,6 +258,28 @@ describe('EffectiveLicenseService', () => {
     });
   });
 
+  describe('the public lookup before sign-in', () => {
+    it('does not replace a licence that is already loaded when it carries no modules', () => {
+      service.setLicenseFromTenantContext(
+        [{ moduleCode: 'PATIENT', moduleName: 'Patients', status: 'ACTIVE', isCore: true, source: 'PLAN' }],
+        { planName: 'Plus', status: 'ACTIVE', endDate: '' },
+      );
+
+      service.setLicenseFromTenantContext([], { planName: '', status: 'PENDING', endDate: '' });
+
+      expect(service.activeModules()).toContain('PATIENT');
+    });
+
+    it('does fill the licence in when none is loaded yet', () => {
+      service.setLicenseFromTenantContext(
+        [{ moduleCode: 'PATIENT', moduleName: 'Patients', status: 'ACTIVE', isCore: true, source: 'PLAN' }],
+        { planName: 'Plus', status: 'ACTIVE', endDate: '' },
+      );
+
+      expect(service.activeModules()).toContain('PATIENT');
+    });
+  });
+
   describe('setLicenseFromTenantContext', () => {
     it('should set license from modules and subscription data', () => {
       service.setLicenseFromTenantContext(
