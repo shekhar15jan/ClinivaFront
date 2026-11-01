@@ -10,7 +10,7 @@ export const CLINIVA = process.env.CLINIVA_API || 'http://localhost:8080/api/v1'
 const OPERATOR_EMAIL = process.env.CLOUDSUITE_ADMIN_EMAIL || 'admin@codeatcloud.in';
 const OPERATOR_PASSWORD = process.env.CLOUDSUITE_ADMIN_PASSWORD || 'admin';
 
-/** CloudSuite wraps most answers as { success, data }; the support-access and oversight endpoints answer the bare JSON. */
+/** CloudSuite wraps EVERY answer as { success, data } (its global response advice does, including the support-access and oversight endpoints). */
 export function unwrap<T = any>(body: any): T {
   return body && typeof body === 'object' && 'success' in body && 'data' in body ? body.data : body;
 }
@@ -26,7 +26,7 @@ export interface CloudSuiteCall {
   text: string;
 }
 
-/** A small caller for CloudSuite with a bearer token; never throws on a non-2xx answer. */
+/** A small caller for CloudSuite with a bearer token; never throws on a non-2xx answer. The body is unwrapped from { success, data }. */
 export function cloudSuite(request: APIRequestContext, token?: string) {
   return async (method: string, path: string, data?: unknown): Promise<CloudSuiteCall> => {
     const res = await request.fetch(`${CLOUDSUITE}${path}`, {
@@ -36,7 +36,7 @@ export function cloudSuite(request: APIRequestContext, token?: string) {
     });
     const text = await res.text();
     let body: any = null;
-    try { body = text ? JSON.parse(text) : null; } catch { body = null; }
+    try { body = unwrap(text ? JSON.parse(text) : null); } catch { body = null; }
     return { status: res.status(), body, text };
   };
 }
