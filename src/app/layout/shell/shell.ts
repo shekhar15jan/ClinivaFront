@@ -10,12 +10,13 @@ import { filter, map } from 'rxjs/operators';
 import { SubscriptionBannerComponent } from '../../shared/components/subscription-banner/subscription-banner.component';
 import { SubscriptionLockedComponent } from '../../shared/components/subscription-banner/subscription-locked.component';
 import { SubscriptionStateService } from '../../core/services/subscription-state.service';
+import { TourComponent } from '../../modules/help/tour.component';
 
 @Component({
   selector: 'app-shell',
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
-  imports: [Sidebar, Header, BottomNav, MobileDrawer, FabComponent, RouterOutlet, SubscriptionBannerComponent, SubscriptionLockedComponent],
+  imports: [Sidebar, Header, BottomNav, MobileDrawer, FabComponent, RouterOutlet, SubscriptionBannerComponent, SubscriptionLockedComponent, TourComponent],
 })
 export class Shell {
   protected readonly drawerOpen = signal(false);

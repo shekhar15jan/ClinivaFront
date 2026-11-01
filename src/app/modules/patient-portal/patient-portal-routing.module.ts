@@ -13,6 +13,7 @@ const routes: Routes = [
   { path: 'bills', component: MyBills },
   { path: 'profile', component: MyProfile },
   { path: 'privacy', loadComponent: () => import('./pages/my-privacy/my-privacy').then((m) => m.MyPrivacy) },
+  { path: 'help', loadComponent: () => import('../help/help-page').then((m) => m.HelpPageComponent) },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];
 

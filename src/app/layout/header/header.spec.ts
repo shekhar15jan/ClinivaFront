@@ -34,6 +34,13 @@ describe('Header', () => {
     expect(create('ADMIN', ['PATIENT']).canBook).toBe(false);
   });
 
+  it('opens Help in the clinic, and a patient in the portal', () => {
+    create('DOCTOR').openHelp();
+    expect(router.navigate).toHaveBeenCalledWith(['/', 'sai-clinic', 'help']);
+    create('PATIENT').openHelp();
+    expect(router.navigate).toHaveBeenCalledWith(['/', 'sai-clinic', 'patient', 'help']);
+  });
+
   it('opens booking in the current clinic', () => {
     create('RECEPTIONIST').newAppointment();
     expect(router.navigate).toHaveBeenCalledWith(['/', 'sai-clinic', 'appointments', 'book']);
