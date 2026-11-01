@@ -133,7 +133,10 @@ export async function provisionTenant(request: APIRequestContext, planCode = 'CL
   expect(hms, 'HMS product registered in CloudSuite').toBeTruthy();
   const planList = (await (await request.get(`${CLOUDSUITE}/platform/plans`, { headers, params: { productId: hms.id } })).json()).data;
   const plans: Record<string, string> = Object.fromEntries(planList.map((p: any) => [p.code, p.id]));
-  if (planCode === 'HMS_FULL') {
+  if (planCode === 'HMS_FULL' || planCode === 'HMS_FULL_TRIAL') {
+    // HMS_FULL_TRIAL is the same plan at price 0: a paid plan ends the free trial at once, so a clinic that must
+    // show the trial banner and trial dates is given the free one.
+    const planPrice = planCode === 'HMS_FULL' ? 1 : 0;
     // A plan with every real HMS module, so one clinic can exercise the whole product. Cliniva's catalog grows
     // (new modules each step), so the platform re-reads it and the plan is brought up to date every time.
     const synced = await request.post(`${CLOUDSUITE}/platform/products/${hms.id}/sync-modules`, { headers });
@@ -141,16 +144,16 @@ export async function provisionTenant(request: APIRequestContext, planCode = 'CL
     const modules = (await (await request.get(`${CLOUDSUITE}/platform/products/${hms.id}/modules`, { headers })).json()).data
       .filter((m: any) => !String(m.code).startsWith('E2E_'))
       .map((m: any) => ({ moduleId: m.id, isAddon: false }));
-    if (plans['HMS_FULL']) {
-      const updated = await request.put(`${CLOUDSUITE}/platform/plans/${plans['HMS_FULL']}`, { headers, data: { modules } });
-      expect(updated.ok(), `bring the HMS_FULL plan up to date (${updated.status()})`).toBeTruthy();
+    if (plans[planCode]) {
+      const updated = await request.put(`${CLOUDSUITE}/platform/plans/${plans[planCode]}`, { headers, data: { modules } });
+      expect(updated.ok(), `bring the ${planCode} plan up to date (${updated.status()})`).toBeTruthy();
     } else {
       const made = await request.post(`${CLOUDSUITE}/platform/plans`, {
         headers,
-        data: { code: 'HMS_FULL', name: 'HMS Full (live tests)', price: 1, billingCycle: 'MONTHLY', productId: hms.id, modules },
+        data: { code: planCode, name: `${planCode === 'HMS_FULL' ? 'HMS Full' : 'HMS Full trial'} (live tests)`, price: planPrice, billingCycle: 'MONTHLY', productId: hms.id, modules },
       });
       expect(made.ok(), 'create the HMS_FULL plan').toBeTruthy();
-      plans['HMS_FULL'] = (await made.json()).data.id;
+      plans[planCode] = (await made.json()).data.id;
     }
   }
   expect(plans[planCode], `plan ${planCode}`).toBeTruthy();

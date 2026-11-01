@@ -9,7 +9,7 @@ import { bearerOf, cliniva, cloudSuite, operatorToken } from './helpers-cross';
 test.describe('Subscription state, clinic over CloudSuite', () => {
   test('a new clinic shows the trial banner with the days left, and Choose a plan leads to Plan and billing @desktop', async ({ page, request }) => {
     // Step 1: fresh clinic, owner signed in.
-    const admin = await signInAsNewAdmin(page, request, 'HMS_FULL');
+    const admin = await signInAsNewAdmin(page, request, 'HMS_FULL_TRIAL');
     const code = admin.hospitalCode;
 
     // Step 2: the trial banner is across the top, with a day count (or "last day" / "1 day left").
