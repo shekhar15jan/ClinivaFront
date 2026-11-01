@@ -1,3 +1,4 @@
+import { ConsentFormsPanel } from '../../components/consent-forms-panel';
 import { Component, OnInit, inject } from '@angular/core';
 import { PatientConsentsComponent } from '../../../privacy/patient-consents';
 import { PatientRetentionComponent } from '../../../privacy/patient-retention';
@@ -31,7 +32,7 @@ export const bloodGroupLabel = (code?: string): string => BLOOD_GROUPS.find(([c]
   selector: 'app-patient-detail',
   templateUrl: './patient-detail.html',
   styleUrl: './patient-detail.scss',
-  imports: [RouterLink, FormsModule, ConfirmDialogComponent, DatePipe, PatientConsentsComponent, PatientRetentionComponent],
+  imports: [RouterLink, FormsModule, ConfirmDialogComponent, DatePipe, PatientConsentsComponent, PatientRetentionComponent, ConsentFormsPanel],
 })
 export class PatientDetail implements OnInit {
   private route = inject(ActivatedRoute);
@@ -94,6 +95,11 @@ export class PatientDetail implements OnInit {
    */
   get seesClinical(): boolean {
     return this.auth.can('CLINICAL_VIEW') && (this.access?.clinical ?? true);
+  }
+
+  /** The roles the server lets write up and record consent forms: doctor, nurse and receptionist. */
+  get canEditConsentForms(): boolean {
+    return ['DOCTOR', 'NURSE', 'RECEPTIONIST'].includes(this.auth.currentUserValue?.role ?? '');
   }
 
   get canDelete(): boolean {

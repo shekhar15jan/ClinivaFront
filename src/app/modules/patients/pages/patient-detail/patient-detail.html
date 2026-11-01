@@ -64,6 +64,9 @@
       </div>
     }
     <app-patient-consents [patientId]="patient.id" [canEdit]="canEdit" [canExport]="canExportData"></app-patient-consents>
+    @if (seesClinical) {
+      <app-consent-forms-panel [patientId]="patient.id" [canEdit]="canEditConsentForms"></app-consent-forms-panel>
+    }
     @if (canExportData) {
       <app-patient-retention [patientId]="patient.id" (anonymised)="load(patient.id)"></app-patient-retention>
     }
