@@ -256,9 +256,25 @@ export class AuthService {
       return;
     }
     if (!this.hadSession()) return;
-    const response = await firstValueFrom(this.postRefresh().pipe(catchError(() => of(null))));
+    let failedWith = 0;
+    const attempt = () => firstValueFrom(this.postRefresh().pipe(catchError((e: { status?: number }) => {
+      failedWith = e?.status ?? 0;
+      return of(null);
+    })));
+    let response = await attempt();
+    // A busy server (429), a gateway hiccup (5xx) or a network blip (0) is not a sign-out: try once more shortly.
+    if (!response && (failedWith === 0 || failedWith === 429 || failedWith >= 500)) {
+      await new Promise((r) => setTimeout(r, 1500));
+      response = await attempt();
+    }
     if (response?.success && response.data) {
       this.setSession(this.normalizeResponse(response.data));
+    } else if (response === null && (failedWith === 0 || failedWith === 429 || failedWith >= 500)) {
+      // Still unreachable: stay signed out for now but keep the "had a session" mark, so the next load asks again
+      // instead of treating a temporary outage as the end of the session.
+      this.accessToken = null;
+      this.currentUserSubject.next(null);
+      this.currentUser.set(null);
     } else {
       this.clearSession();
     }

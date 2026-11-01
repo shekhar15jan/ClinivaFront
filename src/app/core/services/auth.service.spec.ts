@@ -249,6 +249,46 @@ describe('AuthService', () => {
       localStorage.removeItem('cliniva_signed_in');
     });
 
+    describe('restoring the session after a reload when the refresh fails', () => {
+      afterEach(() => { localStorage.removeItem('cliniva_signed_in'); vi.useRealTimers(); });
+
+      it('signs out for good when the server says the session is not valid (401)', async () => {
+        localStorage.setItem('cliniva_signed_in', '1');
+        const restored = service.silentRefresh();
+        httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({ message: 'expired' }, { status: 401, statusText: 'Unauthorized' });
+        await restored;
+        expect(service.isLoggedIn()).toBe(false);
+        expect(localStorage.getItem('cliniva_signed_in')).toBeNull();
+      });
+
+      it('tries once more when the server is busy (429), and then signs in', async () => {
+        vi.useFakeTimers();
+        localStorage.setItem('cliniva_signed_in', '1');
+        const restored = service.silentRefresh();
+        httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({}, { status: 429, statusText: 'Too Many Requests' });
+        await vi.advanceTimersByTimeAsync(1600);
+        httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({
+          success: true,
+          data: { token: 't9', refreshToken: 'r9', user: { id: 'u1', email: 'test@cliniva.com', role: 'ADMIN' },
+            tenant: { id: 't1', name: 'Clinic', activeModules: ['PATIENT'] } },
+        });
+        await restored;
+        expect(service.isLoggedIn()).toBe(true);
+      });
+
+      it('keeps the "had a session" mark when the server stays unreachable, so the next load asks again', async () => {
+        vi.useFakeTimers();
+        localStorage.setItem('cliniva_signed_in', '1');
+        const restored = service.silentRefresh();
+        httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).error(new ProgressEvent('error'), { status: 0 });
+        await vi.advanceTimersByTimeAsync(1600);
+        httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({}, { status: 503, statusText: 'Service Unavailable' });
+        await restored;
+        expect(service.isLoggedIn()).toBe(false);
+        expect(localStorage.getItem('cliniva_signed_in')).toBe('1');
+      });
+    });
+
     it('leaves the licence alone on the routine token renewal', async () => {
       const renewed = new Promise<string>((resolve) => service.refreshToken().subscribe(resolve));
       httpMock.expectOne(`${service['apiUrl']}/auth/refresh`).flush({
