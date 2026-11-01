@@ -77,7 +77,10 @@ export async function nextMail(request: APIRequestContext, address: string, text
 export function temporaryPasswordFrom(mail: Mail): string {
   const match = mail.body.match(/monospace">\s*([^<\s]+)\s*</);
   expect(match, 'temporary password in the welcome email').toBeTruthy();
-  return match![1];
+  // The mail is HTML: a password with & < > " ' arrives as an entity, which a mail client shows as the real character.
+  return match![1]
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;/g, "'").replace(/&amp;/g, '&');
 }
 
 export function otpFrom(mail: Mail): string {
