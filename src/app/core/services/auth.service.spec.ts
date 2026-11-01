@@ -11,7 +11,7 @@ import { of, throwError } from 'rxjs';
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
-  const license = { loadLicense: vi.fn() };
+  const license = { loadLicense: vi.fn(), seedModules: vi.fn() };
 
   beforeEach(() => {
     license.loadLicense.mockReset().mockReturnValue(of({}));
