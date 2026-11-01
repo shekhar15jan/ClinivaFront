@@ -1,0 +1,31 @@
+<div class="space-y-lg">
+  <header class="rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white px-md py-md">
+    <h2 class="text-headline-md font-bold mb-xs">Ask for access</h2>
+    <p class="text-body-md">Leave your email or mobile and we will get in touch to set you up.</p>
+  </header>
+
+  @if (error()) {
+    <div id="access-error" class="bg-red-50 text-red-900 px-md py-sm rounded-lg text-body-sm" role="alert">{{ error() }}</div>
+  }
+
+  @if (sent()) {
+    <div id="access-sent" class="bg-emerald-50 text-emerald-900 px-md py-md rounded-lg" role="status">Thanks, we will contact you.</div>
+    <button id="access-back" type="button" (click)="goToLogin()" class="w-full bg-sky-600 text-white font-semibold py-4 rounded-lg">Back to sign in</button>
+  } @else {
+    <form (ngSubmit)="submit()" class="space-y-md">
+      <input name="contact" id="contact" [(ngModel)]="contact" placeholder="Email or mobile number" class="w-full px-md py-4 rounded-lg border border-slate-300" />
+      <input name="name" id="name" [(ngModel)]="name" placeholder="Your name (optional)" autocomplete="name" class="w-full px-md py-4 rounded-lg border border-slate-300" />
+      <input name="website" [(ngModel)]="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hidden" />
+      <label class="flex items-start gap-sm text-body-sm text-slate-700">
+        <input name="consent" id="consent" type="checkbox" [(ngModel)]="consent" class="mt-1 h-5 w-5" />
+        <span>You may contact me about setting up my access.</span>
+      </label>
+      <button id="access-send" type="submit" [disabled]="loading()" class="w-full bg-sky-600 text-white font-semibold py-4 rounded-lg disabled:opacity-50">
+        {{ loading() ? 'Sending...' : 'Ask for access' }}
+      </button>
+    </form>
+    <div class="text-center">
+      <button id="access-cancel" type="button" (click)="goToLogin()" class="text-body-sm text-sky-700 underline">Back to sign in</button>
+    </div>
+  }
+</div>

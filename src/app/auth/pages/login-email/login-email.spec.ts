@@ -28,6 +28,14 @@ function createLoginEmail() {
 }
 
 describe('LoginEmail', () => {
+  it('goToRequestAccess opens the access form and keeps the typed email', () => {
+    const { component, routerSpy, authSpy } = createLoginEmail();
+    component.email = 'new@person.test';
+    component.goToRequestAccess();
+    expect(authSpy.pendingEmail).toBe('new@person.test');
+    expect(routerSpy.navigate).toHaveBeenCalledWith(['/test-hospital/request-access']);
+  });
+
   it('goToRegister opens the registration page of the clinic', () => {
     const { component, routerSpy } = createLoginEmail();
     component.goToRegister();

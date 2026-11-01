@@ -7,6 +7,7 @@ import { LoginEmail } from './pages/login-email/login-email';
 import { LoginOtp } from './pages/login-otp/login-otp';
 import { ChangePassword } from './pages/change-password/change-password';
 import { RegisterPatient } from './pages/register-patient/register-patient';
+import { RequestAccess } from './pages/request-access/request-access';
 import { AuthShell } from './pages/auth-shell/auth-shell';
 
 @NgModule({
@@ -19,6 +20,7 @@ import { AuthShell } from './pages/auth-shell/auth-shell';
     LoginOtp,
     ChangePassword,
     RegisterPatient,
+    RequestAccess,
     AuthShell,
   ],
 })
