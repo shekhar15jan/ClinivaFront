@@ -22,7 +22,7 @@ const saved: ClinicSettings = {
 const ok = (data: ClinicSettings) => ({ success: true, data, message: 'ok', timestamp: '', requestId: 'r' });
 
 describe('ClinicSettingsPage', () => {
-  let service: { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; uploadLogo: ReturnType<typeof vi.fn>; removeLogo: ReturnType<typeof vi.fn> };
+  let service: { get: ReturnType<typeof vi.fn>; update: ReturnType<typeof vi.fn>; uploadLogo: ReturnType<typeof vi.fn>; removeLogo: ReturnType<typeof vi.fn>; getReminders: ReturnType<typeof vi.fn>; setReminders: ReturnType<typeof vi.fn> };
   let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   function create() {
@@ -31,6 +31,8 @@ describe('ClinicSettingsPage', () => {
       update: vi.fn().mockImplementation((s: ClinicSettings) => of(ok(s))),
       uploadLogo: vi.fn().mockReturnValue(of(ok({ ...saved, logoUrl: '/api/v1/public/media/abc' }))),
       removeLogo: vi.fn().mockReturnValue(of(ok({ ...saved, logoUrl: null }))),
+      getReminders: vi.fn().mockReturnValue(of({ success: true, data: { enabled: true } })),
+      setReminders: vi.fn().mockImplementation((enabled: boolean) => of({ success: true, data: { enabled } })),
     };
     toast = { success: vi.fn(), error: vi.fn() };
     TestBed.configureTestingModule({
@@ -197,6 +199,23 @@ describe('ClinicSettingsPage', () => {
       component.onLogoSelected({ target: { files: [big], value: 'x' } } as unknown as Event);
       expect(service['uploadLogo']).not.toHaveBeenCalled();
       expect(toast.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('appointment reminders', () => {
+    it('shows the saved choice', () => {
+      const c = create();
+      expect(service.getReminders).toHaveBeenCalled();
+      expect(c.appointmentReminders).toBe(true);
+    });
+
+    it('saves the choice with the other settings', () => {
+      const c = create();
+      c.appointmentReminders = false;
+
+      c.save();
+
+      expect(service.setReminders).toHaveBeenCalledWith(false);
     });
   });
 });

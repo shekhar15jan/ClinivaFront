@@ -236,6 +236,15 @@ import { ExchangeRatesComponent } from './exchange-rates';
               />
               <span class="text-sm text-[#475569]">Enable OTP-based Login</span>
             </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input
+                id="appointment-reminders"
+                type="checkbox"
+                [(ngModel)]="appointmentReminders"
+                class="w-4 h-4 rounded border-gray-300 text-[#0052CC] focus:ring-[#0052CC]"
+              />
+              <span class="text-sm text-[#475569]">Email patients a reminder the day before their appointment</span>
+            </label>
           </div>
         </div>
 
@@ -398,6 +407,8 @@ export class ClinicSettingsPage implements OnInit {
   isLoading = false;
   isSaving = false;
   error = '';
+  /** Patients get an email the day before their appointment (saved with the other settings). */
+  appointmentReminders = true;
 
   ngOnInit(): void {
     this.load();
@@ -415,6 +426,10 @@ export class ClinicSettingsPage implements OnInit {
           this.defaultFee = fromMinor(res.data.defaultConsultationFeeInPaisa ?? 0);
         }
         this.isLoading = false;
+        this.settingService.getReminders().subscribe({
+          next: (r) => (this.appointmentReminders = r.success && r.data ? r.data.enabled : true),
+          error: () => undefined,
+        });
       },
       error: (err) => {
         this.isLoading = false;
@@ -456,6 +471,7 @@ export class ClinicSettingsPage implements OnInit {
       this.toast.error('Enter the Razorpay key secret for this Key ID.');
       return;
     }
+    this.settingService.setReminders(this.appointmentReminders).subscribe({ error: () => undefined });
     this.isSaving = true;
     this.settingService
       .update({

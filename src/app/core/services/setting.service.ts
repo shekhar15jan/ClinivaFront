@@ -16,6 +16,15 @@ export class SettingService {
     return this.http.get<ApiResponse<ClinicProfile>>(`${this.baseUrl}/profile`);
   }
 
+  /** Whether patients get an email the day before their appointment. */
+  getReminders(): Observable<ApiResponse<{ enabled: boolean }>> {
+    return this.http.get<ApiResponse<{ enabled: boolean }>>(`${this.baseUrl}/reminders`);
+  }
+
+  setReminders(enabled: boolean): Observable<ApiResponse<{ enabled: boolean }>> {
+    return this.http.put<ApiResponse<{ enabled: boolean }>>(`${this.baseUrl}/reminders`, { enabled });
+  }
+
   get(): Observable<ApiResponse<ClinicSettings>> {
     return this.http.get<ApiResponse<ClinicSettings>>(this.baseUrl);
   }
