@@ -24,8 +24,8 @@ describe('staff menu', () => {
   });
 
   it('hides what the plan does not include, but always offers the dashboard', () => {
-    expect(labels('ADMIN', [])).toEqual(['Dashboard']);
-    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Online requests', 'Privacy']);
+    expect(labels('ADMIN', [])).toEqual(['Dashboard', 'Support access']);
+    expect(labels('ADMIN', ['PATIENT', 'DOCTOR', 'APPOINTMENT'])).toEqual(['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Online requests', 'Support access', 'Privacy']);
   });
 
   it('offers departments, emergency access and roles only when the plan includes those modules', () => {
@@ -33,14 +33,14 @@ describe('staff menu', () => {
     for (const label of ['Departments', 'Emergency Access', 'Roles']) {
       expect(without).not.toContain(label);
     }
-    expect(labels('ADMIN', ['DEPARTMENT'])).toEqual(['Dashboard', 'Departments', 'Emergency Access']);
+    expect(labels('ADMIN', ['DEPARTMENT'])).toEqual(['Dashboard', 'Departments', 'Support access', 'Emergency Access']);
     // Beds and admissions come with a plan for clinics with beds.
-    expect(labels('ADMIN', ['IPD'])).toEqual(['Dashboard', 'Beds', 'Admissions']);
+    expect(labels('ADMIN', ['IPD'])).toEqual(['Dashboard', 'Beds', 'Admissions', 'Support access']);
     expect(labels('PHARMACIST', ['IPD'])).toEqual(['Dashboard', 'Beds', 'Admissions']);
     expect(labels('PATIENT', ['IPD'])).toEqual(['Dashboard']);
     expect(labels('NURSE', ['IPD', 'NURSING'])).toEqual(['Dashboard', 'Beds', 'Admissions', 'Ward round']);
     expect(labels('RECEPTIONIST', ['IPD', 'NURSING'])).toEqual(['Dashboard', 'Beds', 'Admissions']);
-    expect(labels('ADMIN', ['CUSTOM_ROLE'])).toEqual(['Dashboard', 'Roles']);
+    expect(labels('ADMIN', ['CUSTOM_ROLE'])).toEqual(['Dashboard', 'Support access', 'Roles']);
   });
 
   it('offers a receptionist the front desk screens and nothing the API would refuse', () => {

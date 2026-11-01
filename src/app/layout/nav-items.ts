@@ -43,6 +43,8 @@ export const STAFF_NAV: NavItem[] = [
   { code: 'DEPARTMENT', label: 'Departments', icon: 'domain', route: 'departments', perms: ['DEPARTMENT_MANAGE'] },
   { code: 'CONTACT', label: 'Contact Messages', icon: 'contact_mail', route: 'contacts', perms: ['WEBSITE_MANAGE'] },
   { code: 'REVIEW', label: 'Reviews', icon: 'star', route: 'reviews', perms: ['WEBSITE_MANAGE'] },
+  // Not plan-gated (every clinic can approve or refuse support), so it uses the always-on code.
+  { code: 'DASHBOARD', label: 'Support access', icon: 'support_agent', route: 'support-access', perms: ['USER_MANAGE'] },
   { code: 'USER', label: 'Users', icon: 'group', route: 'users', perms: ['USER_MANAGE'] },
   { code: 'CUSTOM_ROLE', label: 'Roles', icon: 'admin_panel_settings', route: 'roles', perms: ['USER_MANAGE'] },
   { code: 'PATIENT', label: 'Privacy', icon: 'shield_person', route: 'privacy', perms: ['PRIVACY_MANAGE'] },

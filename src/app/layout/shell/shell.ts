@@ -11,12 +11,13 @@ import { SubscriptionBannerComponent } from '../../shared/components/subscriptio
 import { SubscriptionLockedComponent } from '../../shared/components/subscription-banner/subscription-locked.component';
 import { SubscriptionStateService } from '../../core/services/subscription-state.service';
 import { TourComponent } from '../../modules/help/tour.component';
+import { SupportBannerComponent } from '../../modules/support-access/support-banner';
 
 @Component({
   selector: 'app-shell',
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
-  imports: [Sidebar, Header, BottomNav, MobileDrawer, FabComponent, RouterOutlet, SubscriptionBannerComponent, SubscriptionLockedComponent, TourComponent],
+  imports: [Sidebar, Header, BottomNav, MobileDrawer, FabComponent, RouterOutlet, SubscriptionBannerComponent, SubscriptionLockedComponent, TourComponent, SupportBannerComponent],
 })
 export class Shell {
   protected readonly drawerOpen = signal(false);

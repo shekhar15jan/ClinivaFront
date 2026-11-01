@@ -8,6 +8,7 @@ import { NotFoundComponent } from './shared/pages/not-found/not-found';
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', loadChildren: () => import('./auth/generic-login-module').then(m => m.GenericLoginModule) },
+  { path: 'support-login', loadComponent: () => import('./auth/pages/support-login/support-login').then(m => m.SupportLoginComponent) },
   { path: ':hospitalCode/book', loadComponent: () => import('./modules/appointments/public-booking').then(m => m.PublicBookingComponent) },
   {
     path: ':hospitalCode',
@@ -65,6 +66,7 @@ export const routes: Routes = [
             path: 'audit-logs',
             loadChildren: () => import('./modules/audit-logs/audit-logs-module').then(m => m.AuditLogsModule)
           },
+          { path: 'support-access', loadComponent: () => import('./modules/support-access/support-access-page').then(m => m.SupportAccessPageComponent) },
           { path: 'abdm', loadComponent: () => import('./modules/abdm/abdm-setup').then(m => m.AbdmSetupComponent) },
           {
             path: 'insurance',
