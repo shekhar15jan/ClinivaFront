@@ -189,6 +189,19 @@ describe('AuthService', () => {
       expect(license.loadLicense).toHaveBeenCalledTimes(1);
     });
 
+    it('asks for the licence only once the new access token is stored, so the request carries it', () => {
+      let tokenWhenAsked: string | null = null;
+      license.loadLicense.mockImplementation(() => {
+        tokenWhenAsked = service.getToken();
+        return of({});
+      });
+
+      service.verifyOtp({ email: 'test@cliniva.com', otp: '123456' }).subscribe();
+      answer();
+
+      expect(tokenWhenAsked).toBeTruthy();
+    });
+
     it('still signs in when the licence cannot be loaded', () => {
       license.loadLicense.mockReturnValue(throwError(() => new Error('network')));
       let done = false;

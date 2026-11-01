@@ -235,17 +235,18 @@ export class AuthService {
   }
 
   private setSession(authResponse: AuthResponse, newSession = true): void {
-    if (newSession) {
-      // The screens decide what to show from the clinic's modules. The public lookup before sign-in no longer carries them,
-      // so they come from the sign-in answer at once, and the full licence (limits, usage) is loaded in the background.
-      // Nothing waits for it, and a failure to load it never fails the sign-in. The routine token renewal skips this.
-      this.licenseService.seedModules(authResponse.tenant?.activeModules);
-      this.licenseService.loadLicense().pipe(catchError(() => of(null))).subscribe();
-    }
     this.accessToken = authResponse.token;
     this.currentUserSubject.next(authResponse.user);
     this.currentUser.set(authResponse.user);
     this.setHadSession(true);
+    if (newSession) {
+      // The screens decide what to show from the clinic's modules. The public lookup before sign-in no longer carries them,
+      // so they come from the sign-in answer at once, and the full licence (limits, usage) is loaded in the background.
+      // Nothing waits for it, and a failure to load it never fails the sign-in. The routine token renewal skips this.
+      // It starts only after the token is stored: the request has to carry it.
+      this.licenseService.seedModules(authResponse.tenant?.activeModules);
+      this.licenseService.loadLicense().pipe(catchError(() => of(null))).subscribe();
+    }
   }
 
   private clearSession(): void {
