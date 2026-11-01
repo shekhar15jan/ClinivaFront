@@ -85,7 +85,13 @@ export class AuthService {
     return this.http.post<ApiResponse<{ success: boolean; requiresOtp: boolean; message: string }>>(`${this.apiUrl}/auth/verify-password`, { email, password });
   }
 
-  register(request: { email: string; password?: string; tenantCode: string; role: string }): Observable<ApiResponse<{ message: string }>> {
+  /** Step one of patient registration: emails a code to the address (nothing is created yet). */
+  sendRegistrationCode(request: { email: string; tenantCode: string }): Observable<ApiResponse<{ message: string }>> {
+    return this.http.post<ApiResponse<{ message: string }>>(`${this.apiUrl}/auth/register/send-code`, request);
+  }
+
+  /** Step two: the account is created only when `otp` is the code emailed in step one. */
+  register(request: { email: string; password?: string; tenantCode: string; role: string; otp?: string; [key: string]: unknown }): Observable<ApiResponse<{ message: string }>> {
     return this.http.post<ApiResponse<{ message: string }>>(`${this.apiUrl}/auth/register`, request);
   }
 
