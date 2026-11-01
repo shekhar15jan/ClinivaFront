@@ -98,11 +98,34 @@ export interface ProvisionedTenant {
   patch: (path: string) => Promise<any>;
 }
 
+/**
+ * Signs a CloudSuite platform user in over the API and returns the access token. When the super-admin second factor
+ * is on, the password answer asks for an emailed code: read it from the mailbox and sign in again with it. (If a code
+ * was sent a moment ago, the resend cooldown refuses a new one; the latest mail's code is still valid, so use that.)
+ */
+export async function operatorLogin(request: APIRequestContext, email: string, password: string): Promise<string> {
+  const before = (await mailsTo(request, email)).length;
+  const first = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email, password } });
+  const firstBody = first.ok() ? await first.json() : null;
+  if (firstBody && !firstBody.data?.secondFactorRequired) {
+    return firstBody.data.accessToken as string;
+  }
+  let mail: Mail | undefined;
+  try {
+    mail = await nextMail(request, email, '', before);
+  } catch {
+    const all = await mailsTo(request, email);
+    mail = all[all.length - 1];
+  }
+  expect(mail, `emailed sign-in code for ${email}`).toBeTruthy();
+  const second = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email, password, otp: otpFrom(mail!) } });
+  expect(second.ok(), 'CloudSuite sign-in with the emailed code').toBeTruthy();
+  return (await second.json()).data.accessToken as string;
+}
+
 /** Creates a tenant with an administrator in CloudSuite, the way an operator would. */
 export async function provisionTenant(request: APIRequestContext, planCode = 'CLINIC_BASIC'): Promise<ProvisionedTenant> {
-  const login = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email: 'admin@codeatcloud.in', password: OPERATOR_PASSWORD } });
-  expect(login.ok(), 'CloudSuite operator sign-in').toBeTruthy();
-  const token = (await login.json()).data.accessToken;
+  const token = await operatorLogin(request, 'admin@codeatcloud.in', OPERATOR_PASSWORD);
   const headers = { Authorization: `Bearer ${token}` };
 
   const products = (await (await request.get(`${CLOUDSUITE}/platform/products`, { headers })).json()).data;

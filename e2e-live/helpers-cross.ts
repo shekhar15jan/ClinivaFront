@@ -1,4 +1,5 @@
 import { APIRequestContext, Page, expect } from '@playwright/test';
+import { operatorLogin } from './helpers';
 
 /**
  * Helpers for the live specs that cross the line between Cliniva and CloudSuite (plan and billing, support access,
@@ -16,9 +17,7 @@ export function unwrap<T = any>(body: any): T {
 
 /** Signs the CloudSuite platform super admin in over the API (the same account provisionTenant uses). */
 export async function operatorToken(request: APIRequestContext): Promise<string> {
-  const login = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email: OPERATOR_EMAIL, password: OPERATOR_PASSWORD } });
-  expect(login.ok(), 'CloudSuite operator sign-in').toBeTruthy();
-  return (await login.json()).data.accessToken as string;
+  return operatorLogin(request, OPERATOR_EMAIL, OPERATOR_PASSWORD);
 }
 
 export interface CloudSuiteCall {
