@@ -41,6 +41,12 @@ export class Header implements OnInit, OnDestroy {
     this.router.navigate(['/', this.clinic, 'appointments', 'book']);
   }
 
+  /** Help: staff at /:clinic/help, patients in their own portal (staff screens are closed to them). */
+  openHelp(): void {
+    const isPatient = this.auth.currentUserValue?.role === 'PATIENT';
+    this.router.navigate(isPatient ? ['/', this.clinic, 'patient', 'help'] : ['/', this.clinic, 'help']);
+  }
+
   /** Patient search from any screen: opens the Patients screen with the results. */
   searchPatients(text = ''): void {
     const q = text.trim();

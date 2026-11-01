@@ -32,6 +32,12 @@
       </button>
     }
 
+    <!-- Help: guides for this role, and the quick tour -->
+    <button type="button" id="header-help" (click)="openHelp()" aria-label="Help"
+      class="p-2 min-h-touch min-w-touch flex items-center justify-center text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors">
+      <span class="material-symbols-outlined text-[24px]">help</span>
+    </button>
+
     <!-- Notification Bell with Dropdown -->
     <div class="relative notification-wrapper">
       <button

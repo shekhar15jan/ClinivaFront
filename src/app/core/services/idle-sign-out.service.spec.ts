@@ -55,6 +55,25 @@ describe('IdleSignOutService', () => {
     expect(auth.logout).not.toHaveBeenCalled();
   });
 
+  it('goes to the generic login when the clinic code is unknown, and a real key press restarts the clock', () => {
+    const s = create();
+    s.ngOnDestroy();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: auth }, { provide: Router, useValue: router },
+      { provide: TenantContextService, useValue: { tenantCode: () => '' } }] });
+    const s2 = TestBed.inject(IdleSignOutService);
+    clock = 7_000_000;
+    s2.start(() => clock);
+    clock += IDLE_LIMIT_MS - 10_000;
+    document.dispatchEvent(new Event('keydown'));
+    clock += 20_000;
+    s2.check();
+    expect(auth.logout).not.toHaveBeenCalled();
+    clock += IDLE_LIMIT_MS;
+    s2.check();
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { reason: 'idle' } });
+  });
+
   it('does nothing while nobody is signed in', () => {
     const s = create();
     loggedIn = false;

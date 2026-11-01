@@ -25,6 +25,12 @@
     }
   </nav>
 
+  <a [routerLink]="isPatient() ? 'patient/help' : 'help'" id="sidebar-help" routerLinkActive="bg-blue-100 font-bold"
+    class="mx-2 mb-2 flex items-center gap-3 px-3 py-2.5 rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+    <span class="material-symbols-outlined text-[22px]">help</span>
+    <span class="text-sm font-medium">Help</span>
+  </a>
+
   @if (authService.currentUser(); as user) {
     <div class="p-4 border-t border-outline-variant">
       <div class="flex items-center gap-3 mb-3">
