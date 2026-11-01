@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, EventEmitter, Output, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { EffectiveLicenseService } from '../../core/services/effective-license.service';
@@ -16,12 +16,22 @@ import { STAFF_NAV, canSee } from '../nav-items';
             [routerLink]="item.route"
             routerLinkActive="text-primary"
             [routerLinkActiveOptions]="{ exact: item.exact || false }"
-            class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-touch py-1 px-2 rounded-xl transition-colors text-on-surface-variant"
+            class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-touch py-1 px-2 rounded-xl transition-colors text-on-surface-variant"
           >
             <span class="material-symbols-outlined text-[24px]">{{ item.icon }}</span>
             <span class="text-[11px] font-medium leading-none">{{ item.label }}</span>
           </a>
         }
+        <!-- More: opens the menu, where Help is. -->
+        <button
+          id="bottom-nav-more"
+          type="button"
+          (click)="more.emit()"
+          class="flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-touch py-1 px-2 rounded-xl transition-colors text-on-surface-variant"
+        >
+          <span class="material-symbols-outlined text-[24px]">more_horiz</span>
+          <span class="text-[11px] font-medium leading-none">More</span>
+        </button>
       </div>
     </nav>
   `,
@@ -30,6 +40,9 @@ import { STAFF_NAV, canSee } from '../nav-items';
 export class BottomNav {
   private authService = inject(AuthService);
   private license = inject(EffectiveLicenseService);
+
+  /** The More tab was tapped: the shell opens the menu drawer. */
+  @Output() more = new EventEmitter<void>();
 
   readonly isPatient = computed(() => this.authService.currentUserValue?.role === 'PATIENT');
 

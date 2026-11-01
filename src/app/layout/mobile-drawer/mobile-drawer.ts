@@ -45,6 +45,12 @@ import { designation, displayName, initials } from '../../core/utils/user-displa
                   </a>
                 }
               }
+              <!-- Help: guides for this role and the quick tour (same as the top bar and the desktop menu). -->
+              <button id="drawer-help" type="button" (click)="openHelp()"
+                class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors border-l-4 border-transparent text-left">
+                <span class="material-symbols-outlined text-[22px]">help</span>
+                <span class="text-sm font-medium">Help</span>
+              </button>
             </nav>
 
             @if (authService.currentUser(); as user) {
@@ -100,6 +106,14 @@ export class MobileDrawer {
   readonly activeModules = this.effectiveLicense.activeModules;
 
   readonly navItems = STAFF_NAV;
+
+  /** Help: staff at /:clinic/help, patients in their own portal. */
+  openHelp(): void {
+    const clinic = this.router.url.split('?')[0].split('/').filter(Boolean)[0] ?? '';
+    const isPatient = this.authService.currentUserValue?.role === 'PATIENT';
+    this.closed.emit();
+    this.router.navigate(isPatient ? ['/', clinic, 'patient', 'help'] : ['/', clinic, 'help']);
+  }
 
   /** Signs out for real: the server revokes the session and clears its cookie, as the desktop sidebar does. */
   logout(): void {
