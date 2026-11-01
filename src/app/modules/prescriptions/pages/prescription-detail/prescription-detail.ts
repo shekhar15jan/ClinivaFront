@@ -1,3 +1,4 @@
+import { LettersPanel } from '../../components/letters-panel';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -128,6 +129,9 @@ import { toMinor } from '../../../../core/utils/money';
               </div>
             </div>
           }
+          @if (isDoctor && prescription.consultationId) {
+            <app-letters-panel [consultationId]="prescription.consultationId" />
+          }
           <div class="border-t border-gray-200 p-4 flex justify-end gap-3">
             <button
               (click)="print()"
@@ -148,7 +152,7 @@ import { toMinor } from '../../../../core/utils/money';
       }
     </div>
   `,
-  imports: [CurrencySymbolPipe, RouterLink, DatePipe, FormsModule],
+  imports: [CurrencySymbolPipe, RouterLink, DatePipe, FormsModule, LettersPanel],
 })
 export class PrescriptionDetail implements OnInit {
   private route = inject(ActivatedRoute);
@@ -195,6 +199,11 @@ export class PrescriptionDetail implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  /** Only a doctor issues certificates and referral letters. */
+  get isDoctor(): boolean {
+    return this.authService.currentUser()?.role === 'DOCTOR';
   }
 
   /** Only front-desk roles may bill (the API refuses everyone else), so others are not offered the form. */
