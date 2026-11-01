@@ -10,9 +10,16 @@
     <!-- Header -->
     <app-header class="h-16 flex-shrink-0 border-b border-outline-variant bg-surface" (menuClick)="openDrawer()"></app-header>
 
+    <!-- Trial days left / read-only notice with Renew -->
+    <app-subscription-banner></app-subscription-banner>
+
     <!-- Main Content -->
     <main class="flex-1 overflow-auto p-4 sm:p-6 pb-20 md:pb-6">
-      <router-outlet></router-outlet>
+      @if (showLocked()) {
+        <app-subscription-locked></app-subscription-locked>
+      } @else {
+        <router-outlet></router-outlet>
+      }
     </main>
   </div>
 

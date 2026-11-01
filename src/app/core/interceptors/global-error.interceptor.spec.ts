@@ -6,6 +6,7 @@ import { GlobalErrorInterceptor } from './global-error.interceptor';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { EffectiveLicenseService } from '../services/effective-license.service';
 import { of } from 'rxjs';
+import { SubscriptionStateService } from '../services/subscription-state.service';
 import { vi } from 'vitest';
 
 describe('GlobalErrorInterceptor', () => {
@@ -250,5 +251,25 @@ describe('GlobalErrorInterceptor', () => {
       'Network error. Please check your connection.',
       'error',
     );
+  });
+
+  it('shows the server message for a read-only clinic instead of a generic error', () => {
+    http.post('/api/patients', {}).subscribe({ error: () => undefined });
+    httpMock.expectOne('/api/patients').flush(
+      { message: 'Records can be viewed but not changed. Please renew.', errorCode: 'SUBSCRIPTION_READ_ONLY' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+    expect(toastService.show).toHaveBeenCalledWith('Records can be viewed but not changed. Please renew.', 'warning');
+    expect(licenseService.loadLicense).not.toHaveBeenCalled();
+  });
+
+  it('marks the clinic locked when the server says so, without an error toast', () => {
+    http.get('/api/patients').subscribe({ error: () => undefined });
+    httpMock.expectOne('/api/patients').flush(
+      { message: 'locked', errorCode: 'SUBSCRIPTION_LOCKED' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+    expect(TestBed.inject(SubscriptionStateService).isLocked()).toBe(true);
+    expect(toastService.show).not.toHaveBeenCalled();
   });
 });

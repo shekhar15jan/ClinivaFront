@@ -5,6 +5,7 @@ import { catchError } from 'rxjs/operators';
 import { toObservable } from '@angular/core/rxjs-interop';
 import {
   AuthResponse,
+  SubscriptionStateInfo,
   SendOtpRequest,
   VerifyOtpRequest,
   User,
@@ -12,6 +13,7 @@ import {
 import { ApiResponse } from '../models/common.model';
 import { TenantContextService } from './tenant-context.service';
 import { EffectiveLicenseService } from './effective-license.service';
+import { SubscriptionStateService } from './subscription-state.service';
 import { TenantResolution } from '../models/tenant.model';
 import { environment } from '../../../environments/environment';
 import { homeCurrency } from '../utils/money';
@@ -23,6 +25,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private tenantContext = inject(TenantContextService);
   private licenseService = inject(EffectiveLicenseService);
+  private subscriptionState = inject(SubscriptionStateService);
 
   private readonly apiUrl = `${environment.apiUrl}`;
   /**
@@ -129,6 +132,7 @@ export class AuthService {
               timezone: rawTenant?.['timezone'] as string | undefined,
               activeModules: (rawTenant?.['activeModules'] as string[]) || [],
               currency: AuthService.useCurrency(rawTenant?.['currency']),
+              subscription: AuthService.subscriptionFrom(rawTenant?.['subscription']),
             },
           };
           return { ...response, data: authResponse } as ApiResponse<AuthResponse>;
@@ -188,8 +192,16 @@ export class AuthService {
         timezone: rawTenant?.['timezone'] as string | undefined,
         activeModules: (rawTenant?.['activeModules'] as string[]) || [],
         currency: AuthService.useCurrency(rawTenant?.['currency']),
+        subscription: AuthService.subscriptionFrom(rawTenant?.['subscription']),
       },
     };
+  }
+
+  private static subscriptionFrom(raw: unknown): SubscriptionStateInfo | null {
+    const value = raw as { state?: string; until?: string | null } | null | undefined;
+    const states = ['NORMAL', 'TRIAL', 'READ_ONLY', 'LOCKED'];
+    if (!value?.state || !states.includes(value.state)) return null;
+    return { state: value.state as SubscriptionStateInfo['state'], until: value.until ?? null };
   }
 
   /** The clinic's currency becomes the one all amounts are shown in. */
@@ -245,6 +257,7 @@ export class AuthService {
     this.currentUserSubject.next(authResponse.user);
     this.currentUser.set(authResponse.user);
     this.setHadSession(true);
+    this.subscriptionState.set(authResponse.tenant?.subscription ?? null);
     if (newSession) {
       // The screens decide what to show from the clinic's modules. The public lookup before sign-in no longer carries them,
       // so they come from the sign-in answer at once, and the full licence (limits, usage) is loaded in the background.
@@ -259,6 +272,7 @@ export class AuthService {
     this.accessToken = null;
     this.currentUserSubject.next(null);
     this.currentUser.set(null);
+    this.subscriptionState.clear();
     this.setHadSession(false);
   }
 

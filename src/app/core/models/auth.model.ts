@@ -11,6 +11,12 @@ export interface User {
   tenantCode?: string;
 }
 
+/** Where the clinic stands at the end of its trial or term; `until` is the last day that state holds. */
+export interface SubscriptionStateInfo {
+  state: 'NORMAL' | 'TRIAL' | 'READ_ONLY' | 'LOCKED';
+  until?: string | null;
+}
+
 export interface TenantInfo {
   id: string;
   tenantId?: string;
@@ -20,6 +26,8 @@ export interface TenantInfo {
   activeModules: string[];
   /** The clinic's home currency; every amount is in its minor units. */
   currency?: string;
+  /** Trial days left, read-only until, or locked; null for clinics without a subscription record. */
+  subscription?: SubscriptionStateInfo | null;
 }
 
 export interface AuthResponse {
