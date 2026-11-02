@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { vi } from 'vitest';
 import { AuthService } from './auth.service';
-import { IDLE_LIMIT_MS, IDLE_WARNING_MS, IdleSignOutService } from './idle-sign-out.service';
+import { IDLE_LIMIT_MS, IDLE_TEST_KEY, IDLE_WARNING_MS, IdleSignOutService } from './idle-sign-out.service';
 import { TenantContextService } from './tenant-context.service';
 
 describe('IdleSignOutService', () => {
@@ -39,6 +39,20 @@ describe('IdleSignOutService', () => {
     s.check();
     expect(auth.logout).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/CITY/login'], { queryParams: { reason: 'idle' } });
+  });
+
+  it('a browser test may shorten the limit, but nobody can lengthen it', () => {
+    const s = create();
+    localStorage.setItem(IDLE_TEST_KEY, '10000');
+    clock += 10_000;
+    s.check();
+    expect(auth.logout).toHaveBeenCalledTimes(1);
+    localStorage.setItem(IDLE_TEST_KEY, String(IDLE_LIMIT_MS * 10));
+    const t = create();
+    clock += IDLE_LIMIT_MS;
+    t.check();
+    expect(auth.logout).toHaveBeenCalledTimes(1);
+    localStorage.removeItem(IDLE_TEST_KEY);
   });
 
   it('starts the clock again on activity, including from another tab', () => {

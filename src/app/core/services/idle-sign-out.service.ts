@@ -7,6 +7,8 @@ import { TenantContextService } from './tenant-context.service';
 export const IDLE_LIMIT_MS = 15 * 60 * 1000;
 /** Warned this long before. */
 export const IDLE_WARNING_MS = 60 * 1000;
+/** An automated browser run may SHORTEN the limit (never lengthen it) by setting this to a number of milliseconds. */
+export const IDLE_TEST_KEY = 'cliniva.idle.limit.ms';
 const SHARED_KEY = 'cliniva.lastActivity';
 const ACTIVITY = ['mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
 
@@ -65,13 +67,26 @@ export class IdleSignOutService implements OnDestroy {
       shared = 0;
     }
     const idle = this.now() - Math.max(this.lastActivity, shared);
-    if (idle >= IDLE_LIMIT_MS) {
+    const limit = this.limit();
+    const warning = Math.min(IDLE_WARNING_MS, limit / 2);
+    if (idle >= limit) {
       this.signOut();
-    } else if (idle >= IDLE_LIMIT_MS - IDLE_WARNING_MS) {
-      this.secondsLeft.set(Math.ceil((IDLE_LIMIT_MS - idle) / 1000));
+    } else if (idle >= limit - warning) {
+      this.secondsLeft.set(Math.ceil((limit - idle) / 1000));
     } else {
       this.secondsLeft.set(null);
     }
+  }
+
+  /** The normal limit, or a shorter one set for a browser test. */
+  private limit(): number {
+    try {
+      const short = Number(localStorage.getItem(IDLE_TEST_KEY));
+      if (short >= 1000 && short < IDLE_LIMIT_MS) return short;
+    } catch {
+      // Storage blocked: the normal limit applies.
+    }
+    return IDLE_LIMIT_MS;
   }
 
   private signOut(): void {

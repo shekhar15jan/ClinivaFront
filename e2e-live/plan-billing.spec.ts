@@ -4,8 +4,8 @@ import { bearerOf, cliniva, watchFailures } from './helpers-cross';
 
 /**
  * Plan and billing, Cliniva screen over CloudSuite billing (real services, no mock data).
- * Razorpay keys may be missing on staging, so Pay may end in a payment link or in a friendly "unavailable" message;
- * both are fine, an error page or a script error is not.
+ * Pay must end in a real Razorpay payment link. A 503 "payment unavailable" answer FAILS the spec unless the run says
+ * outright that Razorpay is not set up there (RAZORPAY_UNCONFIGURED=1), so a broken payment path is never reported as a pass.
  */
 test.describe('Plan and billing, clinic over CloudSuite', () => {
   test('the owner sees plan, price, end and renewal date and the published plans; Pay opens a payment link or says plainly it is unavailable; a doctor cannot open it @desktop', async ({ page, request, browser }) => {
@@ -37,6 +37,14 @@ test.describe('Plan and billing, clinic over CloudSuite', () => {
     expect(o.endDate, 'end date from CloudSuite').toBeTruthy();
     expect(o.renewalDate, 'renewal date from CloudSuite').toBeTruthy();
 
+    // The invoice list from CloudSuite is shown (or says plainly there are none) and agrees with the API.
+    const invoices = (o.invoices ?? []) as { invoiceNumber: string }[];
+    if (invoices.length) {
+      await expect(page.locator('#plan-invoices [data-invoice]')).toHaveCount(invoices.length);
+    } else {
+      await expect(page.locator('#plan-no-invoices')).toBeVisible();
+    }
+
     // Step 4: the published plans are tiles, the same ones the API lists.
     const plans = (await api('GET', '/hms/billing-plan/plans')).body.data as { code: string; name: string; price: number }[];
     expect(plans.length, 'at least one published plan').toBeGreaterThan(0);
@@ -53,6 +61,10 @@ test.describe('Plan and billing, clinic over CloudSuite', () => {
     await page.locator('#plan-pay').click();
     const res = await checkout;
 
+    const razorpayUnconfigured = process.env.RAZORPAY_UNCONFIGURED === '1';
+    if (!res.ok() && !razorpayUnconfigured) {
+      expect.soft(res.status(), 'checkout must give a payment link: set RAZORPAY_UNCONFIGURED=1 only where Razorpay is explicitly not set up').toBe(200);
+    }
     if (res.ok()) {
       // Step 6a: a payment link was made: the payment page opens in a new tab on a Razorpay address, and the screen waits for the payment.
       const link: string = (await res.json()).data.paymentLinkUrl;
@@ -64,7 +76,7 @@ test.describe('Plan and billing, clinic over CloudSuite', () => {
       await popup!.close();
     } else {
       // Step 6b: online payment is not set up (the platform answers 503 PAYMENT_UNAVAILABLE, the clinic API passes it on as 503): a plain message, no error page.
-      expect(res.status(), 'only the documented "payment unavailable" refusal is allowed').toBe(503);
+      expect(res.status(), 'only the documented "payment unavailable" refusal is allowed, and only when RAZORPAY_UNCONFIGURED=1').toBe(503);
       const body = await res.json();
       expect(String(body.message ?? ''), 'friendly message from the API').not.toMatch(/exception|stack|null pointer|internal server/i);
       await expect(page.locator('[role="alert"]').filter({ visible: true }).first()).toBeVisible({ timeout: 10000 });

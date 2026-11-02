@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { ApiResponse } from '../models/common.model';
-import { Alerts, IssueView, MedicineStock, ReceiptLine, StockLine, Supplier } from '../models/stock.model';
+import { Alerts, IssueView, MedicineStock, ReceiptLine, StockLine, StockPage, Supplier } from '../models/stock.model';
 import { environment } from '../../../environments/environment';
 
 /** The pharmacy's stock: what is on the shelf, receiving, counting, and issuing to inpatients. */
@@ -14,6 +14,13 @@ export class StockService {
   overview(q = ''): Observable<StockLine[]> {
     const params = q.trim() ? new HttpParams().set('q', q.trim()) : undefined;
     return this.http.get<ApiResponse<StockLine[]>>(this.api, { params }).pipe(map((r) => r.data ?? []));
+  }
+
+  /** One page of the stock list; the receive screen and the stay screens still use the whole list above. */
+  overviewPage(q = '', page = 0, size = 100): Observable<StockPage> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (q.trim()) params = params.set('q', q.trim());
+    return this.http.get<ApiResponse<StockPage>>(this.api, { params }).pipe(map((r) => r.data));
   }
 
   alerts(days = 60): Observable<Alerts> {

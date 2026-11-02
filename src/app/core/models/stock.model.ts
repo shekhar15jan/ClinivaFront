@@ -2,6 +2,14 @@
 
 export type MovementKind = 'RECEIPT' | 'SALE' | 'ISSUE' | 'RETURN' | 'EXPIRED' | 'ADJUST';
 
+export interface StockPage {
+  items: StockLine[];
+  page: number;
+  size: number;
+  total: number;
+  hasMore: boolean;
+}
+
 export interface StockLine {
   medicineId: string;
   medicineName: string;

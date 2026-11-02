@@ -65,6 +65,11 @@ interface DraftLine {
               </button>
             }
             @if (shown.length === 0) { <p class="text-sm text-slate-600">No medicines.</p> }
+            @if (hasMore) {
+              <button type="button" id="stock-more" (click)="more()" class="w-full border border-outline-variant rounded-lg p-2.5 text-sm font-medium bg-white">
+                Show more ({{ total - lines.length }} left)
+              </button>
+            }
           </div>
 
           @if (selected; as s) {
@@ -167,7 +172,7 @@ interface DraftLine {
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 items-center" [attr.data-line]="i">
               <select [(ngModel)]="d.medicineId" [attr.aria-label]="'Medicine, line ' + (i + 1)" class="col-span-2 border border-outline-variant rounded-lg p-2 text-sm">
                 <option value="">Medicine</option>
-                @for (l of lines; track l.medicineId) { <option [value]="l.medicineId">{{ l.medicineName }}</option> }
+                @for (l of allLines; track l.medicineId) { <option [value]="l.medicineId">{{ l.medicineName }}</option> }
               </select>
               <input [(ngModel)]="d.batchNumber" placeholder="Batch" maxlength="40" [attr.aria-label]="'Batch, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
               <input type="date" [(ngModel)]="d.expiryDate" [attr.aria-label]="'Expiry, line ' + (i + 1)" class="border border-outline-variant rounded-lg p-2 text-sm" />
@@ -198,7 +203,13 @@ export class StockPageComponent implements OnInit {
 
   tab: Tab = 'stock';
   lines: StockLine[] = [];
+  allLines: StockLine[] = [];
   shown: StockLine[] = [];
+  hasMore = false;
+  total = 0;
+  private page = 0;
+  private serverQ = '';
+  private readonly pageSize = 100;
   q = '';
   selected: MedicineStock | null = null;
   reorder = 0;
@@ -231,17 +242,31 @@ export class StockPageComponent implements OnInit {
     this.stock.alerts().subscribe({ next: (a) => (this.alerts = a), error: () => (this.alerts = null) });
   }
 
-  load(): void {
-    this.stock.overview().subscribe({
-      next: (lines) => {
-        this.lines = lines;
-        this.filter();
+  load(append = false): void {
+    if (!append) this.page = 0;
+    this.stock.overviewPage(this.serverQ, this.page, this.pageSize).subscribe({
+      next: (p) => {
+        this.lines = append ? [...this.lines, ...p.items] : p.items;
+        this.hasMore = p.hasMore;
+        this.total = p.total;
+        this.filter(false);
       },
       error: (err) => this.toast.error(err?.error?.message || 'The stock could not be loaded.'),
     });
   }
 
-  filter(): void {
+  more(): void {
+    this.page += 1;
+    this.load(true);
+  }
+
+  /** Narrows the loaded lines; when more exist on the server the search asks the server so nothing is missed. */
+  filter(server = true): void {
+    if (server && (this.hasMore || this.serverQ)) {
+      this.serverQ = this.q.trim();
+      this.load();
+      return;
+    }
     const q = this.q.trim().toLowerCase();
     this.shown = this.lines.filter((l) => !q || l.medicineName.toLowerCase().includes(q) || (l.genericName ?? '').toLowerCase().includes(q));
   }
@@ -250,6 +275,7 @@ export class StockPageComponent implements OnInit {
     this.tab = tab;
     if (tab === 'receive') {
       if (this.draft.length === 0) this.addLine();
+      if (this.allLines.length === 0) this.stock.overview().subscribe({ next: (l) => (this.allLines = l) });
       if (this.suppliers.length === 0) this.stock.suppliers().subscribe({ next: (s) => (this.suppliers = s) });
     }
     if (tab === 'alerts') this.stock.alerts().subscribe({ next: (a) => (this.alerts = a) });
