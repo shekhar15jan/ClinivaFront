@@ -16,6 +16,14 @@ export default defineConfig({
     headless: true,
     // SLOWMO=600 (milliseconds per action) with --headed, to watch a run.
     launchOptions: { slowMo: Number(process.env.SLOWMO || 0) },
+    // The first-run tour card would sit on top of what a journey clicks; the app skips it when this is set (the tour has its own spec).
+    storageState: {
+      cookies: [],
+      origins: [{
+        origin: new URL(process.env.BASE_URL || 'http://localhost:4201').origin,
+        localStorage: [{ name: 'cliniva.tour.off', value: '1' }],
+      }],
+    },
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },

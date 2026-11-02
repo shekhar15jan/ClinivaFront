@@ -40,7 +40,17 @@ export class TourService {
 
   /** Starts the tour for a person who has not seen it. Called when the app shell opens. */
   startIfFirstRun(): void {
+    if (this.switchedOff()) return;
     if (!this.running() && !this.hasSeen()) this.start();
+  }
+
+  /** An automated browser run sets this so the first-run card does not sit over the screen it is testing. */
+  private switchedOff(): boolean {
+    try {
+      return localStorage.getItem('cliniva.tour.off') === '1';
+    } catch {
+      return false;
+    }
   }
 
   /** Starts (or restarts) the tour whether or not it was seen. */

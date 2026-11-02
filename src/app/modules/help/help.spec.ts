@@ -212,6 +212,15 @@ describe('Help screens', () => {
     expect(localStorage.getItem('cliniva.tour.done.u1')).toBe('1');
   });
 
+  it('stays away when an automated run has switched the tour off', () => {
+    setup('DOCTOR');
+    localStorage.setItem('cliniva.tour.off', '1');
+    const f = TestBed.createComponent(TourComponent);
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('#tour-card')).toBeNull();
+    localStorage.removeItem('cliniva.tour.off');
+  });
+
   it('does not show the card to someone who has already seen it', () => {
     setup('DOCTOR');
     localStorage.setItem('cliniva.tour.done.u1', '1');

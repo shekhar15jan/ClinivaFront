@@ -7,7 +7,11 @@ import { bearerOf, cliniva, cloudSuite, operatorToken } from './helpers-cross';
  * Cliniva works the state out from the subscription dates it holds (TRIAL / READ_ONLY / LOCKED).
  */
 test.describe('Subscription state, clinic over CloudSuite', () => {
-  test('a new clinic shows the trial banner with the days left, and Choose a plan leads to Plan and billing @desktop', async ({ page, request }) => {
+  // CloudSuite refuses a plan priced 0 ("Price must be positive") and a paid plan ends the trial at once (PLAT-12, 15 Oct),
+  // so provisioning through an operator cannot produce a clinic in trial. Trial clinics come from assigning a plan with
+  // trial days and startTrial (TenantSubscriptionService). Until the owner says how a new customer should enter a trial,
+  // the trial banner is covered by the unit specs (subscription-banner) and the backend tests (SubscriptionEndIntegrationTest).
+  test.fixme('a new clinic shows the trial banner with the days left, and Choose a plan leads to Plan and billing @desktop', async ({ page, request }) => {
     // Step 1: fresh clinic, owner signed in.
     const admin = await signInAsNewAdmin(page, request, 'HMS_FULL_TRIAL');
     const code = admin.hospitalCode;
