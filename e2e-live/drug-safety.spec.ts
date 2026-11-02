@@ -61,8 +61,12 @@ test.describe('Drug allergy warning at prescribing, real backend', () => {
 
     // Ticking without a reason does not open the way.
     await doctor.locator('#safety-ack').check();
+    // Wait for the check to answer before going on: the decision is taken when it answers, using what is typed by then.
+    const checkedAgain = doctor.waitForResponse((r) => r.request().method() === 'POST' && /\/prescriptions\/safety-check$/.test(r.url()));
     await doctor.getByRole('button', { name: /Finish & Print/ }).click();
+    await checkedAgain;
     await expect(doctor.locator('#safety-panel')).toBeVisible();
+    await expect(doctor.getByRole('button', { name: /Finish & Print/ })).toBeEnabled();
     expect(saved, 'a reason is needed').toBe(false);
 
     // With a reason the prescription is saved.
