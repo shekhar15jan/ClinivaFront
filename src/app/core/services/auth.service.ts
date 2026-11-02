@@ -252,7 +252,13 @@ export class AuthService {
     if (saved) {
       // A reload inside a support session: the platform is asked again before the session continues.
       const ok = await firstValueFrom(this.supportRefreshWith(saved).pipe(map(() => true), catchError(() => of(false))));
-      if (!ok) this.clearSession();
+      if (!ok) {
+        this.clearSession();
+        return;
+      }
+      // The screens are offered from the clinic's modules: load them before the first screen is decided, or a reload
+      // would find none and send the person to the dashboard.
+      await firstValueFrom(this.licenseService.loadLicense().pipe(catchError(() => of(null))));
       return;
     }
     if (!this.hadSession()) return;

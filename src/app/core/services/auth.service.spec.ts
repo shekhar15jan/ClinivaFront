@@ -249,6 +249,20 @@ describe('AuthService', () => {
       localStorage.removeItem('cliniva_signed_in');
     });
 
+    it('a support session restored after a reload has the clinic modules loaded before the first screen is decided', async () => {
+      sessionStorage.setItem('cliniva_support_token', 'saved-support-token');
+      const restored = service.silentRefresh();
+      httpMock.expectOne(`${service['apiUrl']}/auth/support-refresh`).flush({
+        success: true,
+        data: { accessToken: 'new', sessionId: 's1', staffName: 'Asha', role: 'SUPPORT_READONLY', tenantId: 't1', tenantCode: 'C1',
+          accessEndsAt: '2099-01-01T00:00:00Z', permissions: ['PATIENT_VIEW'] },
+      });
+      await restored;
+      expect(license.loadLicense).toHaveBeenCalledTimes(1);
+      expect(service.supportSession()?.sessionId).toBe('s1');
+      sessionStorage.removeItem('cliniva_support_token');
+    });
+
     describe('restoring the session after a reload when the refresh fails', () => {
       afterEach(() => { localStorage.removeItem('cliniva_signed_in'); vi.useRealTimers(); });
 

@@ -103,7 +103,18 @@ export interface ProvisionedTenant {
  * is on, the password answer asks for an emailed code: read it from the mailbox and sign in again with it. (If a code
  * was sent a moment ago, the resend cooldown refuses a new one; the latest mail's code is still valid, so use that.)
  */
+const operatorTokens = new Map<string, { token: string; at: number }>();
+
 export async function operatorLogin(request: APIRequestContext, email: string, password: string): Promise<string> {
+  // Each sign-in with the second factor reads the mailbox; a token lasts 15 minutes, so one is reused for 8.
+  const cached = operatorTokens.get(email);
+  if (cached && Date.now() - cached.at < 8 * 60 * 1000) return cached.token;
+  const token = await operatorLoginFresh(request, email, password);
+  operatorTokens.set(email, { token, at: Date.now() });
+  return token;
+}
+
+async function operatorLoginFresh(request: APIRequestContext, email: string, password: string): Promise<string> {
   const before = (await mailsTo(request, email)).length;
   const first = await request.post(`${CLOUDSUITE}/auth/login`, { data: { email, password } });
   const firstBody = first.ok() ? await first.json() : null;
