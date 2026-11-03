@@ -92,12 +92,13 @@ export class IdleSignOutService implements OnDestroy {
   private signOut(): void {
     const code = this.tenant.tenantCode();
     this.secondsLeft.set(null);
+    this.auth.logout();
+    // After the sign-out: it clears the session storage, which would take the note with it.
     try {
       sessionStorage.setItem('cliniva.signedOutIdle', '1');
     } catch {
       // Storage blocked: the address query still carries the reason.
     }
-    this.auth.logout();
     this.router.navigate(code ? [`/${code}/login`] : ['/login'], { queryParams: { reason: 'idle' } });
   }
 
