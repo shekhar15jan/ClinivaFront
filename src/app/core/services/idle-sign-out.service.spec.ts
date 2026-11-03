@@ -39,6 +39,8 @@ describe('IdleSignOutService', () => {
     s.check();
     expect(auth.logout).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/CITY/login'], { queryParams: { reason: 'idle' } });
+    expect(sessionStorage.getItem('cliniva.signedOutIdle')).toBe('1');
+    sessionStorage.removeItem('cliniva.signedOutIdle');
   });
 
   it('a browser test may shorten the limit, but nobody can lengthen it', () => {

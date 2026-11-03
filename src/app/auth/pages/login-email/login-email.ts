@@ -56,7 +56,16 @@ export class LoginEmail implements OnInit {
       this.email = this.authService.pendingEmail;
     }
     this.passwordChanged = this.route.snapshot?.queryParams?.['passwordChanged'] === '1';
-    this.signedOutIdle.set(this.route.snapshot?.queryParams?.['reason'] === 'idle');
+    // The sign-in page may be opened again once the clinic is looked up, which drops the address query; the idle
+    // sign-out also leaves a one-time note in session storage so the notice still shows.
+    let idleNote = false;
+    try {
+      idleNote = sessionStorage.getItem('cliniva.signedOutIdle') === '1';
+      if (idleNote) sessionStorage.removeItem('cliniva.signedOutIdle');
+    } catch {
+      // Storage blocked: only the address query can tell.
+    }
+    this.signedOutIdle.set(idleNote || this.route.snapshot?.queryParams?.['reason'] === 'idle');
   }
 
   goToRegister(): void {

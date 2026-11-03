@@ -19,8 +19,8 @@
       <input name="email" id="email" type="email" [(ngModel)]="email" placeholder="Email" autocomplete="email" class="w-full px-md py-4 rounded-lg border border-slate-300" />
       <input name="phone" id="phone" type="tel" [(ngModel)]="phone" placeholder="Mobile number" autocomplete="tel" class="w-full px-md py-4 rounded-lg border border-slate-300" />
       <div class="flex gap-sm">
-        <select name="gender" id="gender" [(ngModel)]="gender" class="flex-1 px-md py-4 rounded-lg border border-slate-300">
-          <option value="">Gender (optional)</option>
+        <select name="gender" id="gender" aria-label="Gender" required [(ngModel)]="gender" class="flex-1 px-md py-4 rounded-lg border border-slate-300">
+          <option value="">Gender</option>
           <option value="FEMALE">Female</option>
           <option value="MALE">Male</option>
           <option value="OTHER">Other</option>

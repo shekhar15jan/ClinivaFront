@@ -40,6 +40,7 @@ export class RegisterPatient implements OnInit {
     if (!this.fullName.trim()) return 'Please enter your full name.';
     if (!this.email.includes('@')) return 'Please enter a valid email address.';
     if (!/^[+]?[0-9 -]{8,17}$/.test(this.phone.trim())) return 'Please enter a valid mobile number.';
+    if (!this.gender) return 'Please choose your gender.';
     if (!this.acceptPrivacyNotice) return 'Please read and accept the privacy notice to continue.';
     return '';
   }

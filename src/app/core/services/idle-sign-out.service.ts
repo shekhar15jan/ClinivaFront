@@ -92,6 +92,11 @@ export class IdleSignOutService implements OnDestroy {
   private signOut(): void {
     const code = this.tenant.tenantCode();
     this.secondsLeft.set(null);
+    try {
+      sessionStorage.setItem('cliniva.signedOutIdle', '1');
+    } catch {
+      // Storage blocked: the address query still carries the reason.
+    }
     this.auth.logout();
     this.router.navigate(code ? [`/${code}/login`] : ['/login'], { queryParams: { reason: 'idle' } });
   }

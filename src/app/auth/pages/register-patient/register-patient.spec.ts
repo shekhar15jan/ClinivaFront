@@ -25,11 +25,20 @@ function create(auth: Record<string, unknown> = {}) {
   c.fullName = 'Asha Rao';
   c.email = 'asha@x.test';
   c.phone = '9876543210';
+  c.gender = 'FEMALE';
   c.acceptPrivacyNotice = true;
   return { c, authSpy, router };
 }
 
 describe('RegisterPatient', () => {
+  it('asks for the gender before sending a code, because the clinic record needs it', () => {
+    const { c, authSpy } = create();
+    c.gender = '';
+    c.sendCode();
+    expect(c.error()).toContain('gender');
+    expect(authSpy.sendRegistrationCode).not.toHaveBeenCalled();
+  });
+
   it('rejects missing privacy acceptance without calling the server', () => {
     const { c, authSpy } = create();
     c.acceptPrivacyNotice = false;
