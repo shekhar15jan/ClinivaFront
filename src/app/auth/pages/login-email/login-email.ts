@@ -42,6 +42,18 @@ export class LoginEmail implements OnInit {
   hospitalCode = '';
 
   ngOnInit(): void {
+    // The sign-in page may be opened again once the clinic is looked up, which drops the address query; the idle
+    // sign-out also leaves a one-time note in session storage so the notice still shows.
+    let idleNote = false;
+    try {
+      // Kept until the person starts signing in: this page is created twice during the redirect, and the first copy
+      // must not use the note up before the second one is shown.
+      idleNote = sessionStorage.getItem('cliniva.signedOutIdle') === '1';
+    } catch {
+      // Storage blocked: only the address query can tell.
+    }
+    this.signedOutIdle.set(idleNote || this.route.snapshot?.queryParams?.['reason'] === 'idle');
+    // (Read before the early returns below: when the clinic is not loaded yet the page redirects to itself and is reused.)
     this.hospitalCode = this.route.parent?.snapshot.params['hospitalCode'] || this.route.snapshot.params['hospitalCode'] || '';
     if (!this.hospitalCode) {
       this.router.navigate(['/login']);
@@ -56,17 +68,6 @@ export class LoginEmail implements OnInit {
       this.email = this.authService.pendingEmail;
     }
     this.passwordChanged = this.route.snapshot?.queryParams?.['passwordChanged'] === '1';
-    // The sign-in page may be opened again once the clinic is looked up, which drops the address query; the idle
-    // sign-out also leaves a one-time note in session storage so the notice still shows.
-    let idleNote = false;
-    try {
-      // Kept until the person starts signing in: this page is created twice during the redirect, and the first copy
-      // must not use the note up before the second one is shown.
-      idleNote = sessionStorage.getItem('cliniva.signedOutIdle') === '1';
-    } catch {
-      // Storage blocked: only the address query can tell.
-    }
-    this.signedOutIdle.set(idleNote || this.route.snapshot?.queryParams?.['reason'] === 'idle');
   }
 
   goToRegister(): void {
