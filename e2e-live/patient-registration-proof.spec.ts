@@ -28,9 +28,12 @@ test('a patient proves her email with a code before the account exists', async (
   await guest.fill('#fullName', name);
   await guest.fill('#email', email);
   await guest.fill('#phone', `96${stamp}12`.slice(0, 10));
+  // Gender is asked before the privacy notice: leaving it out is refused first.
+  await guest.locator('#send-code').click();
+  await expect(guest.locator('#register-error')).toContainText(/gender/i);
+  await guest.selectOption('#gender', 'FEMALE');
   await guest.locator('#send-code').click();
   await expect(guest.locator('#register-error')).toContainText(/privacy notice/i);
-  await guest.selectOption('#gender', 'FEMALE');
   await guest.check('#privacy');
 
   // The code is emailed, and nothing is created yet.

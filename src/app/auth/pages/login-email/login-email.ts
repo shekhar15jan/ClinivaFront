@@ -60,8 +60,9 @@ export class LoginEmail implements OnInit {
     // sign-out also leaves a one-time note in session storage so the notice still shows.
     let idleNote = false;
     try {
+      // Kept until the person starts signing in: this page is created twice during the redirect, and the first copy
+      // must not use the note up before the second one is shown.
       idleNote = sessionStorage.getItem('cliniva.signedOutIdle') === '1';
-      if (idleNote) sessionStorage.removeItem('cliniva.signedOutIdle');
     } catch {
       // Storage blocked: only the address query can tell.
     }
@@ -89,6 +90,11 @@ export class LoginEmail implements OnInit {
       return;
     }
 
+    try {
+      sessionStorage.removeItem('cliniva.signedOutIdle');
+    } catch {
+      // Storage blocked: nothing to clear.
+    }
     this.isLoading = true;
     this.errorMessage = '';
     this.passwordChangeRequired = false;
