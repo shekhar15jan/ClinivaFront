@@ -26,10 +26,19 @@ export class GenericLogin implements OnInit, OnDestroy {
   errorMessage = '';
   resolutions: TenantResolution[] = [];
   showSelection = false;
+  /** Set when the person was signed out for being idle (the idle sign-out leaves a note; the address may also say so). */
+  signedOutIdle = false;
   
   private authSubscription!: Subscription;
 
   ngOnInit(): void {
+    try {
+      // Kept until the person starts signing in: this page can be created more than once during the redirect.
+      this.signedOutIdle = sessionStorage.getItem('cliniva.signedOutIdle') === '1';
+    } catch {
+      // Storage blocked: only the address can tell.
+    }
+    this.signedOutIdle = this.signedOutIdle || this.route.snapshot?.queryParams?.['reason'] === 'idle';
     this.authSubscription = this.authService.authState$.subscribe({
       next: (state: { isAuthenticated: boolean; user: User | null; tenant?: { code?: string } | null }) => {
         if (state.isAuthenticated && state.user) {
@@ -63,6 +72,11 @@ export class GenericLogin implements OnInit, OnDestroy {
   }
 
   resolveTenant(): void {
+    try {
+      sessionStorage.removeItem('cliniva.signedOutIdle');
+    } catch {
+      // Storage blocked: nothing to clear.
+    }
     if (!this.email || !this.email.includes('@')) {
       this.errorMessage = 'Please enter a valid email address.';
       return;

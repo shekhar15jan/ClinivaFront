@@ -4,6 +4,12 @@
     <p class="text-body-md text-secondary">Enter your professional email to receive a secure access code.</p>
   </header>
 
+  @if (signedOutIdle) {
+    <div id="signed-out-idle" class="bg-amber-50 text-amber-950 px-md py-sm rounded-lg mb-4 text-body-sm" role="status">
+      You were signed out after 15 minutes without activity, to keep patient records safe. Sign in again to continue.
+    </div>
+  }
+
   @if (errorMessage) {
     <div class="bg-error-container text-error px-md py-sm rounded-lg mb-4 text-body-sm">
       {{ errorMessage }}
