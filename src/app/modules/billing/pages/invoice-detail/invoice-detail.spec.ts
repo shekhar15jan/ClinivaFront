@@ -1,3 +1,5 @@
+// @ts-expect-error vite '?raw' import (no type declaration in this project)
+import invoiceTemplate from './invoice-detail.html?raw';
 import { TestBed } from '@angular/core/testing';
 import { InvoiceDetail } from './invoice-detail';
 import { BillingService } from '../../../../core/services/billing.service';
@@ -108,6 +110,8 @@ describe('InvoiceDetail GST breakdown', () => {
         { provide: SettingService, useValue: { getProfile: vi.fn().mockReturnValue(of({ success: true, data: { clinicName: 'Sai Clinic' } })) } },
       ],
     });
+    // The test runner compiles in the browser (JIT), which cannot fetch templateUrl/styleUrl, so the template is supplied inline.
+    TestBed.overrideComponent(InvoiceDetail, { set: { template: invoiceTemplate, templateUrl: undefined, styleUrl: undefined, styles: [] } });
     const fixture = TestBed.createComponent(InvoiceDetail);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;

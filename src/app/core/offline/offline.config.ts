@@ -5,8 +5,8 @@
  */
 export const QUEUEABLE: RegExp[] = [
   /\/hms\/consultations$/,
-  /\/hms\/nursing\/admissions\/[^\/]+\/vitals$/,
-  /\/hms\/nursing\/admissions\/[^\/]+\/notes$/
+  /\/hms\/nursing\/admissions\/[^/]+\/vitals$/,
+  /\/hms\/nursing\/admissions\/[^/]+\/notes$/
 ];
 
 /** What the "waiting to send" list calls an entry. */

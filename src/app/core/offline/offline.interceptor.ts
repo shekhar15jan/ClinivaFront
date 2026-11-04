@@ -1,5 +1,5 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
-import { Injectable, Injector } from '@angular/core';
+import { Injectable, Injector, inject } from '@angular/core';
 import { Observable, catchError, of, throwError } from 'rxjs';
 import { QUEUEABLE, offlineLabel } from './offline.config';
 import { OfflineQueue, REPLAY_HEADER, newOfflineId } from './offline-queue.service';
@@ -11,7 +11,7 @@ import { OfflineQueue, REPLAY_HEADER, newOfflineId } from './offline-queue.servi
 @Injectable()
 export class OfflineInterceptor implements HttpInterceptor {
   // The queue itself uses HttpClient, so it is looked up when needed, not injected here.
-  constructor(private readonly injector: Injector) {}
+  private readonly injector = inject(Injector);
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const method = request.method;
