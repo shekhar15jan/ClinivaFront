@@ -1,5 +1,5 @@
-# Deploy Cliniva front (front end). develop -> staging (https://cliniva.codeatcloudai.com, Hostinger), main -> production
-# (https://cliniva.codeatcloud.com, Hostinger) after approval. Per-environment secrets and variables; NAMES only in
+# Deploy Cliniva front (front end). develop -> staging (https://cliniva.codeatcloudai.com, Hostinger), a release/* branch -> production
+# (https://cliniva.codeatcloud.com, Hostinger) after approval. main is merged from the release branch only after production is healthy. Per-environment secrets and variables; NAMES only in
 # platform/docs/plans/github-actions-aws-secrets.md. No value lives in this file.
 # Build with --base-href=/, upload a tgz, extract to a stage folder, MOVE the live files to a backup folder and MOVE the new ones
 # in (nothing is deleted; a failed check moves the old files back). The staging front calls the staging API (the OptiPlex through
@@ -8,7 +8,7 @@ name: Deploy Cliniva front
 
 on:
   push:
-    branches: [develop, main]
+    branches: [develop, 'release/**']
   workflow_dispatch:
     inputs:
       environment:
@@ -21,20 +21,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-Cliniva front-${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+  group: deploy-Cliniva front-${{ inputs.environment || (startsWith(github.ref_name, 'release/') && 'production' || 'staging') }}
   cancel-in-progress: false
 
 env:
-  TARGET: ${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+  TARGET: ${{ inputs.environment || (startsWith(github.ref_name, 'release/') && 'production' || 'staging') }}
 
 jobs:
   deploy:
-    name: Build and deploy to ${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+    name: Build and deploy to ${{ inputs.environment || (startsWith(github.ref_name, 'release/') && 'production' || 'staging') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # production: this environment must have required reviewers.
     environment:
-      name: ${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
+      name: ${{ inputs.environment || (startsWith(github.ref_name, 'release/') && 'production' || 'staging') }}
       url: ${{ vars.SITE_URL }}
     env:
       API_URL: ${{ vars.API_URL }}
