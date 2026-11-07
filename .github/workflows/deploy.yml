@@ -1,8 +1,9 @@
-# Deploy Cliniva front (front end). develop -> staging (the OptiPlex nginx, /var/www/cliniva), main -> production (Hostinger)
-# after approval. Per-environment secrets and variables; NAMES only in platform/docs/plans/github-actions-aws-secrets.md.
-#   production: build with --base-href=/, upload a tgz, extract to a stage folder, MOVE the live files to a backup folder and
-#               MOVE the new ones in (nothing is deleted; a failed check moves the old files back).
-#   staging:    build with --base-href=/cliniva/ and the staging API path, copy over SSH (Tailscale).
+# Deploy Cliniva front (front end). develop -> staging (https://cliniva.codeatcloudai.com, Hostinger), main -> production
+# (https://cliniva.codeatcloud.com, Hostinger) after approval. Per-environment secrets and variables; NAMES only in
+# platform/docs/plans/github-actions-aws-secrets.md. No value lives in this file.
+# Build with --base-href=/, upload a tgz, extract to a stage folder, MOVE the live files to a backup folder and MOVE the new ones
+# in (nothing is deleted; a failed check moves the old files back). The staging front calls the staging API (the OptiPlex through
+# Tailscale Funnel) and the production front calls the production API (AWS): the address comes from the variable API_URL.
 name: Deploy Cliniva front
 
 on:
@@ -35,6 +36,9 @@ jobs:
     environment:
       name: ${{ inputs.environment || (github.ref_name == 'main' && 'production' || 'staging') }}
       url: ${{ vars.SITE_URL }}
+    env:
+      API_URL: ${{ vars.API_URL }}
+      SITE_DIR: ${{ vars.HOSTINGER_SITE_DIR }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -45,94 +49,58 @@ jobs:
       - name: Unit tests
         run: npm run test:ci --if-present
 
-      - name: Work out the addresses
-        run: |
-          set -euo pipefail
-          if [ "$TARGET" = production ]; then
-            echo "BASE_HREF=/" >> "$GITHUB_ENV"
-            echo "API_URL=${{ vars.API_URL }}" >> "$GITHUB_ENV"
-          else
-            echo "BASE_HREF=/cliniva/" >> "$GITHUB_ENV"
-            echo "API_URL=/cliniva/api/v1" >> "$GITHUB_ENV"
-          fi
-
       - name: Build
-        run: npm run build:prod -- --base-href="$BASE_HREF"
+        run: npm run build:prod -- --base-href=/
 
       - name: Put the API address in (the address in environment.prod.ts is replaced in the built files)
         run: |
           set -euo pipefail
+          [ -n "$API_URL" ] || { echo "::error::the variable API_URL is not set for this environment"; exit 1; }
           DIST=$(find dist -name index.html -path '*browser*' -printf '%h\n' | head -1)
           [ -n "$DIST" ] || { echo "::error::build folder not found"; exit 1; }
-          echo "DIST=$DIST" >> "$GITHUB_ENV"
           OLD=$(grep -ohE "apiUrl: *'[^']+'" src/environments/environment.prod.ts | head -1 | sed -E "s/apiUrl: *'([^']+)'/\1/")
           if [ -n "$OLD" ] && [ "$OLD" != "$API_URL" ]; then
             grep -rlF "$OLD" "$DIST" | xargs -r sed -i "s|$OLD|$API_URL|g"
           fi
-          grep -rq "__API_URL__" "$DIST" && { echo "::error::the API placeholder is still in the build"; exit 1; } || true
-          grep -q "<base href=\"$BASE_HREF\">" "$DIST/index.html" || { echo "::error::index.html base href is not $BASE_HREF"; exit 1; }
+          if grep -rq "__API_URL__" "$DIST"; then echo "::error::the API placeholder is still in the build"; exit 1; fi
+          grep -q '<base href="/">' "$DIST/index.html" || { echo "::error::index.html base href is not /"; exit 1; }
           tar -czf front.tgz -C "$DIST" .
-
-      - name: Join the Tailnet (staging only)
-        if: env.TARGET == 'staging'
-        uses: tailscale/github-action@v3
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
-          tags: tag:ci
 
       - name: Prepare SSH
         env:
-          STG_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          STG_KNOWN: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
-          STG_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          STG_USER: ${{ secrets.DEPLOY_SSH_USER }}
-          HOSTINGER_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
-          HOSTINGER_KNOWN: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
-          HOSTINGER_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
-          HOSTINGER_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
-          HOSTINGER_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+          HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          USER_NAME: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          if [ "$TARGET" = production ]; then
-            printf '%s\n' "$HOSTINGER_KEY" > ~/.ssh/deploy_key; printf '%s\n' "$HOSTINGER_KNOWN" > ~/.ssh/known_hosts
-            { echo "Host target"; echo "  HostName $HOSTINGER_HOST"; echo "  Port $HOSTINGER_PORT"; echo "  User $HOSTINGER_USER"; } > ~/.ssh/config
-          else
-            printf '%s\n' "$STG_KEY" > ~/.ssh/deploy_key; printf '%s\n' "$STG_KNOWN" > ~/.ssh/known_hosts
-            { echo "Host target"; echo "  HostName $STG_HOST"; echo "  User $STG_USER"; } > ~/.ssh/config
-          fi
-          { echo "  IdentityFile ~/.ssh/deploy_key"; echo "  StrictHostKeyChecking yes"; } >> ~/.ssh/config
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          {
+            echo "Host hostinger"
+            echo "  HostName $HOST"
+            echo "  Port $PORT"
+            echo "  User $USER_NAME"
+            echo "  IdentityFile ~/.ssh/deploy_key"
+            echo "  StrictHostKeyChecking yes"
+          } > ~/.ssh/config
 
-      - name: Deploy to the OptiPlex (staging)
-        if: env.TARGET == 'staging'
-        run: |
-          set -euo pipefail
-          ssh target "mkdir -p /var/www/cliniva"
-          ssh target "tar -xzf - -C /var/www/cliniva" < front.tgz
-          for i in $(seq 1 8); do
-            code=$(ssh target "curl -s -o /dev/null -w '%{http_code}' http://localhost/cliniva/" || echo 000)
-            [ "$code" = 200 ] && { echo "Staging site OK"; exit 0; }; sleep 4
-          done
-          echo "::error::the staging site did not answer"; exit 1
-
-      - name: Deploy to Hostinger (production, move-swap, nothing deleted)
-        if: env.TARGET == 'production'
-        env:
-          SITE_DIR: ${{ vars.HOSTINGER_SITE_DIR }}
+      - name: Upload and swap (nothing is deleted)
         run: |
           set -euo pipefail
           TS=$(date +%Y%m%d-%H%M%S); echo "TS=$TS" >> "$GITHUB_ENV"
-          ssh target "mkdir -p ~/deploy-tmp ~/deploy-backups"
-          scp front.tgz target:deploy-tmp/cliniva-front-$TS.tgz
-          ssh target "TS=$TS SITE_DIR='$SITE_DIR' bash -s" <<'REMOTE'
+          ssh hostinger "mkdir -p ~/deploy-tmp ~/deploy-backups"
+          scp front.tgz hostinger:deploy-tmp/cliniva-$TARGET-$TS.tgz
+          ssh hostinger "TS=$TS TARGET=$TARGET SITE_DIR='$SITE_DIR' bash -s" <<'REMOTE'
           set -euo pipefail
           # SITE_DIR keeps its own folders (for example api/ and .htaccess): they are not in the build and are never touched.
-          STAGE=~/deploy-tmp/cliniva-stage-$TS
-          BACKUP=~/deploy-backups/cliniva-front-$TS
+          STAGE=~/deploy-tmp/cliniva-stage-$TARGET-$TS
+          BACKUP=~/deploy-backups/cliniva-$TARGET-$TS
           mkdir -p "$STAGE" "$BACKUP"
-          tar -xzf ~/deploy-tmp/cliniva-front-$TS.tgz -C "$STAGE"
+          tar -xzf ~/deploy-tmp/cliniva-$TARGET-$TS.tgz -C "$STAGE"
           grep -q '<base href="/">' "$STAGE/index.html"
           cd "$STAGE"
           for item in *; do
@@ -142,8 +110,7 @@ jobs:
           echo "Swapped. Backup of the old files: $BACKUP"
           REMOTE
 
-      - name: Check the live site (production)
-        if: env.TARGET == 'production'
+      - name: Check the live site
         run: |
           set -euo pipefail
           for i in $(seq 1 10); do
@@ -153,15 +120,13 @@ jobs:
           done
           echo "::error::the live site did not answer correctly"; exit 1
 
-      - name: Roll back on failure (production, move the backup files back)
-        if: failure() && env.TARGET == 'production'
-        env:
-          SITE_DIR: ${{ vars.HOSTINGER_SITE_DIR }}
+      - name: Roll back on failure (move the backup files back)
+        if: failure()
         run: |
           [ -n "${TS:-}" ] || { echo "Nothing was swapped"; exit 0; }
-          ssh target "TS=$TS SITE_DIR='$SITE_DIR' bash -s" <<'REMOTE'
+          ssh hostinger "TS=$TS TARGET=$TARGET SITE_DIR='$SITE_DIR' bash -s" <<'REMOTE'
           set -euo pipefail
-          BACKUP=~/deploy-backups/cliniva-front-$TS
+          BACKUP=~/deploy-backups/cliniva-$TARGET-$TS
           [ -d "$BACKUP" ] || exit 0
           cd "$BACKUP"
           for item in *; do
